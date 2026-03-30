@@ -28,8 +28,8 @@ export interface Expense {
   id: string;
   title: string;
   description?: string | null;
-  amount: string;
-  category?: string | null; // Category name from API
+  amount: number;
+  category?: string | null;
   category_id?: string | null;
   expense_date: string;
   status: ExpenseStatus;
@@ -42,7 +42,7 @@ export interface Expense {
   recurrence_type_id?: string | null;
   recurrence_count?: number | null;
   recurrence_current?: number | null;
-  recurrence_total_amount?: string | null;
+  recurrence_total_amount?: number | null;
   recurrence_end_date?: string | null;
   recurrence_group_id?: string | null;
   notes?: string;
@@ -75,18 +75,17 @@ export interface SingleExpenseResponse {
 
 export interface CreateExpensePayload {
   title: string;
-  amount: string;
+  amount: number;
   category_id: string;
   bill_statement_id: string;
   payment_method: PaymentMethod;
   expense_date: string;
   description?: string;
   paid_by?: string;
-  // Recurrence fields for installments and subscriptions
-  recurrence_type_id?: string; // UUID of the recurrence type
-  recurrence_count?: number; // For installments: number of payments
-  recurrence_total_amount?: string; // For installments: total amount
-  recurrence_end_date?: string; // For subscriptions: end date
+  recurrence_type_id?: string;
+  recurrence_count?: number;
+  recurrence_total_amount?: number;
+  recurrence_end_date?: string;
 }
 
 export interface UpdateExpensePayload {
@@ -103,8 +102,8 @@ export interface UpdateExpensePayload {
   // Recurrence fields for installments and subscriptions
   recurrence_type_id?: string | null; // UUID of the recurrence type, null to remove
   recurrence_count?: number | null; // For installments: number of payments
-  recurrence_total_amount?: string | null; // For installments: total amount
-  recurrence_end_date?: string | null; // For subscriptions/recurring: end date
+  recurrence_total_amount?: number | null;
+  recurrence_end_date?: string | null;
   clear_recurrence?: boolean; // Set to true when changing from recurring to one-time
 }
 

@@ -190,7 +190,7 @@ export function CreateExpenseDialog({
       // Build payload based on recurrence type
       const payload: Parameters<typeof createExpense>[0] = {
         title,
-        amount,
+        amount: Number(amount),
         category_id: categoryId,
         bill_statement_id: billStatementId,
         payment_method: paymentMethod,
@@ -206,7 +206,7 @@ export function CreateExpenseDialog({
         // Add type-specific fields based on recurrence type name
         if (recurrenceTypeName === "installment") {
           payload.recurrence_count = Number(recurrenceCount);
-          payload.recurrence_total_amount = recurrenceTotalAmount;
+          payload.recurrence_total_amount = Number(recurrenceTotalAmount);
         } else if (
           recurrenceTypeName === "subscription" ||
           recurrenceTypeName === "recurring"

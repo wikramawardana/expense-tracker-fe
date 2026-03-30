@@ -288,7 +288,7 @@ export function ExpenseActionDialog({
 
         if (recurrenceTypeName === "installment") {
           updatePayload.recurrence_count = Number(recurrenceCount);
-          updatePayload.recurrence_total_amount = recurrenceTotalAmount;
+          updatePayload.recurrence_total_amount = Number(recurrenceTotalAmount);
           updatePayload.recurrence_end_date = null;
         } else if (
           recurrenceTypeName === "subscription" ||

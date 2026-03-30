@@ -1,7 +1,13 @@
 "use client";
 
 import { format } from "date-fns";
-import { DollarSign, Filter, TrendingUp, Clock, CheckCircle } from "lucide-react";
+import {
+  CheckCircle,
+  Clock,
+  DollarSign,
+  Filter,
+  TrendingUp,
+} from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/format";
 import type { ExpenseFilters, ExpenseStats } from "@/types/expense.types";
@@ -42,7 +48,10 @@ export function ExpenseStatsCards({
   isLoading,
 }: ExpenseStatsCardsProps) {
   // Build filter context info
-  const dateRange = formatDateRange(filters?.expense_date_from, filters?.expense_date_to);
+  const dateRange = formatDateRange(
+    filters?.expense_date_from,
+    filters?.expense_date_to,
+  );
   const hasFilters = filters?.search || filters?.category || filters?.status;
 
   if (isLoading) {
@@ -107,7 +116,9 @@ export function ExpenseStatsCards({
           <div className="text-2xl font-black text-foreground">
             {stats?.total_count ?? 0}
           </div>
-          <p className="text-xs font-bold text-foreground/70 uppercase">transactions</p>
+          <p className="text-xs font-bold text-foreground/70 uppercase">
+            transactions
+          </p>
         </CardContent>
       </Card>
 
@@ -122,7 +133,9 @@ export function ExpenseStatsCards({
           <div className="text-2xl font-black text-foreground truncate">
             {formatCurrency(stats?.total_amount ?? 0)}
           </div>
-          <p className="text-xs font-bold text-foreground/70 uppercase">total spent</p>
+          <p className="text-xs font-bold text-foreground/70 uppercase">
+            total spent
+          </p>
         </CardContent>
       </Card>
 
@@ -137,7 +150,9 @@ export function ExpenseStatsCards({
           <div className="text-2xl font-black text-foreground truncate">
             {formatCurrency(stats?.approved_amount ?? 0)}
           </div>
-          <p className="text-xs font-bold text-foreground/70 uppercase">approved expenses</p>
+          <p className="text-xs font-bold text-foreground/70 uppercase">
+            approved expenses
+          </p>
         </CardContent>
       </Card>
 
@@ -152,7 +167,9 @@ export function ExpenseStatsCards({
           <div className="text-2xl font-black text-foreground truncate">
             {formatCurrency(stats?.pending_amount ?? 0)}
           </div>
-          <p className="text-xs font-bold text-foreground/70 uppercase">awaiting approval</p>
+          <p className="text-xs font-bold text-foreground/70 uppercase">
+            awaiting approval
+          </p>
         </CardContent>
       </Card>
     </div>

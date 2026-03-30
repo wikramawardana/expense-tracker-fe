@@ -55,7 +55,9 @@ export function CreateRecurrenceTypeDialog({
       onRecurrenceTypeCreated?.();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to create recurrence type",
+        error instanceof Error
+          ? error.message
+          : "Failed to create recurrence type",
       );
     } finally {
       setIsLoading(false);
@@ -74,7 +76,8 @@ export function CreateRecurrenceTypeDialog({
         <DialogHeader>
           <DialogTitle>Add New Recurrence Type</DialogTitle>
           <DialogDescription>
-            Create a new recurrence type for expenses. Fill in the details below.
+            Create a new recurrence type for expenses. Fill in the details
+            below.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">

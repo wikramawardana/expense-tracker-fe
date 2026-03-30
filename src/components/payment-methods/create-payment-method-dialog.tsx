@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -23,6 +22,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
 import { createPaymentMethod } from "@/services/payment-methods.service";
 import type { PaymentMethodType } from "@/types/payment-method.types";
 import { PAYMENT_METHOD_TYPES } from "@/types/payment-method.types";
@@ -67,7 +67,9 @@ export function CreatePaymentMethodDialog({
       onPaymentMethodCreated?.();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to create payment method",
+        error instanceof Error
+          ? error.message
+          : "Failed to create payment method",
       );
     } finally {
       setIsLoading(false);

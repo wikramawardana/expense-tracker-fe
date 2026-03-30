@@ -1,6 +1,6 @@
 import { cn } from "@/lib/utils";
-import type { ExpenseStatus } from "@/types/expense.types";
 import type { Category } from "@/types/category.types";
+import type { ExpenseStatus } from "@/types/expense.types";
 
 interface StatusBadgeProps {
   status: ExpenseStatus;
@@ -11,8 +11,7 @@ export function StatusBadge({ status, className }: StatusBadgeProps) {
   const variants = {
     pending:
       "bg-[#FFE156] text-foreground border-3 border-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]",
-    paid:
-      "bg-[#A3E636] text-foreground border-3 border-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]",
+    paid: "bg-[#A3E636] text-foreground border-3 border-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]",
     unpaid:
       "bg-[#FF6B6B] text-foreground border-3 border-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]",
   };
@@ -51,9 +50,10 @@ export function CategoryBadge({ category, className }: CategoryBadgeProps) {
   }
 
   // Use category color from API if available, otherwise use default
-  const defaultStyle = "bg-[#88AAEE] text-foreground border-3 border-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]";
-  
-  const style = category.color 
+  const defaultStyle =
+    "bg-[#88AAEE] text-foreground border-3 border-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]";
+
+  const style = category.color
     ? `text-foreground border-3 border-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]`
     : defaultStyle;
 
@@ -77,7 +77,10 @@ interface PaymentMethodBadgeProps {
   className?: string;
 }
 
-export function PaymentMethodBadge({ paymentMethod, className }: PaymentMethodBadgeProps) {
+export function PaymentMethodBadge({
+  paymentMethod,
+  className,
+}: PaymentMethodBadgeProps) {
   if (!paymentMethod) {
     return (
       <span className={cn("text-gray-500 dark:text-gray-400", className)}>

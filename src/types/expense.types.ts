@@ -13,7 +13,12 @@ export type ExpenseCategory =
 export type ExpenseStatus = "pending" | "paid" | "unpaid";
 
 // Payment method
-export type PaymentMethod = "Cash" | "Credit Card" | "Debit Card" | "Transfer" | "E-Wallet";
+export type PaymentMethod =
+  | "Cash"
+  | "Credit Card"
+  | "Debit Card"
+  | "Transfer"
+  | "E-Wallet";
 
 // Recurrence type
 export type RecurrenceType = "installment" | "subscription";

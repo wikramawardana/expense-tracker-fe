@@ -51,7 +51,9 @@ export function CreateBillStatementDialog({
     try {
       await createBillStatement({
         name: name.trim(),
-        statement_date: statementDate ? new Date(statementDate).toISOString() : undefined,
+        statement_date: statementDate
+          ? new Date(statementDate).toISOString()
+          : undefined,
         due_date: dueDate ? new Date(dueDate).toISOString() : undefined,
         description: description.trim() || undefined,
       });
@@ -61,7 +63,9 @@ export function CreateBillStatementDialog({
       onBillStatementCreated?.();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to create bill statement",
+        error instanceof Error
+          ? error.message
+          : "Failed to create bill statement",
       );
     } finally {
       setIsLoading(false);

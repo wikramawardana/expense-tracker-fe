@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreHorizontal, Pencil, Trash2, Eye } from "lucide-react";
+import { Eye, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -21,7 +21,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -29,23 +28,24 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Textarea } from "@/components/ui/textarea";
+import { EXPENSE_STATUSES, PAYMENT_METHODS } from "@/lib/constants";
 import { formatCurrency, formatDate } from "@/lib/format";
+import { getBillStatements } from "@/services/bill-statements.service";
+import { getCategories } from "@/services/categories.service";
 import {
   deleteExpense,
   getExpenseById,
   updateExpense,
 } from "@/services/expenses.service";
-import { getCategories } from "@/services/categories.service";
-import { getBillStatements } from "@/services/bill-statements.service";
 import { getRecurrenceTypes } from "@/services/recurrence-types.service";
-import { PAYMENT_METHODS, EXPENSE_STATUSES } from "@/lib/constants";
+import type { BillStatement } from "@/types/bill-statement.types";
+import type { Category } from "@/types/category.types";
 import type {
   Expense,
   ExpenseStatus,
   PaymentMethod,
 } from "@/types/expense.types";
-import type { Category } from "@/types/category.types";
-import type { BillStatement } from "@/types/bill-statement.types";
 import type { RecurrenceType as RecurrenceTypeModel } from "@/types/recurrence-type.types";
 import { StatusBadge } from "./status-badge";
 

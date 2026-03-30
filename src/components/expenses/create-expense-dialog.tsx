@@ -15,7 +15,6 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import {
   Select,
   SelectContent,
@@ -23,14 +22,15 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { createExpense } from "@/services/expenses.service";
-import { getCategories } from "@/services/categories.service";
-import { getBillStatements } from "@/services/bill-statements.service";
-import { getRecurrenceTypes } from "@/services/recurrence-types.service";
+import { Textarea } from "@/components/ui/textarea";
 import { PAYMENT_METHODS } from "@/lib/constants";
-import type { PaymentMethod } from "@/types/expense.types";
-import type { Category } from "@/types/category.types";
+import { getBillStatements } from "@/services/bill-statements.service";
+import { getCategories } from "@/services/categories.service";
+import { createExpense } from "@/services/expenses.service";
+import { getRecurrenceTypes } from "@/services/recurrence-types.service";
 import type { BillStatement } from "@/types/bill-statement.types";
+import type { Category } from "@/types/category.types";
+import type { PaymentMethod } from "@/types/expense.types";
 import type { RecurrenceType as RecurrenceTypeModel } from "@/types/recurrence-type.types";
 
 interface CreateExpenseDialogProps {

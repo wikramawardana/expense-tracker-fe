@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreHorizontal, Pencil, Trash2, Eye } from "lucide-react";
+import { Eye, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -21,10 +21,13 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
 import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { formatDate } from "@/lib/format";
-import { deleteBillStatement, updateBillStatement } from "@/services/bill-statements.service";
+import {
+  deleteBillStatement,
+  updateBillStatement,
+} from "@/services/bill-statements.service";
 import type { BillStatement } from "@/types/bill-statement.types";
 
 interface BillStatementActionDialogProps {
@@ -46,19 +49,29 @@ export function BillStatementActionDialog({
   // Edit form state
   const [name, setName] = React.useState(billStatement.name);
   const [statementDate, setStatementDate] = React.useState(
-    billStatement.statement_date ? billStatement.statement_date.split("T")[0] : ""
+    billStatement.statement_date
+      ? billStatement.statement_date.split("T")[0]
+      : "",
   );
   const [dueDate, setDueDate] = React.useState(
-    billStatement.due_date ? billStatement.due_date.split("T")[0] : ""
+    billStatement.due_date ? billStatement.due_date.split("T")[0] : "",
   );
-  const [description, setDescription] = React.useState(billStatement.description || "");
+  const [description, setDescription] = React.useState(
+    billStatement.description || "",
+  );
   const [isActive, setIsActive] = React.useState(billStatement.is_active);
 
   // Reset form when billStatement changes
   React.useEffect(() => {
     setName(billStatement.name);
-    setStatementDate(billStatement.statement_date ? billStatement.statement_date.split("T")[0] : "");
-    setDueDate(billStatement.due_date ? billStatement.due_date.split("T")[0] : "");
+    setStatementDate(
+      billStatement.statement_date
+        ? billStatement.statement_date.split("T")[0]
+        : "",
+    );
+    setDueDate(
+      billStatement.due_date ? billStatement.due_date.split("T")[0] : "",
+    );
     setDescription(billStatement.description || "");
     setIsActive(billStatement.is_active);
   }, [billStatement]);
@@ -73,7 +86,9 @@ export function BillStatementActionDialog({
     try {
       await updateBillStatement(billStatement.id, {
         name: name.trim(),
-        statement_date: statementDate ? new Date(statementDate).toISOString() : undefined,
+        statement_date: statementDate
+          ? new Date(statementDate).toISOString()
+          : undefined,
         due_date: dueDate ? new Date(dueDate).toISOString() : undefined,
         description: description.trim() || undefined,
         is_active: isActive,
@@ -83,7 +98,9 @@ export function BillStatementActionDialog({
       onBillStatementUpdated?.();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to update bill statement",
+        error instanceof Error
+          ? error.message
+          : "Failed to update bill statement",
       );
     } finally {
       setIsLoading(false);
@@ -99,7 +116,9 @@ export function BillStatementActionDialog({
       onBillStatementDeleted?.();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete bill statement",
+        error instanceof Error
+          ? error.message
+          : "Failed to delete bill statement",
       );
     } finally {
       setIsLoading(false);
@@ -152,7 +171,9 @@ export function BillStatementActionDialog({
               </div>
               <div>
                 <Label className="text-muted-foreground">Status</Label>
-                <p className={`font-medium ${billStatement.is_active ? "text-green-600" : "text-gray-500"}`}>
+                <p
+                  className={`font-medium ${billStatement.is_active ? "text-green-600" : "text-gray-500"}`}
+                >
                   {billStatement.is_active ? "Active" : "Inactive"}
                 </p>
               </div>
@@ -161,24 +182,34 @@ export function BillStatementActionDialog({
               <div>
                 <Label className="text-muted-foreground">Statement Date</Label>
                 <p className="font-medium">
-                  {billStatement.statement_date ? formatDate(billStatement.statement_date) : "Not set"}
+                  {billStatement.statement_date
+                    ? formatDate(billStatement.statement_date)
+                    : "Not set"}
                 </p>
               </div>
               <div>
                 <Label className="text-muted-foreground">Due Date</Label>
-                <p className={`font-medium ${billStatement.due_date && new Date(billStatement.due_date) < new Date() ? "text-red-600" : ""}`}>
-                  {billStatement.due_date ? formatDate(billStatement.due_date) : "Not set"}
+                <p
+                  className={`font-medium ${billStatement.due_date && new Date(billStatement.due_date) < new Date() ? "text-red-600" : ""}`}
+                >
+                  {billStatement.due_date
+                    ? formatDate(billStatement.due_date)
+                    : "Not set"}
                 </p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-muted-foreground">Created</Label>
-                <p className="font-medium">{formatDate(billStatement.created_at)}</p>
+                <p className="font-medium">
+                  {formatDate(billStatement.created_at)}
+                </p>
               </div>
               <div>
                 <Label className="text-muted-foreground">Updated</Label>
-                <p className="font-medium">{formatDate(billStatement.updated_at)}</p>
+                <p className="font-medium">
+                  {formatDate(billStatement.updated_at)}
+                </p>
               </div>
             </div>
             {billStatement.description && (
@@ -275,7 +306,8 @@ export function BillStatementActionDialog({
           <DialogHeader>
             <DialogTitle>Delete Bill Statement</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &quot;{billStatement.name}&quot;? This action cannot be undone.
+              Are you sure you want to delete &quot;{billStatement.name}&quot;?
+              This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

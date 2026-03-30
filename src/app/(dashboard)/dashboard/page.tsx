@@ -1,9 +1,9 @@
 "use client";
 
-import Link from "next/link";
-import { useSession } from "@/lib/auth-client";
 import { Receipt } from "lucide-react";
+import Link from "next/link";
 import { PageHeader } from "@/components/page-header";
+import { useSession } from "@/lib/auth-client";
 
 export default function DashboardPage() {
   const { data: session } = useSession();
@@ -15,7 +15,9 @@ export default function DashboardPage() {
       {/* Main Content */}
       <main className="p-4 sm:p-6">
         <div className="mb-8">
-          <h1 className="text-4xl font-black uppercase tracking-tight mb-2">Welcome back!</h1>
+          <h1 className="text-4xl font-black uppercase tracking-tight mb-2">
+            Welcome back!
+          </h1>
           <p className="text-muted-foreground font-bold">
             Manage your expenses and track your spending.
           </p>

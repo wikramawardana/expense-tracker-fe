@@ -10,18 +10,18 @@ import {
   ExpensesPagination,
   ExpensesTable,
 } from "@/components/expenses";
-import { Card, CardContent } from "@/components/ui/card";
 import { PageHeader } from "@/components/page-header";
+import { Card, CardContent } from "@/components/ui/card";
 import { useSession } from "@/lib/auth-client";
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
-import { getExpenses } from "@/services/expenses.service";
 import { getCategories } from "@/services/categories.service";
+import { getExpenses } from "@/services/expenses.service";
+import type { Category } from "@/types/category.types";
 import type {
   Expense,
   ExpenseFilters,
   PaginationInfo,
 } from "@/types/expense.types";
-import type { Category } from "@/types/category.types";
 
 export default function ExpensesPage() {
   const router = useRouter();
@@ -125,11 +125,7 @@ export default function ExpensesPage() {
 
   return (
     <div className="min-h-screen bg-background">
-      <PageHeader
-        breadcrumbs={[
-          { label: "Expenses" },
-        ]}
-      />
+      <PageHeader breadcrumbs={[{ label: "Expenses" }]} />
 
       <main className="p-4 sm:p-6 space-y-4">
         {/* Top Section: Title + Filters */}

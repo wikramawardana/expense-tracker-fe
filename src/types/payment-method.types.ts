@@ -1,5 +1,10 @@
 // Payment method type
-export type PaymentMethodType = "cash" | "credit_card" | "debit_card" | "e_wallet" | "bank_transfer";
+export type PaymentMethodType =
+  | "cash"
+  | "credit_card"
+  | "debit_card"
+  | "e_wallet"
+  | "bank_transfer";
 
 // Single payment method item
 export interface PaymentMethod {
@@ -42,7 +47,11 @@ export interface UpdatePaymentMethodPayload {
 }
 
 // Method type options for UI
-export const PAYMENT_METHOD_TYPES: { value: PaymentMethodType; label: string; emoji: string }[] = [
+export const PAYMENT_METHOD_TYPES: {
+  value: PaymentMethodType;
+  label: string;
+  emoji: string;
+}[] = [
   { value: "cash", label: "Cash", emoji: "💵" },
   { value: "credit_card", label: "Credit Card", emoji: "💳" },
   { value: "debit_card", label: "Debit Card", emoji: "💳" },

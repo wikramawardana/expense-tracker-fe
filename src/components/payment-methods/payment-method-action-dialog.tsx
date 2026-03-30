@@ -1,6 +1,6 @@
 "use client";
 
-import { MoreHorizontal, Pencil, Trash2, Eye } from "lucide-react";
+import { Eye, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -21,8 +21,6 @@ import {
 } from "@/components/ui/dropdown-menu";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
-import { Textarea } from "@/components/ui/textarea";
-import { Switch } from "@/components/ui/switch";
 import {
   Select,
   SelectContent,
@@ -30,9 +28,17 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { Switch } from "@/components/ui/switch";
+import { Textarea } from "@/components/ui/textarea";
 import { formatDate } from "@/lib/format";
-import { deletePaymentMethod, updatePaymentMethod } from "@/services/payment-methods.service";
-import type { PaymentMethod, PaymentMethodType } from "@/types/payment-method.types";
+import {
+  deletePaymentMethod,
+  updatePaymentMethod,
+} from "@/services/payment-methods.service";
+import type {
+  PaymentMethod,
+  PaymentMethodType,
+} from "@/types/payment-method.types";
 import { PAYMENT_METHOD_TYPES } from "@/types/payment-method.types";
 
 interface PaymentMethodActionDialogProps {
@@ -58,8 +64,12 @@ export function PaymentMethodActionDialog({
 
   // Edit form state
   const [name, setName] = React.useState(paymentMethod.name);
-  const [methodType, setMethodType] = React.useState<PaymentMethodType>(paymentMethod.method_type);
-  const [description, setDescription] = React.useState(paymentMethod.description || "");
+  const [methodType, setMethodType] = React.useState<PaymentMethodType>(
+    paymentMethod.method_type,
+  );
+  const [description, setDescription] = React.useState(
+    paymentMethod.description || "",
+  );
   const [isActive, setIsActive] = React.useState(paymentMethod.is_active);
 
   // Reset form when paymentMethod changes
@@ -89,7 +99,9 @@ export function PaymentMethodActionDialog({
       onPaymentMethodUpdated?.();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to update payment method",
+        error instanceof Error
+          ? error.message
+          : "Failed to update payment method",
       );
     } finally {
       setIsLoading(false);
@@ -105,7 +117,9 @@ export function PaymentMethodActionDialog({
       onPaymentMethodDeleted?.();
     } catch (error) {
       toast.error(
-        error instanceof Error ? error.message : "Failed to delete payment method",
+        error instanceof Error
+          ? error.message
+          : "Failed to delete payment method",
       );
     } finally {
       setIsLoading(false);
@@ -158,24 +172,32 @@ export function PaymentMethodActionDialog({
               </div>
               <div>
                 <Label className="text-muted-foreground">Type</Label>
-                <p className="font-medium">{getMethodTypeDisplay(paymentMethod.method_type)}</p>
+                <p className="font-medium">
+                  {getMethodTypeDisplay(paymentMethod.method_type)}
+                </p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-muted-foreground">Status</Label>
-                <p className={`font-medium ${paymentMethod.is_active ? "text-green-600" : "text-gray-500"}`}>
+                <p
+                  className={`font-medium ${paymentMethod.is_active ? "text-green-600" : "text-gray-500"}`}
+                >
                   {paymentMethod.is_active ? "Active" : "Inactive"}
                 </p>
               </div>
               <div>
                 <Label className="text-muted-foreground">Created</Label>
-                <p className="font-medium">{formatDate(paymentMethod.created_at)}</p>
+                <p className="font-medium">
+                  {formatDate(paymentMethod.created_at)}
+                </p>
               </div>
             </div>
             <div>
               <Label className="text-muted-foreground">Updated</Label>
-              <p className="font-medium">{formatDate(paymentMethod.updated_at)}</p>
+              <p className="font-medium">
+                {formatDate(paymentMethod.updated_at)}
+              </p>
             </div>
             {paymentMethod.description && (
               <div>
@@ -271,7 +293,8 @@ export function PaymentMethodActionDialog({
           <DialogHeader>
             <DialogTitle>Delete Payment Method</DialogTitle>
             <DialogDescription>
-              Are you sure you want to delete &quot;{paymentMethod.name}&quot;? This action cannot be undone.
+              Are you sure you want to delete &quot;{paymentMethod.name}&quot;?
+              This action cannot be undone.
             </DialogDescription>
           </DialogHeader>
           <DialogFooter>

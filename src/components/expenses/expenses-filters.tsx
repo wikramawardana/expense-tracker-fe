@@ -28,8 +28,8 @@ import { cn } from "@/lib/utils";
 import { getBillStatements } from "@/services/bill-statements.service";
 import type { BillStatement } from "@/types/bill-statement.types";
 import type {
-  ExpenseFilters,
   ExpenseCategory,
+  ExpenseFilters,
   ExpenseStatus,
 } from "@/types/expense.types";
 
@@ -46,8 +46,12 @@ export function ExpensesFilters({
   const [search, setSearch] = React.useState(filters.search || "");
   const [category, setCategory] = React.useState(filters.category || "all");
   const [status, setStatus] = React.useState(filters.status || "all");
-  const [billStatementId, setBillStatementId] = React.useState(filters.bill_statement_id || "all");
-  const [billStatements, setBillStatements] = React.useState<BillStatement[]>([]);
+  const [billStatementId, setBillStatementId] = React.useState(
+    filters.bill_statement_id || "all",
+  );
+  const [billStatements, setBillStatements] = React.useState<BillStatement[]>(
+    [],
+  );
 
   // Fetch bill statements on mount
   React.useEffect(() => {
@@ -64,8 +68,12 @@ export function ExpensesFilters({
   // Combined date range state
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>(
     () => {
-      const from = filters.expense_date_from ? new Date(filters.expense_date_from) : undefined;
-      const to = filters.expense_date_to ? new Date(filters.expense_date_to) : undefined;
+      const from = filters.expense_date_from
+        ? new Date(filters.expense_date_from)
+        : undefined;
+      const to = filters.expense_date_to
+        ? new Date(filters.expense_date_to)
+        : undefined;
       return from || to ? { from, to } : undefined;
     },
   );
@@ -80,8 +88,12 @@ export function ExpensesFilters({
     setCategory(filters.category || "all");
     setStatus(filters.status || "all");
     setBillStatementId(filters.bill_statement_id || "all");
-    const from = filters.expense_date_from ? new Date(filters.expense_date_from) : undefined;
-    const to = filters.expense_date_to ? new Date(filters.expense_date_to) : undefined;
+    const from = filters.expense_date_from
+      ? new Date(filters.expense_date_from)
+      : undefined;
+    const to = filters.expense_date_to
+      ? new Date(filters.expense_date_to)
+      : undefined;
     setDateRange(from || to ? { from, to } : undefined);
     setSortBy(filters.sort_by || "date");
     setSortOrder(filters.sort_order || "desc");
@@ -94,8 +106,12 @@ export function ExpensesFilters({
       category: category === "all" ? "" : (category as ExpenseCategory),
       status: status === "all" ? "" : (status as ExpenseStatus),
       bill_statement_id: billStatementId === "all" ? "" : billStatementId,
-      expense_date_from: dateRange?.from ? format(dateRange.from, "yyyy-MM-dd'T'00:00:00'Z'") : "",
-      expense_date_to: dateRange?.to ? format(dateRange.to, "yyyy-MM-dd'T'23:59:59'Z'") : "",
+      expense_date_from: dateRange?.from
+        ? format(dateRange.from, "yyyy-MM-dd'T'00:00:00'Z'")
+        : "",
+      expense_date_to: dateRange?.to
+        ? format(dateRange.to, "yyyy-MM-dd'T'23:59:59'Z'")
+        : "",
       sort_by: sortBy,
       sort_order: sortOrder,
       page: 1,
@@ -134,7 +150,9 @@ export function ExpensesFilters({
     status !== (filters.status || "all") ||
     billStatementId !== (filters.bill_statement_id || "all") ||
     (dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : "") !==
-      (filters.expense_date_from ? filters.expense_date_from.split("T")[0] : "") ||
+      (filters.expense_date_from
+        ? filters.expense_date_from.split("T")[0]
+        : "") ||
     (dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : "") !==
       (filters.expense_date_to ? filters.expense_date_to.split("T")[0] : "") ||
     sortBy !== (filters.sort_by || "date") ||

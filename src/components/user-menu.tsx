@@ -4,7 +4,6 @@ import { LogOut, Moon, Sun } from "lucide-react";
 import { useTheme } from "next-themes";
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
 import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -59,9 +58,9 @@ export function UserMenu() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button
-          variant="ghost"
-          className="relative h-8 w-8 rounded-full border-2 border-black dark:border-white"
+        <button
+          type="button"
+          className="relative inline-flex h-8 w-8 items-center justify-center rounded-full border-2 border-black dark:border-white p-0 outline-none focus-visible:ring-2 focus-visible:ring-ring"
         >
           <Avatar className="h-8 w-8">
             <AvatarImage
@@ -73,7 +72,7 @@ export function UserMenu() {
               {getInitials(session?.user?.name, session?.user?.email || "")}
             </AvatarFallback>
           </Avatar>
-        </Button>
+        </button>
       </DropdownMenuTrigger>
       <DropdownMenuContent
         className="w-56 border-2 border-black dark:border-white"

@@ -7,8 +7,13 @@ import {
   BillStatementsTable,
   CreateBillStatementDialog,
 } from "@/components/bill-statements";
-import { PageHeader } from "@/components/page-header";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useSession } from "@/lib/auth-client";
 import { getBillStatements } from "@/services/bill-statements.service";
 import type { BillStatement } from "@/types/bill-statement.types";
@@ -88,90 +93,78 @@ export default function BillStatementsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <PageHeader
-        breadcrumbs={[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "Bill Statements" },
-        ]}
-      />
-
-      <main className="p-4 sm:p-6 space-y-4">
-        {/* Top Section: Title + Create Button */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1">
-            <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight">
-              Bill Statements
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground font-bold">
-              Manage your bill statements and due dates
-            </p>
-          </div>
-          <CreateBillStatementDialog
-            onBillStatementCreated={fetchBillStatements}
-          />
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-sm font-bold text-muted-foreground uppercase">
-                Total Statements
-              </div>
-              <div className="text-2xl font-black">
-                {isLoading ? "-" : billStatements.length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-sm font-bold text-muted-foreground uppercase">
-                Active
-              </div>
-              <div className="text-2xl font-black text-green-600">
-                {isLoading
-                  ? "-"
-                  : billStatements.filter((bs) => bs.is_active).length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-sm font-bold text-muted-foreground uppercase">
-                Inactive
-              </div>
-              <div className="text-2xl font-black text-gray-500">
-                {isLoading
-                  ? "-"
-                  : billStatements.filter((bs) => !bs.is_active).length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-sm font-bold text-muted-foreground uppercase">
-                Overdue
-              </div>
-              <div className="text-2xl font-black text-red-600">
-                {isLoading ? "-" : overdueCount}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Bill Statements Table */}
-        <Card>
-          <CardContent className="p-4">
-            <BillStatementsTable
-              billStatements={billStatements}
-              isLoading={isLoading}
-              onBillStatementUpdated={fetchBillStatements}
-              onBillStatementDeleted={fetchBillStatements}
+    <div className="flex flex-1 flex-col gap-4 p-2 sm:p-4">
+      <Card>
+        <CardHeader className="flex flex-col gap-4 pb-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-xl sm:text-2xl">
+                Bill Statements
+              </CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
+                Manage your bill statements and due dates
+              </CardDescription>
+            </div>
+            <CreateBillStatementDialog
+              onBillStatementCreated={fetchBillStatements}
             />
-          </CardContent>
-        </Card>
-      </main>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4 px-3 sm:space-y-6 sm:px-6">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-sm font-bold text-muted-foreground uppercase">
+                  Total Statements
+                </div>
+                <div className="text-2xl font-black">
+                  {isLoading ? "-" : billStatements.length}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-sm font-bold text-muted-foreground uppercase">
+                  Active
+                </div>
+                <div className="text-2xl font-black text-green-600">
+                  {isLoading
+                    ? "-"
+                    : billStatements.filter((bs) => bs.is_active).length}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-sm font-bold text-muted-foreground uppercase">
+                  Inactive
+                </div>
+                <div className="text-2xl font-black text-gray-500">
+                  {isLoading
+                    ? "-"
+                    : billStatements.filter((bs) => !bs.is_active).length}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-sm font-bold text-muted-foreground uppercase">
+                  Overdue
+                </div>
+                <div className="text-2xl font-black text-red-600">
+                  {isLoading ? "-" : overdueCount}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          <BillStatementsTable
+            billStatements={billStatements}
+            isLoading={isLoading}
+            onBillStatementUpdated={fetchBillStatements}
+            onBillStatementDeleted={fetchBillStatements}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

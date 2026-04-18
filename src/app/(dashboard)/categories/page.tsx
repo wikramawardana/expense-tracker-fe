@@ -4,8 +4,13 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 import { CategoriesTable, CreateCategoryDialog } from "@/components/categories";
-import { PageHeader } from "@/components/page-header";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useSession } from "@/lib/auth-client";
 import { getCategories } from "@/services/categories.service";
 import type { Category } from "@/types/category.types";
@@ -71,76 +76,64 @@ export default function CategoriesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <PageHeader
-        breadcrumbs={[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "Categories" },
-        ]}
-      />
-
-      <main className="p-4 sm:p-6 space-y-4">
-        {/* Top Section: Title + Create Button */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1">
-            <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight">
-              Categories
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground font-bold">
-              Manage your expense categories
-            </p>
+    <div className="flex flex-1 flex-col gap-4 p-2 sm:p-4">
+      <Card>
+        <CardHeader className="flex flex-col gap-4 pb-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-xl sm:text-2xl">Categories</CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
+                Manage your expense categories
+              </CardDescription>
+            </div>
+            <CreateCategoryDialog onCategoryCreated={fetchCategories} />
           </div>
-          <CreateCategoryDialog onCategoryCreated={fetchCategories} />
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-sm font-bold text-muted-foreground uppercase">
-                Total Categories
-              </div>
-              <div className="text-2xl font-black">
-                {isLoading ? "-" : categories.length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-sm font-bold text-muted-foreground uppercase">
-                Active
-              </div>
-              <div className="text-2xl font-black text-green-600">
-                {isLoading ? "-" : categories.filter((c) => c.is_active).length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-sm font-bold text-muted-foreground uppercase">
-                Inactive
-              </div>
-              <div className="text-2xl font-black text-gray-500">
-                {isLoading
-                  ? "-"
-                  : categories.filter((c) => !c.is_active).length}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Categories Table */}
-        <Card>
-          <CardContent className="p-4">
-            <CategoriesTable
-              categories={categories}
-              isLoading={isLoading}
-              onCategoryUpdated={fetchCategories}
-              onCategoryDeleted={fetchCategories}
-            />
-          </CardContent>
-        </Card>
-      </main>
+        </CardHeader>
+        <CardContent className="space-y-4 px-3 sm:space-y-6 sm:px-6">
+          <div className="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-sm font-bold text-muted-foreground uppercase">
+                  Total Categories
+                </div>
+                <div className="text-2xl font-black">
+                  {isLoading ? "-" : categories.length}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-sm font-bold text-muted-foreground uppercase">
+                  Active
+                </div>
+                <div className="text-2xl font-black text-green-600">
+                  {isLoading
+                    ? "-"
+                    : categories.filter((c) => c.is_active).length}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-sm font-bold text-muted-foreground uppercase">
+                  Inactive
+                </div>
+                <div className="text-2xl font-black text-gray-500">
+                  {isLoading
+                    ? "-"
+                    : categories.filter((c) => !c.is_active).length}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          <CategoriesTable
+            categories={categories}
+            isLoading={isLoading}
+            onCategoryUpdated={fetchCategories}
+            onCategoryDeleted={fetchCategories}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

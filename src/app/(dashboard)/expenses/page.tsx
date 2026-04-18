@@ -10,8 +10,13 @@ import {
   ExpensesPagination,
   ExpensesTable,
 } from "@/components/expenses";
-import { PageHeader } from "@/components/page-header";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useSession } from "@/lib/auth-client";
 import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { getCategories } from "@/services/categories.service";
@@ -124,77 +129,61 @@ export default function ExpensesPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <PageHeader breadcrumbs={[{ label: "Expenses" }]} />
-
-      <main className="p-4 sm:p-6 space-y-4">
-        {/* Top Section: Title + Filters */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1">
-            <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight">
-              Expense Tracker
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground font-bold">
-              Track and manage all your expenses
-            </p>
+    <div className="flex flex-1 flex-col gap-4 p-2 sm:p-4">
+      <Card>
+        <CardHeader className="flex flex-col gap-4 pb-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-xl sm:text-2xl">
+                Expense Tracker
+              </CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
+                Track and manage all your expenses
+              </CardDescription>
+            </div>
+            <CreateExpenseDialog
+              onExpenseCreated={() => {
+                fetchExpenses();
+              }}
+            />
           </div>
-          <CreateExpenseDialog
-            onExpenseCreated={() => {
-              fetchExpenses();
-            }}
+        </CardHeader>
+        <CardContent className="space-y-4 px-3 sm:space-y-6 sm:px-6">
+          <ExpensesFilters
+            filters={filters}
+            onFiltersChange={handleFiltersChange}
           />
-        </div>
-
-        {/* Filters Row */}
-        <Card>
-          <CardContent className="p-4">
-            <ExpensesFilters
-              filters={filters}
-              onFiltersChange={handleFiltersChange}
-            />
-          </CardContent>
-        </Card>
-
-        {/* Main Content: Table (70%) + Stats (30%) */}
-        <div className="grid grid-cols-1 lg:grid-cols-10 gap-4">
-          {/* Left: Table */}
-          <div className="lg:col-span-7">
-            <Card className="h-full">
-              <CardContent className="p-4">
-                <ExpensesTable
-                  expenses={expenses}
-                  categories={categories}
-                  isLoading={isLoading}
-                  onExpenseUpdated={() => {
-                    fetchExpenses();
-                  }}
-                  onExpenseDeleted={() => {
-                    fetchExpenses();
-                  }}
+          <div className="grid grid-cols-1 lg:grid-cols-10 gap-4">
+            <div className="lg:col-span-7 space-y-4">
+              <ExpensesTable
+                expenses={expenses}
+                categories={categories}
+                isLoading={isLoading}
+                onExpenseUpdated={() => {
+                  fetchExpenses();
+                }}
+                onExpenseDeleted={() => {
+                  fetchExpenses();
+                }}
+              />
+              {!isLoading && expenses.length > 0 && (
+                <ExpensesPagination
+                  pagination={pagination}
+                  onPageChange={handlePageChange}
+                  onPageSizeChange={handlePageSizeChange}
                 />
-                {!isLoading && expenses.length > 0 && (
-                  <div className="mt-4">
-                    <ExpensesPagination
-                      pagination={pagination}
-                      onPageChange={handlePageChange}
-                      onPageSizeChange={handlePageSizeChange}
-                    />
-                  </div>
-                )}
-              </CardContent>
-            </Card>
+              )}
+            </div>
+            <div className="lg:col-span-3">
+              <ExpenseStatsCards
+                stats={null}
+                filters={filters}
+                isLoading={false}
+              />
+            </div>
           </div>
-
-          {/* Right: Stats Cards */}
-          <div className="lg:col-span-3">
-            <ExpenseStatsCards
-              stats={null}
-              filters={filters}
-              isLoading={false}
-            />
-          </div>
-        </div>
-      </main>
+        </CardContent>
+      </Card>
     </div>
   );
 }

@@ -1,6 +1,7 @@
+"use client";
+
 import { Toaster } from "sonner";
-import { AppSidebar } from "@/components/app-sidebar";
-import { SidebarInset, SidebarProvider } from "@/components/ui/sidebar";
+import { DashboardShell } from "@/components/dashboard-shell";
 
 export default function DashboardLayout({
   children,
@@ -8,12 +9,9 @@ export default function DashboardLayout({
   children: React.ReactNode;
 }) {
   return (
-    <SidebarProvider>
-      <AppSidebar />
-      <SidebarInset>
-        <div className="flex flex-1 flex-col gap-4 p-4 pt-0">{children}</div>
-      </SidebarInset>
+    <>
+      <DashboardShell>{children}</DashboardShell>
       <Toaster position="top-right" richColors />
-    </SidebarProvider>
+    </>
   );
 }

@@ -84,6 +84,7 @@ export interface CreateExpensePayload {
   paid_by?: string;
   recurrence_type_id?: string;
   recurrence_count?: number;
+  recurrence_current?: number;
   recurrence_total_amount?: number;
   recurrence_end_date?: string;
 }

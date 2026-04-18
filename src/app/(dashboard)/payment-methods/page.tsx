@@ -3,12 +3,17 @@
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
-import { PageHeader } from "@/components/page-header";
 import {
   CreatePaymentMethodDialog,
   PaymentMethodsTable,
 } from "@/components/payment-methods";
-import { Card, CardContent } from "@/components/ui/card";
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardHeader,
+  CardTitle,
+} from "@/components/ui/card";
 import { useSession } from "@/lib/auth-client";
 import { getPaymentMethods } from "@/services/payment-methods.service";
 import type { PaymentMethod } from "@/types/payment-method.types";
@@ -105,86 +110,74 @@ export default function PaymentMethodsPage() {
   }
 
   return (
-    <div className="min-h-screen bg-background">
-      <PageHeader
-        breadcrumbs={[
-          { label: "Dashboard", href: "/dashboard" },
-          { label: "Payment Methods" },
-        ]}
-      />
-
-      <main className="p-4 sm:p-6 space-y-4">
-        {/* Top Section: Title + Create Button */}
-        <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
-          <div className="space-y-1">
-            <h1 className="text-2xl sm:text-3xl font-black uppercase tracking-tight">
-              Payment Methods
-            </h1>
-            <p className="text-xs sm:text-sm text-muted-foreground font-bold">
-              Manage your payment methods
-            </p>
-          </div>
-          <CreatePaymentMethodDialog
-            onPaymentMethodCreated={fetchPaymentMethods}
-          />
-        </div>
-
-        {/* Stats Cards */}
-        <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-sm font-bold text-muted-foreground uppercase">
-                Total Methods
-              </div>
-              <div className="text-2xl font-black">
-                {isLoading ? "-" : paymentMethods.length}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-sm font-bold text-muted-foreground uppercase">
-                💳 Credit Cards
-              </div>
-              <div className="text-2xl font-black text-blue-600">
-                {isLoading ? "-" : creditCardCount}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-sm font-bold text-muted-foreground uppercase">
-                💵 Cash
-              </div>
-              <div className="text-2xl font-black text-green-600">
-                {isLoading ? "-" : cashCount}
-              </div>
-            </CardContent>
-          </Card>
-          <Card>
-            <CardContent className="p-4">
-              <div className="text-sm font-bold text-muted-foreground uppercase">
-                📱 Others
-              </div>
-              <div className="text-2xl font-black text-purple-600">
-                {isLoading ? "-" : otherCount}
-              </div>
-            </CardContent>
-          </Card>
-        </div>
-
-        {/* Payment Methods Table */}
-        <Card>
-          <CardContent className="p-4">
-            <PaymentMethodsTable
-              paymentMethods={paymentMethods}
-              isLoading={isLoading}
-              onPaymentMethodUpdated={fetchPaymentMethods}
-              onPaymentMethodDeleted={fetchPaymentMethods}
+    <div className="flex flex-1 flex-col gap-4 p-2 sm:p-4">
+      <Card>
+        <CardHeader className="flex flex-col gap-4 pb-4">
+          <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
+            <div className="space-y-1">
+              <CardTitle className="text-xl sm:text-2xl">
+                Payment Methods
+              </CardTitle>
+              <CardDescription className="text-xs sm:text-sm">
+                Manage your payment methods
+              </CardDescription>
+            </div>
+            <CreatePaymentMethodDialog
+              onPaymentMethodCreated={fetchPaymentMethods}
             />
-          </CardContent>
-        </Card>
-      </main>
+          </div>
+        </CardHeader>
+        <CardContent className="space-y-4 px-3 sm:space-y-6 sm:px-6">
+          <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-sm font-bold text-muted-foreground uppercase">
+                  Total Methods
+                </div>
+                <div className="text-2xl font-black">
+                  {isLoading ? "-" : paymentMethods.length}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-sm font-bold text-muted-foreground uppercase">
+                  Credit Cards
+                </div>
+                <div className="text-2xl font-black text-blue-600">
+                  {isLoading ? "-" : creditCardCount}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-sm font-bold text-muted-foreground uppercase">
+                  Cash
+                </div>
+                <div className="text-2xl font-black text-green-600">
+                  {isLoading ? "-" : cashCount}
+                </div>
+              </CardContent>
+            </Card>
+            <Card>
+              <CardContent className="p-4">
+                <div className="text-sm font-bold text-muted-foreground uppercase">
+                  Others
+                </div>
+                <div className="text-2xl font-black text-purple-600">
+                  {isLoading ? "-" : otherCount}
+                </div>
+              </CardContent>
+            </Card>
+          </div>
+          <PaymentMethodsTable
+            paymentMethods={paymentMethods}
+            isLoading={isLoading}
+            onPaymentMethodUpdated={fetchPaymentMethods}
+            onPaymentMethodDeleted={fetchPaymentMethods}
+          />
+        </CardContent>
+      </Card>
     </div>
   );
 }

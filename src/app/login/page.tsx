@@ -1,7 +1,6 @@
 "use client";
 
 import { Wallet } from "lucide-react";
-import Link from "next/link";
 import { useSearchParams } from "next/navigation";
 import * as React from "react";
 import { Suspense } from "react";
@@ -75,64 +74,77 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#FFE156] p-4">
-      <div className="absolute inset-0 overflow-hidden">
-        <div className="absolute top-20 left-20 w-32 h-32 bg-[#FF88DC] border-3 border-foreground" />
-        <div className="absolute top-40 right-32 w-24 h-24 bg-[#7DF9FF] border-3 border-foreground" />
-        <div className="absolute bottom-32 left-1/4 w-20 h-20 bg-[#A3E636] border-3 border-foreground" />
-        <div className="absolute bottom-20 right-20 w-28 h-28 bg-[#88AAEE] border-3 border-foreground" />
-      </div>
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#f5f5f0] p-4">
+      <div className="absolute top-12 left-16 w-16 h-16 border-4 border-black rotate-12 hidden md:block" />
+      <div className="absolute top-28 right-24 w-10 h-10 bg-black rotate-45 hidden md:block" />
+      <div className="absolute bottom-24 left-24 w-20 h-5 bg-black hidden md:block" />
+      <div className="absolute bottom-16 right-16 w-8 h-8 border-4 border-black rounded-full hidden md:block" />
 
-      <Card className="w-full max-w-md relative z-10 bg-background">
-        <CardHeader className="text-center space-y-4 pb-2">
-          <div className="mx-auto w-20 h-20 bg-[#A3E636] border-3 border-foreground flex items-center justify-center shadow-[4px_4px_0px_0px_rgba(26,26,26,1)]">
-            <Wallet className="w-10 h-10 text-foreground" />
+      <Card className="w-full max-w-sm bg-white border-3 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] relative">
+        <CardHeader className="text-center space-y-5 pb-2 pt-8">
+          <div className="mx-auto flex items-center justify-center w-16 h-16 bg-black">
+            <Wallet className="w-9 h-9 text-white" />
           </div>
-          <div>
-            <CardTitle className="text-3xl font-black uppercase tracking-tight">
+
+          <div className="space-y-1">
+            <CardTitle className="text-2xl font-black tracking-tight text-black uppercase">
               Expense Tracker
             </CardTitle>
-            <CardDescription className="mt-2 text-base">
+            <CardDescription className="text-sm font-medium text-black/50">
               Track your expenses and manage your finances
             </CardDescription>
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-6">
+        <CardContent className="space-y-6 pb-8">
+          <div className="w-full h-[2px] bg-black/10" />
+
           <Button
             onClick={handleSignIn}
-            disabled={isLoading || isPending}
-            className="w-full h-14 text-base"
-            variant="outline"
+            disabled={isLoading}
+            className="w-full h-12 text-base font-bold bg-white text-black border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all duration-150"
           >
             {isLoading ? (
-              <div className="flex items-center gap-2">
-                <div className="w-5 h-5 border-3 border-foreground border-t-transparent animate-spin" />
-                <span className="font-black uppercase">Signing in...</span>
+              <div className="flex items-center gap-3">
+                <div className="w-5 h-5 border-3 border-black border-t-transparent rounded-full animate-spin" />
+                <span>Redirecting...</span>
               </div>
             ) : (
               <div className="flex items-center gap-3">
-                <GoogleIcon className="w-6 h-6" />
-                <span className="font-black uppercase">
-                  Continue with Google
-                </span>
+                <GoogleIcon className="w-5 h-5" />
+                <span>Continue with Google</span>
               </div>
             )}
           </Button>
 
-          <p className="text-center text-xs text-muted-foreground">
+          <p className="text-center text-xs text-black/40 leading-relaxed">
             Secured by Wikra Auth.
+            <br />
+            Only authorized users can access this system.
           </p>
-
-          <div className="text-center">
-            <Link
-              href="/"
-              className="text-sm font-bold text-muted-foreground hover:text-foreground transition-colors uppercase border-b-2 border-transparent hover:border-foreground"
-            >
-              ← Back to Home
-            </Link>
-          </div>
         </CardContent>
+      </Card>
+    </div>
+  );
+}
+
+function LoginLoading() {
+  return (
+    <div className="min-h-screen w-full flex items-center justify-center bg-[#f5f5f0] p-4">
+      <Card className="w-full max-w-sm bg-white border-3 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] relative">
+        <CardHeader className="text-center space-y-5 pb-2 pt-8">
+          <div className="mx-auto flex items-center justify-center w-16 h-16 bg-black">
+            <Wallet className="w-9 h-9 text-white" />
+          </div>
+          <div className="space-y-1">
+            <CardTitle className="text-2xl font-black tracking-tight text-black uppercase">
+              Expense Tracker
+            </CardTitle>
+            <CardDescription className="text-sm font-medium text-black/50">
+              Loading...
+            </CardDescription>
+          </div>
+        </CardHeader>
       </Card>
     </div>
   );
@@ -140,13 +152,7 @@ function LoginForm() {
 
 export default function LoginPage() {
   return (
-    <Suspense
-      fallback={
-        <div className="min-h-screen w-full flex items-center justify-center bg-[#FFE156]">
-          <div className="w-10 h-10 border-4 border-foreground border-t-transparent animate-spin" />
-        </div>
-      }
-    >
+    <Suspense fallback={<LoginLoading />}>
       <LoginForm />
     </Suspense>
   );

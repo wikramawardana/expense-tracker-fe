@@ -100,7 +100,7 @@ export default function Home() {
       <footer className="relative z-10 border-t-[3px] border-black bg-white">
         <div className="mx-auto flex max-w-6xl flex-col items-center justify-between gap-2 px-6 py-6 text-sm font-medium text-black/60 sm:flex-row">
           <p>© {new Date().getFullYear()} Expense Tracker. Built by Wikra.</p>
-          <p>Secured by Wikra Auth.</p>
+          <p>Secured by Auth.</p>
         </div>
       </footer>
     </div>

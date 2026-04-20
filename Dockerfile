@@ -42,8 +42,8 @@ RUN mkdir -p public
 # Build with dummy server-side env vars (real values provided at runtime)
 RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
     BETTER_AUTH_SECRET="dummy-secret-for-build-only" \
-    WIKRA_AUTH_CLIENT_ID="dummy" \
-    WIKRA_AUTH_CLIENT_SECRET="dummy" \
+    AUTH_CLIENT_ID="dummy" \
+    AUTH_CLIENT_SECRET="dummy" \
     pnpm build
 
 # ================================

@@ -89,6 +89,19 @@ export interface CreateExpensePayload {
   recurrence_end_date?: string;
 }
 
+export interface CreateExpensesBulkPayload {
+  expenses: CreateExpensePayload[];
+}
+
+export interface BulkCreateExpensesResponse {
+  status: string;
+  message: string;
+  data: {
+    created: Expense[];
+    count: number;
+  };
+}
+
 export interface UpdateExpensePayload {
   title?: string;
   description?: string;

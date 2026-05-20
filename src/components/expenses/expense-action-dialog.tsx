@@ -390,7 +390,7 @@ export function ExpenseActionDialog({
               {/* Section 1: Basic Info */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2 pb-2 border-b">
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  <h3 className="text-sm font-semibold text-muted-foreground">
                     Basic Info
                   </h3>
                 </div>
@@ -410,9 +410,12 @@ export function ExpenseActionDialog({
                     <div className="flex items-center gap-2">
                       {categoryInfo ? (
                         <span
-                          className="inline-flex items-center gap-1 px-3 py-1 text-xs font-black uppercase tracking-wide border-3 border-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]"
+                          className="inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset ring-border"
                           style={{
-                            backgroundColor: categoryInfo.color || "#88AAEE",
+                            backgroundColor: categoryInfo.color
+                              ? `${categoryInfo.color}20`
+                              : undefined,
+                            color: categoryInfo.color ?? undefined,
                           }}
                         >
                           {categoryInfo.icon && (
@@ -421,7 +424,7 @@ export function ExpenseActionDialog({
                           <span>{categoryInfo.name}</span>
                         </span>
                       ) : (
-                        <span className="text-muted-foreground">-</span>
+                        <span className="text-muted-foreground">—</span>
                       )}
                     </div>
                   </div>
@@ -431,7 +434,7 @@ export function ExpenseActionDialog({
               {/* Section 2: Amount & Date */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2 pb-2 border-b">
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  <h3 className="text-sm font-semibold text-muted-foreground">
                     Amount & Date
                   </h3>
                 </div>
@@ -466,7 +469,7 @@ export function ExpenseActionDialog({
               {/* Section 3: Payment Details */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2 pb-2 border-b">
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  <h3 className="text-sm font-semibold text-muted-foreground">
                     Payment Details
                   </h3>
                 </div>
@@ -514,7 +517,7 @@ export function ExpenseActionDialog({
               {currentExpense.recurrence_type && (
                 <div className="space-y-4">
                   <div className="flex items-center gap-2 pb-2 border-b">
-                    <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                    <h3 className="text-sm font-semibold text-muted-foreground">
                       Recurrence Details
                     </h3>
                   </div>
@@ -570,7 +573,7 @@ export function ExpenseActionDialog({
               {/* Section 5: Additional Info */}
               <div className="space-y-4">
                 <div className="flex items-center gap-2 pb-2 border-b">
-                  <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                  <h3 className="text-sm font-semibold text-muted-foreground">
                     Additional Info
                   </h3>
                 </div>
@@ -645,7 +648,7 @@ export function ExpenseActionDialog({
             {/* Section 1: Basic Info */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                <h3 className="text-sm font-semibold text-muted-foreground">
                   Basic Info
                 </h3>
               </div>
@@ -694,7 +697,7 @@ export function ExpenseActionDialog({
             {/* Section 2: Amount & Date */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                <h3 className="text-sm font-semibold text-muted-foreground">
                   Amount & Date
                 </h3>
               </div>
@@ -760,7 +763,7 @@ export function ExpenseActionDialog({
             {/* Section 3: Payment Details */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                <h3 className="text-sm font-semibold text-muted-foreground">
                   Payment Details
                 </h3>
               </div>
@@ -929,7 +932,7 @@ export function ExpenseActionDialog({
             {/* Section 4: Additional Info */}
             <div className="space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                <h3 className="text-sm font-semibold text-muted-foreground">
                   Additional Info (Optional)
                 </h3>
               </div>

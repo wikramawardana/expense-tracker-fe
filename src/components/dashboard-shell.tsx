@@ -77,13 +77,13 @@ export function DashboardShell({ children }: DashboardShellProps) {
     const showCollapsed = collapsed && !inSheet;
 
     return (
-      <ScrollArea className="h-full pt-4 pb-2">
+      <ScrollArea className="h-full pt-3 pb-2">
         {!showCollapsed && (
-          <p className="px-4 pb-2 text-[10px] font-bold uppercase tracking-widest text-black/40 dark:text-white/40 border-b border-black/10 dark:border-white/10 mx-2 mb-2">
+          <p className="px-4 pb-2 text-[11px] font-medium uppercase tracking-wider text-muted-foreground">
             Menu
           </p>
         )}
-        <nav className="flex flex-col gap-1 px-2">
+        <nav className="flex flex-col gap-0.5 px-2">
           {allNavItems.map((item) => {
             const active = isActive(item.href);
             const linkContent = (
@@ -93,10 +93,10 @@ export function DashboardShell({ children }: DashboardShellProps) {
                 prefetch={false}
                 onClick={() => inSheet && setMobileOpen(false)}
                 className={cn(
-                  "flex items-center gap-3 px-3 py-2.5 text-sm font-bold transition-all border-2",
+                  "flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium transition-colors",
                   active
-                    ? "bg-yellow-400 text-black border-black shadow-[3px_3px_0px_0px_rgba(0,0,0,1)]"
-                    : "text-black/60 dark:text-white/60 border-transparent hover:border-black dark:hover:border-white hover:bg-yellow-100 dark:hover:bg-yellow-900",
+                    ? "bg-sidebar-accent text-sidebar-accent-foreground"
+                    : "text-sidebar-foreground/70 hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground",
                   showCollapsed && "justify-center px-2",
                 )}
               >
@@ -117,14 +117,14 @@ export function DashboardShell({ children }: DashboardShellProps) {
           })}
         </nav>
 
-        <div className="px-2 pt-2 mt-auto border-t border-black/10 dark:border-white/10 mx-2">
+        <div className="mt-2 px-2 pt-2 mx-0 border-t border-sidebar-border">
           {collapsed && !inSheet ? (
             <Tooltip>
               <TooltipTrigger asChild>
                 <Link
                   href="/"
                   prefetch={false}
-                  className="flex items-center justify-center px-2 py-2.5 text-sm font-bold transition-all border-2 border-transparent text-black/60 dark:text-white/60 hover:border-black dark:hover:border-white hover:bg-yellow-100 dark:hover:bg-yellow-900"
+                  className="flex items-center justify-center rounded-md px-2 py-2 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
                 >
                   <Home className="h-4 w-4 shrink-0" />
                 </Link>
@@ -136,7 +136,7 @@ export function DashboardShell({ children }: DashboardShellProps) {
               href="/"
               prefetch={false}
               onClick={() => inSheet && setMobileOpen(false)}
-              className="flex items-center gap-3 px-3 py-2.5 text-sm font-bold transition-all border-2 border-transparent text-black/60 dark:text-white/60 hover:border-black dark:hover:border-white hover:bg-yellow-100 dark:hover:bg-yellow-900"
+              className="flex items-center gap-3 rounded-md px-3 py-2 text-sm font-medium text-sidebar-foreground/70 transition-colors hover:bg-sidebar-accent/60 hover:text-sidebar-accent-foreground"
             >
               <Home className="h-4 w-4 shrink-0" />
               <span>Back to Home</span>
@@ -147,58 +147,64 @@ export function DashboardShell({ children }: DashboardShellProps) {
     );
   }
 
+  function Brand({ collapsed: c = false, onClick }: { collapsed?: boolean; onClick?: () => void }) {
+    return c ? (
+      <Link href="/dashboard" className="mx-auto" onClick={onClick}>
+        <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-sm">
+          <Wallet className="h-4 w-4" />
+        </div>
+      </Link>
+    ) : (
+      <Link
+        href="/dashboard"
+        onClick={onClick}
+        className="flex items-center gap-2.5 text-foreground"
+      >
+        <div className="flex h-9 w-9 shrink-0 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-sm">
+          <Wallet className="h-4 w-4" />
+        </div>
+        <div className="flex flex-col">
+          <span className="text-sm font-semibold leading-tight">Expense Tracker</span>
+          <span className="text-[11px] text-muted-foreground leading-tight">
+            Finance Management
+          </span>
+        </div>
+      </Link>
+    );
+  }
+
   if (isMobile) {
     return (
       <TooltipProvider delayDuration={0}>
-        <div className="flex h-screen flex-col">
-          <header className="flex h-16 shrink-0 items-center gap-2 border-b-4 border-black dark:border-white bg-white dark:bg-black px-4">
+        <div className="flex h-screen flex-col bg-background">
+          <header className="flex h-14 shrink-0 items-center gap-2 border-b border-border bg-card px-4">
             <Button
               variant="ghost"
-              size="icon"
-              className="h-8 w-8 border-2 border-black dark:border-white hover:bg-yellow-200 shrink-0"
+              size="icon-sm"
               onClick={() => setMobileOpen(true)}
             >
               <PanelLeft className="h-4 w-4" />
             </Button>
-            <div className="mr-2 h-6 w-[3px] shrink-0 bg-black dark:bg-white" />
-            <h2 className="text-sm font-black text-black dark:text-white">
-              {pageTitle}
-            </h2>
+            <h2 className="text-sm font-semibold text-foreground">{pageTitle}</h2>
             <div className="ml-auto">
               <UserMenu />
             </div>
           </header>
 
-          <main className="flex-1 overflow-auto bg-[#f5f5f5] dark:bg-[#1a1a1a]">
-            {children}
-          </main>
+          <main className="flex-1 overflow-auto">{children}</main>
         </div>
 
         <Sheet open={mobileOpen} onOpenChange={setMobileOpen}>
           <SheetContent
             side="left"
-            className="w-72 border-r-4 border-black dark:border-white bg-white dark:bg-black p-0 [&>button]:hidden"
+            className="w-72 border-r border-sidebar-border bg-sidebar p-0 [&>button]:hidden"
           >
             <SheetHeader className="sr-only">
               <SheetTitle>Navigation</SheetTitle>
               <SheetDescription>Main navigation menu</SheetDescription>
             </SheetHeader>
-            <div className="flex h-16 items-center border-b-4 border-black dark:border-white px-3">
-              <Link
-                href="/dashboard"
-                className="flex items-center gap-2.5 font-black text-black dark:text-white"
-                onClick={() => setMobileOpen(false)}
-              >
-                <div className="flex h-9 w-9 shrink-0 items-center justify-center bg-blue-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                  <Wallet className="h-5 w-5 text-black" />
-                </div>
-                <div className="flex flex-col">
-                  <span className="text-sm leading-tight">Expense Tracker</span>
-                  <span className="text-[10px] font-medium text-black/50 dark:text-white/50 leading-tight">
-                    Finance Management
-                  </span>
-                </div>
-              </Link>
+            <div className="flex h-14 items-center border-b border-sidebar-border px-3">
+              <Brand onClick={() => setMobileOpen(false)} />
             </div>
             <NavLinks inSheet />
           </SheetContent>
@@ -211,44 +217,22 @@ export function DashboardShell({ children }: DashboardShellProps) {
     <TooltipProvider delayDuration={0}>
       <div
         className={cn(
-          "grid h-screen grid-rows-[4rem_1fr] transition-all duration-300",
-          collapsed ? "grid-cols-[60px_1fr]" : "grid-cols-[256px_1fr]",
+          "grid h-screen grid-rows-[3.5rem_1fr] transition-all duration-300 bg-background",
+          collapsed ? "grid-cols-[64px_1fr]" : "grid-cols-[256px_1fr]",
         )}
       >
         {/* Sidebar header */}
-        <div className="flex items-center border-r-4 border-b-4 border-black dark:border-white bg-white dark:bg-black px-3">
-          {!collapsed ? (
-            <Link
-              href="/dashboard"
-              className="flex items-center gap-2.5 font-black text-black dark:text-white"
-            >
-              <div className="flex h-9 w-9 shrink-0 items-center justify-center bg-blue-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                <Wallet className="h-5 w-5 text-black" />
-              </div>
-              <div className="flex flex-col">
-                <span className="text-sm leading-tight">Expense Tracker</span>
-                <span className="text-[10px] font-medium text-black/50 dark:text-white/50 leading-tight">
-                  Finance Management
-                </span>
-              </div>
-            </Link>
-          ) : (
-            <Link href="/dashboard" className="mx-auto">
-              <div className="flex h-9 w-9 items-center justify-center bg-blue-400 border-2 border-black shadow-[2px_2px_0px_0px_rgba(0,0,0,1)]">
-                <Wallet className="h-5 w-5 text-black" />
-              </div>
-            </Link>
-          )}
+        <div className="flex items-center border-r border-b border-sidebar-border bg-sidebar px-3">
+          <Brand collapsed={collapsed} />
         </div>
 
         {/* Main header */}
-        <header className="flex items-center gap-2 border-b-4 border-black dark:border-white bg-white dark:bg-black px-4">
+        <header className="flex items-center gap-2 border-b border-border bg-card px-4">
           <Tooltip>
             <TooltipTrigger asChild>
               <Button
                 variant="ghost"
-                size="icon"
-                className="h-8 w-8 border-2 border-black dark:border-white hover:bg-yellow-200 shrink-0"
+                size="icon-sm"
                 onClick={() => setCollapsed(!collapsed)}
               >
                 <PanelLeft className="h-4 w-4" />
@@ -258,24 +242,19 @@ export function DashboardShell({ children }: DashboardShellProps) {
               {collapsed ? "Expand sidebar" : "Collapse sidebar"}
             </TooltipContent>
           </Tooltip>
-          <div className="mr-2 h-6 w-[3px] shrink-0 bg-black dark:bg-white" />
-          <h2 className="text-sm font-black text-black dark:text-white">
-            {pageTitle}
-          </h2>
+          <h2 className="text-sm font-semibold text-foreground">{pageTitle}</h2>
           <div className="ml-auto">
             <UserMenu />
           </div>
         </header>
 
         {/* Sidebar nav */}
-        <div className="border-r-4 border-black dark:border-white bg-white dark:bg-black overflow-hidden">
+        <div className="border-r border-sidebar-border bg-sidebar overflow-hidden">
           <NavLinks />
         </div>
 
         {/* Main content */}
-        <main className="overflow-auto bg-[#f5f5f5] dark:bg-[#1a1a1a]">
-          {children}
-        </main>
+        <main className="overflow-auto">{children}</main>
       </div>
     </TooltipProvider>
   );

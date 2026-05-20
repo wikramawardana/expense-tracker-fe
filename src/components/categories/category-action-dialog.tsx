@@ -263,7 +263,7 @@ export function CategoryActionDialog({
                     onClick={() => setIcon(icon === emoji ? "" : emoji)}
                     className={`w-10 h-10 text-xl rounded border-2 transition-all ${
                       icon === emoji
-                        ? "border-foreground bg-[#FFE156] shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]"
+                        ? "border-foreground bg-muted shadow-sm"
                         : "border-foreground/30 hover:border-foreground"
                     }`}
                   >
@@ -289,7 +289,7 @@ export function CategoryActionDialog({
                     onClick={() => setColor(color === c ? "" : c)}
                     className={`w-10 h-10 rounded border-2 transition-all ${
                       color === c
-                        ? "border-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] scale-110"
+                        ? "border-foreground shadow-sm scale-110"
                         : "border-foreground/30 hover:border-foreground"
                     }`}
                     style={{ backgroundColor: c }}

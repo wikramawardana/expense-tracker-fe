@@ -336,7 +336,7 @@ export function CreateExpenseDialog({
           {/* Shared: Date & Bill Statement */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 pb-2 border-b">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              <h3 className="text-sm font-semibold text-muted-foreground">
                 Shared Info
               </h3>
             </div>
@@ -421,7 +421,7 @@ export function CreateExpenseDialog({
           {/* Expense rows */}
           <div className="space-y-4">
             <div className="flex items-center justify-between gap-2 pb-2 border-b">
-              <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+              <h3 className="text-sm font-semibold text-muted-foreground">
                 Expenses ({rows.length})
               </h3>
               <Button
@@ -548,7 +548,7 @@ export function CreateExpenseDialog({
           {!isMulti && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b">
-                <h3 className="text-sm font-semibold uppercase tracking-wide text-muted-foreground">
+                <h3 className="text-sm font-semibold text-muted-foreground">
                   Expense Type
                 </h3>
               </div>

@@ -245,7 +245,7 @@ export default function ExpensesPage() {
               <div ref={sentinelRef} className="h-4" />
               {isLoadingMore && (
                 <div className="flex justify-center py-4">
-                  <div className="inline-block h-6 w-6 animate-spin border-3 border-solid border-foreground border-r-transparent" />
+                  <div className="inline-block h-6 w-6 animate-spin border border-solid border-foreground border-r-transparent" />
                   <span className="ml-2 text-sm font-bold text-muted-foreground">
                     Loading more...
                   </span>

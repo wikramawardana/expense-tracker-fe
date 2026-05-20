@@ -28,12 +28,9 @@ export function ExpensesTable({
   onExpenseUpdated,
   onExpenseDeleted,
 }: ExpensesTableProps) {
-  // Create a map of category_id to category for quick lookup
   const categoryMap = React.useMemo(() => {
     const map = new Map<string, Category>();
-    for (const cat of categories) {
-      map.set(cat.id, cat);
-    }
+    for (const cat of categories) map.set(cat.id, cat);
     return map;
   }, [categories]);
 
@@ -41,30 +38,30 @@ export function ExpensesTable({
     () => [
       {
         accessorKey: "title",
-        header: () => <div className="text-left font-semibold">Title</div>,
+        header: () => <div className="text-left">Title</div>,
         cell: ({ row }) => (
-          <div className="text-left font-bold text-black dark:text-white">
+          <div className="font-medium text-foreground">
             {row.getValue("title")}
           </div>
         ),
       },
       {
         accessorKey: "expense_date",
-        header: () => <div className="text-left font-semibold">Date</div>,
+        header: () => <div className="text-left">Date</div>,
         cell: ({ row }) => (
-          <div className="text-left text-gray-600 dark:text-gray-400">
+          <div className="text-muted-foreground tabular-nums">
             {formatDate(row.getValue("expense_date"))}
           </div>
         ),
       },
       {
         accessorKey: "category_id",
-        header: () => <div className="text-left font-semibold">Category</div>,
+        header: () => <div className="text-left">Category</div>,
         cell: ({ row }) => {
           const categoryId = row.getValue("category_id") as string | null;
           const category = categoryId ? categoryMap.get(categoryId) : null;
           return (
-            <div className="flex justify-left">
+            <div className="flex">
               <CategoryBadge category={category} />
             </div>
           );
@@ -72,58 +69,52 @@ export function ExpensesTable({
       },
       {
         accessorKey: "description",
-        header: () => (
-          <div className="text-left font-semibold">Description</div>
-        ),
+        header: () => <div className="text-left">Description</div>,
         cell: ({ row }) => (
-          <div className="text-left text-gray-500 dark:text-gray-400 max-w-[200px] truncate">
-            {row.getValue("description") || "-"}
+          <div className="text-muted-foreground max-w-[220px] truncate">
+            {row.getValue("description") || "—"}
           </div>
         ),
       },
       {
         accessorKey: "payment_method",
-        header: () => <div className="text-left font-semibold">Payment</div>,
+        header: () => <div className="text-left">Payment</div>,
         cell: ({ row }) => (
-          <div className="flex justify-left">
-            <PaymentMethodBadge
-              paymentMethod={row.getValue("payment_method")}
-            />
-          </div>
+          <PaymentMethodBadge paymentMethod={row.getValue("payment_method")} />
         ),
       },
       {
         accessorKey: "paid_by",
-        header: () => <div className="text-left font-semibold">Paid By</div>,
+        header: () => <div className="text-left">Paid By</div>,
         cell: ({ row }) => (
-          <div className="text-left text-gray-600 dark:text-gray-400">
-            {row.getValue("paid_by") || "-"}
+          <div className="text-muted-foreground">
+            {row.getValue("paid_by") || "—"}
           </div>
         ),
       },
       {
         accessorKey: "amount",
-        header: () => <div className="text-left font-semibold">Amount</div>,
+        header: () => <div className="text-right">Amount</div>,
         cell: ({ row }) => (
-          <div className="text-left font-bold text-green-600 dark:text-green-400">
+          <div className="text-right font-semibold text-foreground tabular-nums">
             {formatCurrency(row.getValue("amount"))}
           </div>
         ),
       },
       {
         accessorKey: "status",
-        header: () => <div className="text-left font-semibold">Status</div>,
+        header: () => <div className="text-left">Status</div>,
         cell: ({ row }) => (
-          <div className="flex justify-left">
+          <div className="flex">
             <StatusBadge status={row.getValue("status")} />
           </div>
         ),
       },
       {
         id: "actions",
-        header: () => <div className="text-center font-semibold">Actions</div>,
+        header: () => <div className="text-right">Actions</div>,
         cell: ({ row }) => (
-          <div className="flex justify-center">
+          <div className="flex justify-end">
             <ExpenseActionDialog
               expense={row.original}
               categories={categories}
@@ -145,11 +136,11 @@ export function ExpensesTable({
 
   if (isLoading) {
     return (
-      <div className="border-3 border-foreground shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,251,245,1)] bg-background">
-        <div className="p-8 text-center">
-          <div className="inline-block h-10 w-10 animate-spin border-4 border-solid border-foreground border-r-transparent" />
-          <p className="mt-2 text-sm font-bold text-muted-foreground uppercase">
-            Loading expenses...
+      <div className="rounded-lg border border-border bg-card shadow-sm">
+        <div className="p-12 text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
+          <p className="mt-3 text-sm text-muted-foreground">
+            Loading expenses…
           </p>
         </div>
       </div>
@@ -158,11 +149,13 @@ export function ExpensesTable({
 
   if (expenses.length === 0) {
     return (
-      <div className="border-3 border-foreground shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,251,245,1)] bg-background">
-        <div className="p-8 text-center">
-          <p className="text-lg font-black uppercase">No expenses found</p>
-          <p className="text-sm font-bold text-muted-foreground">
-            Start by adding your first expense
+      <div className="rounded-lg border border-border bg-card shadow-sm">
+        <div className="p-12 text-center">
+          <p className="text-base font-semibold text-foreground">
+            No expenses found
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            Adjust filters or add your first expense to get started.
           </p>
         </div>
       </div>
@@ -170,45 +163,44 @@ export function ExpensesTable({
   }
 
   return (
-    <div className="border-3 border-foreground shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,251,245,1)] overflow-x-auto bg-background">
-      <table className="w-full">
-        <thead className="bg-[#FFE156] border-b-3 border-foreground">
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th
-                  key={header.id}
-                  className="h-14 px-4 text-left align-middle text-sm font-black uppercase tracking-wide text-foreground"
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr
-              key={row.id}
-              className="border-b-2 border-foreground/20 transition-colors hover:bg-[#FFE156]/20"
-            >
-              {row.getVisibleCells().map((cell) => (
-                <td
-                  key={cell.id}
-                  className="p-4 align-middle text-sm font-bold"
-                >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
+    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/50 border-b border-border">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    className="h-11 px-4 text-left align-middle text-xs font-medium text-muted-foreground"
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody className="divide-y divide-border">
+            {table.getRowModel().rows.map((row) => (
+              <tr
+                key={row.id}
+                className="transition-colors hover:bg-muted/40"
+              >
+                {row.getVisibleCells().map((cell) => (
+                  <td key={cell.id} className="px-4 py-3 align-middle">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
     </div>
   );
 }

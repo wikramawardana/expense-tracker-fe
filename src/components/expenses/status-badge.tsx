@@ -7,20 +7,20 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-export function StatusBadge({ status, className }: StatusBadgeProps) {
-  const variants = {
-    pending:
-      "bg-[#FFE156] text-foreground border-3 border-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]",
-    paid: "bg-[#A3E636] text-foreground border-3 border-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]",
-    unpaid:
-      "bg-[#FF6B6B] text-foreground border-3 border-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]",
-  };
+const statusVariants: Record<ExpenseStatus, string> = {
+  pending:
+    "bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-900",
+  paid: "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-900",
+  unpaid:
+    "bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:ring-rose-900",
+};
 
+export function StatusBadge({ status, className }: StatusBadgeProps) {
   return (
     <span
       className={cn(
-        "inline-flex items-center px-3 py-1 text-xs font-black uppercase tracking-wide",
-        variants[status],
+        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ring-1 ring-inset",
+        statusVariants[status],
         className,
       )}
     >
@@ -34,37 +34,54 @@ interface CategoryBadgeProps {
   className?: string;
 }
 
+/**
+ * Convert a hex color to a soft background + readable foreground.
+ * Falls back to a neutral slate badge if no color is provided.
+ */
+function lighten(hex: string, alpha: number) {
+  const m = hex.replace("#", "");
+  if (m.length !== 6) return undefined;
+  const r = parseInt(m.slice(0, 2), 16);
+  const g = parseInt(m.slice(2, 4), 16);
+  const b = parseInt(m.slice(4, 6), 16);
+  if ([r, g, b].some((n) => Number.isNaN(n))) return undefined;
+  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+}
+
 export function CategoryBadge({ category, className }: CategoryBadgeProps) {
   if (!category) {
     return (
       <span
         className={cn(
-          "inline-flex items-center gap-1 px-3 py-1 text-xs font-black uppercase tracking-wide",
-          "bg-[#D4D4D4] text-foreground border-3 border-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]",
+          "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium",
+          "bg-muted text-muted-foreground ring-1 ring-inset ring-border",
           className,
         )}
       >
-        <span>-</span>
+        —
       </span>
     );
   }
 
-  // Use category color from API if available, otherwise use default
-  const defaultStyle =
-    "bg-[#88AAEE] text-foreground border-3 border-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]";
-
-  const style = category.color
-    ? `text-foreground border-3 border-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]`
-    : defaultStyle;
+  const bg = category.color ? lighten(category.color, 0.12) : undefined;
+  const ring = category.color ? lighten(category.color, 0.3) : undefined;
 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 px-3 py-1 text-xs font-black uppercase tracking-wide",
-        style,
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset",
+        !bg && "bg-muted text-muted-foreground ring-border",
         className,
       )}
-      style={category.color ? { backgroundColor: category.color } : undefined}
+      style={
+        bg
+          ? {
+              backgroundColor: bg,
+              color: category.color,
+              boxShadow: `inset 0 0 0 1px ${ring}`,
+            }
+          : undefined
+      }
     >
       {category.icon && <span>{category.icon}</span>}
       <span>{category.name}</span>
@@ -83,9 +100,7 @@ export function PaymentMethodBadge({
 }: PaymentMethodBadgeProps) {
   if (!paymentMethod) {
     return (
-      <span className={cn("text-gray-500 dark:text-gray-400", className)}>
-        -
-      </span>
+      <span className={cn("text-muted-foreground", className)}>—</span>
     );
   }
 
@@ -100,7 +115,7 @@ export function PaymentMethodBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1 text-sm font-bold",
+        "inline-flex items-center gap-1.5 text-sm text-foreground",
         className,
       )}
     >

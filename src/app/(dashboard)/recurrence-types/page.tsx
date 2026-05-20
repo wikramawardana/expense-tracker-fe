@@ -109,7 +109,7 @@ export default function RecurrenceTypesPage() {
                 <div className="text-sm font-bold text-muted-foreground uppercase">
                   Total Types
                 </div>
-                <div className="text-2xl font-black">
+                <div className="text-2xl font-semibold">
                   {isLoading ? "-" : recurrenceTypes.length}
                 </div>
               </CardContent>
@@ -119,7 +119,7 @@ export default function RecurrenceTypesPage() {
                 <div className="text-sm font-bold text-muted-foreground uppercase">
                   Active
                 </div>
-                <div className="text-2xl font-black text-green-600">
+                <div className="text-2xl font-semibold text-green-600">
                   {isLoading
                     ? "-"
                     : recurrenceTypes.filter((r) => r.is_active).length}
@@ -131,7 +131,7 @@ export default function RecurrenceTypesPage() {
                 <div className="text-sm font-bold text-muted-foreground uppercase">
                   Inactive
                 </div>
-                <div className="text-2xl font-black text-gray-500">
+                <div className="text-2xl font-semibold text-gray-500">
                   {isLoading
                     ? "-"
                     : recurrenceTypes.filter((r) => !r.is_active).length}

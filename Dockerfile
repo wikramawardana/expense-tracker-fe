@@ -11,7 +11,10 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
 
-# Install dependencies
+# Install dependencies (HUSKY=0 disables the husky prepare script during
+# `pnpm install`; the .git directory is excluded by .dockerignore so husky
+# would otherwise fail with "can't find .git")
+ENV HUSKY=0
 RUN pnpm install --frozen-lockfile
 
 # ================================

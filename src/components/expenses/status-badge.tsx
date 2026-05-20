@@ -99,9 +99,7 @@ export function PaymentMethodBadge({
   className,
 }: PaymentMethodBadgeProps) {
   if (!paymentMethod) {
-    return (
-      <span className={cn("text-muted-foreground", className)}>—</span>
-    );
+    return <span className={cn("text-muted-foreground", className)}>—</span>;
   }
 
   const methodInfo = [

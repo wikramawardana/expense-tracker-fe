@@ -187,10 +187,7 @@ export function ExpensesTable({
           </thead>
           <tbody className="divide-y divide-border">
             {table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.id}
-                className="transition-colors hover:bg-muted/40"
-              >
+              <tr key={row.id} className="transition-colors hover:bg-muted/40">
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id} className="px-4 py-3 align-middle">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

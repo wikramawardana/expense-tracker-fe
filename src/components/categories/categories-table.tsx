@@ -36,7 +36,7 @@ export function ActiveBadge({ active }: { active: boolean }) {
   );
 }
 
-interface DataTableShellProps<T> {
+interface DataTableShellProps {
   // biome-ignore lint/suspicious/noExplicitAny: generic table type
   table: ReturnType<typeof useReactTable<any>>;
   isLoading?: boolean;
@@ -45,13 +45,13 @@ interface DataTableShellProps<T> {
   loadingLabel: string;
 }
 
-export function DataTableShell<T>({
+export function DataTableShell({
   table,
   isLoading,
   emptyTitle,
   emptyDescription,
   loadingLabel,
-}: DataTableShellProps<T>) {
+}: DataTableShellProps) {
   if (isLoading) {
     return (
       <div className="rounded-lg border border-border bg-card shadow-sm">

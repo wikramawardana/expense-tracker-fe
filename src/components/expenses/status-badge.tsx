@@ -77,7 +77,7 @@ export function CategoryBadge({ category, className }: CategoryBadgeProps) {
         bg
           ? {
               backgroundColor: bg,
-              color: category.color,
+              color: category.color ?? undefined,
               boxShadow: `inset 0 0 0 1px ${ring}`,
             }
           : undefined

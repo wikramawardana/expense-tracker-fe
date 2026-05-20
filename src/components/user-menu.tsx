@@ -12,6 +12,7 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
+import { cn } from "@/lib/utils";
 import { signOut, useSession } from "@/lib/auth-client";
 
 export function UserMenu() {
@@ -40,19 +41,19 @@ export function UserMenu() {
     return email.slice(0, 2).toUpperCase();
   };
 
-  const getRoleBadgeColor = (role: string | null | undefined) => {
+  const getRoleBadgeClasses = (role: string | null | undefined) => {
     switch (role) {
       case "admin":
-        return "bg-red-400 text-black border-black";
+        return "bg-rose-50 text-rose-700 ring-1 ring-inset ring-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:ring-rose-900";
       case "chef":
-        return "bg-green-400 text-black border-black";
+        return "bg-emerald-50 text-emerald-700 ring-1 ring-inset ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-900";
       default:
-        return "bg-gray-300 text-black border-black";
+        return "bg-muted text-muted-foreground ring-1 ring-inset ring-border";
     }
   };
 
   if (isPending) {
-    return <div className="h-8 w-8 rounded-full bg-gray-200 animate-pulse" />;
+    return <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />;
   }
 
   return (
@@ -60,7 +61,7 @@ export function UserMenu() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="relative inline-flex h-8 w-8 items-center justify-center rounded-full border-2 border-black dark:border-white p-0 outline-none focus-visible:ring-2 focus-visible:ring-ring"
+          className="relative inline-flex h-8 w-8 items-center justify-center rounded-full p-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
           <Avatar className="h-8 w-8">
             <AvatarImage
@@ -68,27 +69,26 @@ export function UserMenu() {
               alt={session?.user?.name || "User"}
               referrerPolicy="no-referrer"
             />
-            <AvatarFallback className="bg-yellow-400 text-black font-bold">
+            <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
               {getInitials(session?.user?.name, session?.user?.email || "")}
             </AvatarFallback>
           </Avatar>
         </button>
       </DropdownMenuTrigger>
-      <DropdownMenuContent
-        className="w-56 border-2 border-black dark:border-white"
-        align="end"
-        forceMount
-      >
+      <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
-          <div className="flex flex-col space-y-2">
-            <p className="text-sm font-bold leading-none">
+          <div className="flex flex-col space-y-1.5">
+            <p className="text-sm font-medium leading-none">
               {session?.user?.name || "User"}
             </p>
             <p className="text-xs leading-none text-muted-foreground">
               {session?.user?.email}
             </p>
             <Badge
-              className={`${getRoleBadgeColor(session?.user?.role)} border w-fit text-xs font-bold`}
+              className={cn(
+                "rounded-full border-0 px-2 py-0.5 text-xs font-medium capitalize w-fit",
+                getRoleBadgeClasses(session?.user?.role),
+              )}
             >
               {session?.user?.role || "user"}
             </Badge>
@@ -106,10 +106,7 @@ export function UserMenu() {
           <span>Toggle theme</span>
         </DropdownMenuItem>
         <DropdownMenuSeparator />
-        <DropdownMenuItem
-          onClick={handleSignOut}
-          className="text-red-600 focus:text-red-600"
-        >
+        <DropdownMenuItem onClick={handleSignOut} variant="destructive">
           <LogOut className="mr-2 h-4 w-4" />
           <span>Log out</span>
         </DropdownMenuItem>

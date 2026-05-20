@@ -117,7 +117,7 @@ export default function BillStatementsPage() {
                 <div className="text-sm font-bold text-muted-foreground uppercase">
                   Total Statements
                 </div>
-                <div className="text-2xl font-black">
+                <div className="text-2xl font-semibold">
                   {isLoading ? "-" : billStatements.length}
                 </div>
               </CardContent>
@@ -127,7 +127,7 @@ export default function BillStatementsPage() {
                 <div className="text-sm font-bold text-muted-foreground uppercase">
                   Active
                 </div>
-                <div className="text-2xl font-black text-green-600">
+                <div className="text-2xl font-semibold text-green-600">
                   {isLoading
                     ? "-"
                     : billStatements.filter((bs) => bs.is_active).length}
@@ -139,7 +139,7 @@ export default function BillStatementsPage() {
                 <div className="text-sm font-bold text-muted-foreground uppercase">
                   Inactive
                 </div>
-                <div className="text-2xl font-black text-gray-500">
+                <div className="text-2xl font-semibold text-gray-500">
                   {isLoading
                     ? "-"
                     : billStatements.filter((bs) => !bs.is_active).length}
@@ -151,7 +151,7 @@ export default function BillStatementsPage() {
                 <div className="text-sm font-bold text-muted-foreground uppercase">
                   Overdue
                 </div>
-                <div className="text-2xl font-black text-red-600">
+                <div className="text-2xl font-semibold text-red-600">
                   {isLoading ? "-" : overdueCount}
                 </div>
               </CardContent>

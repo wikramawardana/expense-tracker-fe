@@ -134,7 +134,7 @@ export default function PaymentMethodsPage() {
                 <div className="text-sm font-bold text-muted-foreground uppercase">
                   Total Methods
                 </div>
-                <div className="text-2xl font-black">
+                <div className="text-2xl font-semibold">
                   {isLoading ? "-" : paymentMethods.length}
                 </div>
               </CardContent>
@@ -144,7 +144,7 @@ export default function PaymentMethodsPage() {
                 <div className="text-sm font-bold text-muted-foreground uppercase">
                   Credit Cards
                 </div>
-                <div className="text-2xl font-black text-blue-600">
+                <div className="text-2xl font-semibold text-blue-600">
                   {isLoading ? "-" : creditCardCount}
                 </div>
               </CardContent>
@@ -154,7 +154,7 @@ export default function PaymentMethodsPage() {
                 <div className="text-sm font-bold text-muted-foreground uppercase">
                   Cash
                 </div>
-                <div className="text-2xl font-black text-green-600">
+                <div className="text-2xl font-semibold text-green-600">
                   {isLoading ? "-" : cashCount}
                 </div>
               </CardContent>
@@ -164,7 +164,7 @@ export default function PaymentMethodsPage() {
                 <div className="text-sm font-bold text-muted-foreground uppercase">
                   Others
                 </div>
-                <div className="text-2xl font-black text-purple-600">
+                <div className="text-2xl font-semibold text-purple-600">
                   {isLoading ? "-" : otherCount}
                 </div>
               </CardContent>

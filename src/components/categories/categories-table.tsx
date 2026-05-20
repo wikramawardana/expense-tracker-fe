@@ -8,6 +8,7 @@ import {
 } from "@tanstack/react-table";
 import * as React from "react";
 import { formatDate } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import type { Category } from "@/types/category.types";
 import { CategoryActionDialog } from "./category-action-dialog";
 
@@ -17,6 +18,103 @@ interface CategoriesTableProps {
   onCategoryUpdated?: () => void;
   onCategoryDeleted?: () => void;
 }
+
+/* shared helpers --------------------------------------------------- */
+
+export function ActiveBadge({ active }: { active: boolean }) {
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset",
+        active
+          ? "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-900"
+          : "bg-muted text-muted-foreground ring-border",
+      )}
+    >
+      {active ? "Active" : "Inactive"}
+    </span>
+  );
+}
+
+interface DataTableShellProps<T> {
+  // biome-ignore lint/suspicious/noExplicitAny: generic table type
+  table: ReturnType<typeof useReactTable<any>>;
+  isLoading?: boolean;
+  emptyTitle: string;
+  emptyDescription: string;
+  loadingLabel: string;
+}
+
+export function DataTableShell<T>({
+  table,
+  isLoading,
+  emptyTitle,
+  emptyDescription,
+  loadingLabel,
+}: DataTableShellProps<T>) {
+  if (isLoading) {
+    return (
+      <div className="rounded-lg border border-border bg-card shadow-sm">
+        <div className="p-12 text-center">
+          <div className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
+          <p className="mt-3 text-sm text-muted-foreground">{loadingLabel}</p>
+        </div>
+      </div>
+    );
+  }
+
+  if (table.getRowModel().rows.length === 0) {
+    return (
+      <div className="rounded-lg border border-border bg-card shadow-sm">
+        <div className="p-12 text-center">
+          <p className="text-base font-semibold text-foreground">{emptyTitle}</p>
+          <p className="mt-1 text-sm text-muted-foreground">{emptyDescription}</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+      <div className="overflow-x-auto">
+        <table className="w-full text-sm">
+          <thead className="bg-muted/50 border-b border-border">
+            {table.getHeaderGroups().map((headerGroup) => (
+              <tr key={headerGroup.id}>
+                {headerGroup.headers.map((header) => (
+                  <th
+                    key={header.id}
+                    className="h-11 px-4 text-left align-middle text-xs font-medium text-muted-foreground"
+                  >
+                    {header.isPlaceholder
+                      ? null
+                      : flexRender(
+                          header.column.columnDef.header,
+                          header.getContext(),
+                        )}
+                  </th>
+                ))}
+              </tr>
+            ))}
+          </thead>
+          <tbody className="divide-y divide-border">
+            {table.getRowModel().rows.map((row) => (
+              <tr key={row.id} className="transition-colors hover:bg-muted/40">
+                {row.getVisibleCells().map((cell) => (
+                  <td key={cell.id} className="px-4 py-3 align-middle">
+                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
+                  </td>
+                ))}
+              </tr>
+            ))}
+          </tbody>
+        </table>
+      </div>
+    </div>
+  );
+}
+
+/* CategoriesTable ------------------------------------------------- */
 
 export function CategoriesTable({
   categories,
@@ -28,91 +126,64 @@ export function CategoriesTable({
     () => [
       {
         accessorKey: "icon",
-        header: () => <div className="text-center font-semibold">Icon</div>,
+        header: () => <div className="text-center">Icon</div>,
         cell: ({ row }) => (
-          <div className="text-center text-2xl">
-            {row.getValue("icon") || "📁"}
-          </div>
+          <div className="text-center text-xl">{row.getValue("icon") || "📁"}</div>
         ),
       },
       {
         accessorKey: "name",
-        header: () => <div className="text-left font-semibold">Name</div>,
+        header: () => <div className="text-left">Name</div>,
         cell: ({ row }) => (
-          <div className="text-left font-bold text-black dark:text-white">
-            {row.getValue("name")}
-          </div>
+          <div className="font-medium text-foreground">{row.getValue("name")}</div>
         ),
       },
       {
         accessorKey: "color",
-        header: () => <div className="text-left font-semibold">Color</div>,
+        header: () => <div className="text-left">Color</div>,
         cell: ({ row }) => {
           const color = row.getValue("color") as string | null;
-          return (
+          return color ? (
             <div className="flex items-center gap-2">
-              {color ? (
-                <>
-                  <div
-                    className="w-6 h-6 rounded border-2 border-foreground"
-                    style={{ backgroundColor: color }}
-                  />
-                  <span className="text-sm text-gray-600 dark:text-gray-400">
-                    {color}
-                  </span>
-                </>
-              ) : (
-                <span className="text-gray-400">-</span>
-              )}
+              <div
+                className="h-5 w-5 rounded ring-1 ring-inset ring-border"
+                style={{ backgroundColor: color }}
+              />
+              <span className="text-xs text-muted-foreground tabular-nums">{color}</span>
             </div>
+          ) : (
+            <span className="text-muted-foreground">—</span>
           );
         },
       },
       {
         accessorKey: "description",
-        header: () => (
-          <div className="text-left font-semibold">Description</div>
-        ),
+        header: () => <div className="text-left">Description</div>,
         cell: ({ row }) => (
-          <div className="text-left text-gray-500 dark:text-gray-400 max-w-[200px] truncate">
-            {row.getValue("description") || "-"}
+          <div className="max-w-[220px] truncate text-muted-foreground">
+            {row.getValue("description") || "—"}
           </div>
         ),
       },
       {
         accessorKey: "is_active",
-        header: () => <div className="text-center font-semibold">Status</div>,
-        cell: ({ row }) => {
-          const isActive = row.getValue("is_active") as boolean;
-          return (
-            <div className="flex justify-center">
-              <span
-                className={`px-2 py-1 text-xs font-bold rounded border-2 ${
-                  isActive
-                    ? "bg-green-100 text-green-700 border-green-500 dark:bg-green-900/30 dark:text-green-400"
-                    : "bg-gray-100 text-gray-700 border-gray-500 dark:bg-gray-800 dark:text-gray-400"
-                }`}
-              >
-                {isActive ? "Active" : "Inactive"}
-              </span>
-            </div>
-          );
-        },
+        header: () => <div className="text-left">Status</div>,
+        cell: ({ row }) => <ActiveBadge active={row.getValue("is_active")} />,
       },
       {
         accessorKey: "created_at",
-        header: () => <div className="text-left font-semibold">Created</div>,
+        header: () => <div className="text-left">Created</div>,
         cell: ({ row }) => (
-          <div className="text-left text-gray-600 dark:text-gray-400">
+          <div className="text-muted-foreground tabular-nums">
             {formatDate(row.getValue("created_at"))}
           </div>
         ),
       },
       {
         id: "actions",
-        header: () => <div className="text-center font-semibold">Actions</div>,
+        header: () => <div className="text-right">Actions</div>,
         cell: ({ row }) => (
-          <div className="flex justify-center">
+          <div className="flex justify-end">
             <CategoryActionDialog
               category={row.original}
               onCategoryUpdated={onCategoryUpdated}
@@ -131,72 +202,13 @@ export function CategoriesTable({
     getCoreRowModel: getCoreRowModel(),
   });
 
-  if (isLoading) {
-    return (
-      <div className="border-3 border-foreground shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,251,245,1)] bg-background">
-        <div className="p-8 text-center">
-          <div className="inline-block h-10 w-10 animate-spin border-4 border-solid border-foreground border-r-transparent" />
-          <p className="mt-2 text-sm font-bold text-muted-foreground uppercase">
-            Loading categories...
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  if (categories.length === 0) {
-    return (
-      <div className="border-3 border-foreground shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,251,245,1)] bg-background">
-        <div className="p-8 text-center">
-          <p className="text-lg font-black uppercase">No categories found</p>
-          <p className="text-sm font-bold text-muted-foreground">
-            Start by adding your first category
-          </p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="border-3 border-foreground shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,251,245,1)] overflow-x-auto bg-background">
-      <table className="w-full">
-        <thead className="bg-[#FFE156] border-b-3 border-foreground">
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th
-                  key={header.id}
-                  className="h-14 px-4 text-left align-middle text-sm font-black uppercase tracking-wide text-foreground"
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                </th>
-              ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody>
-          {table.getRowModel().rows.map((row) => (
-            <tr
-              key={row.id}
-              className="border-b-2 border-foreground/20 transition-colors hover:bg-[#FFE156]/20"
-            >
-              {row.getVisibleCells().map((cell) => (
-                <td
-                  key={cell.id}
-                  className="p-4 align-middle text-sm font-bold"
-                >
-                  {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                </td>
-              ))}
-            </tr>
-          ))}
-        </tbody>
-      </table>
-    </div>
+    <DataTableShell
+      table={table}
+      isLoading={isLoading}
+      emptyTitle="No categories found"
+      emptyDescription="Start by adding your first category."
+      loadingLabel="Loading categories…"
+    />
   );
 }

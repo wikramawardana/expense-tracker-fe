@@ -46,7 +46,7 @@ function TooltipContent({
         data-slot="tooltip-content"
         sideOffset={sideOffset}
         className={cn(
-          "bg-foreground text-background z-50 w-fit px-3 py-1.5 text-xs font-bold border-2 border-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)]",
+          "z-50 w-fit rounded-md bg-foreground text-background px-2.5 py-1.5 text-xs shadow-md",
           "animate-in fade-in-0 zoom-in-95 data-[state=closed]:animate-out data-[state=closed]:fade-out-0 data-[state=closed]:zoom-out-95 data-[side=bottom]:slide-in-from-top-2 data-[side=left]:slide-in-from-right-2 data-[side=right]:slide-in-from-left-2 data-[side=top]:slide-in-from-bottom-2",
           className,
         )}

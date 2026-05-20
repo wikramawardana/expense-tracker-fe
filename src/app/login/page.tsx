@@ -74,50 +74,43 @@ function LoginForm() {
   };
 
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#f5f5f0] p-4">
-      <div className="absolute top-12 left-16 w-16 h-16 border-4 border-black rotate-12 hidden md:block" />
-      <div className="absolute top-28 right-24 w-10 h-10 bg-black rotate-45 hidden md:block" />
-      <div className="absolute bottom-24 left-24 w-20 h-5 bg-black hidden md:block" />
-      <div className="absolute bottom-16 right-16 w-8 h-8 border-4 border-black rounded-full hidden md:block" />
-
-      <Card className="w-full max-w-sm bg-white border-3 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] relative">
-        <CardHeader className="text-center space-y-5 pb-2 pt-8">
-          <div className="mx-auto flex items-center justify-center w-16 h-16 bg-black">
-            <Wallet className="w-9 h-9 text-white" />
+    <div className="min-h-screen w-full flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-sm">
+        <CardHeader className="text-center space-y-4 pb-2 pt-8">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+            <Wallet className="h-6 w-6" />
           </div>
-
           <div className="space-y-1">
-            <CardTitle className="text-2xl font-black tracking-tight text-black uppercase">
-              Expense Tracker
+            <CardTitle className="text-xl font-semibold">
+              Welcome back
             </CardTitle>
-            <CardDescription className="text-sm font-medium text-black/50">
-              Track your expenses and manage your finances
+            <CardDescription className="text-sm text-muted-foreground">
+              Sign in to track your expenses and manage your finances.
             </CardDescription>
           </div>
         </CardHeader>
 
-        <CardContent className="space-y-6 pb-8">
-          <div className="w-full h-[2px] bg-black/10" />
-
+        <CardContent className="space-y-5 pb-8">
           <Button
             onClick={handleSignIn}
             disabled={isLoading}
-            className="w-full h-12 text-base font-bold bg-white text-black border-3 border-black shadow-[4px_4px_0px_0px_rgba(0,0,0,1)] hover:shadow-[2px_2px_0px_0px_rgba(0,0,0,1)] hover:translate-x-[2px] hover:translate-y-[2px] active:shadow-none active:translate-x-[4px] active:translate-y-[4px] transition-all duration-150"
+            variant="outline"
+            className="w-full h-11 text-sm"
           >
             {isLoading ? (
-              <div className="flex items-center gap-3">
-                <div className="w-5 h-5 border-3 border-black border-t-transparent rounded-full animate-spin" />
-                <span>Redirecting...</span>
+              <div className="flex items-center gap-2">
+                <div className="h-4 w-4 animate-spin rounded-full border-2 border-muted-foreground border-t-transparent" />
+                <span>Redirecting…</span>
               </div>
             ) : (
-              <div className="flex items-center gap-3">
-                <GoogleIcon className="w-5 h-5" />
+              <div className="flex items-center gap-2.5">
+                <GoogleIcon className="h-4 w-4" />
                 <span>Continue with Google</span>
               </div>
             )}
           </Button>
 
-          <p className="text-center text-xs text-black/40 leading-relaxed">
+          <p className="text-center text-xs text-muted-foreground leading-relaxed">
             Secured by Auth.
             <br />
             Only authorized users can access this system.
@@ -130,18 +123,18 @@ function LoginForm() {
 
 function LoginLoading() {
   return (
-    <div className="min-h-screen w-full flex items-center justify-center bg-[#f5f5f0] p-4">
-      <Card className="w-full max-w-sm bg-white border-3 border-black shadow-[6px_6px_0px_0px_rgba(0,0,0,1)] relative">
-        <CardHeader className="text-center space-y-5 pb-2 pt-8">
-          <div className="mx-auto flex items-center justify-center w-16 h-16 bg-black">
-            <Wallet className="w-9 h-9 text-white" />
+    <div className="min-h-screen w-full flex items-center justify-center bg-background p-4">
+      <Card className="w-full max-w-sm">
+        <CardHeader className="text-center space-y-4 pb-2 pt-8">
+          <div className="mx-auto flex h-14 w-14 items-center justify-center rounded-xl bg-primary text-primary-foreground shadow-sm">
+            <Wallet className="h-6 w-6" />
           </div>
           <div className="space-y-1">
-            <CardTitle className="text-2xl font-black tracking-tight text-black uppercase">
+            <CardTitle className="text-xl font-semibold">
               Expense Tracker
             </CardTitle>
-            <CardDescription className="text-sm font-medium text-black/50">
-              Loading...
+            <CardDescription className="text-sm text-muted-foreground">
+              Loading…
             </CardDescription>
           </div>
         </CardHeader>

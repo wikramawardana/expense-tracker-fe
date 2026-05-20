@@ -8,7 +8,6 @@ import {
   CreateExpenseDialog,
   ExpenseStatsCards,
   ExpensesFilters,
-  ExpensesPagination,
   ExpensesTable,
 } from "@/components/expenses";
 import {
@@ -19,16 +18,13 @@ import {
   CardTitle,
 } from "@/components/ui/card";
 import { useSession } from "@/lib/auth-client";
-import { DEFAULT_PAGE_SIZE } from "@/lib/constants";
 import { getBillStatements } from "@/services/bill-statements.service";
 import { getCategories } from "@/services/categories.service";
 import { getExpenses } from "@/services/expenses.service";
 import type { Category } from "@/types/category.types";
-import type {
-  Expense,
-  ExpenseFilters,
-  PaginationInfo,
-} from "@/types/expense.types";
+import type { Expense, ExpenseFilters } from "@/types/expense.types";
+
+const PAGE_SIZE = 50;
 
 export default function ExpensesPage() {
   const router = useRouter();
@@ -36,29 +32,24 @@ export default function ExpensesPage() {
 
   const [expenses, setExpenses] = React.useState<Expense[]>([]);
   const [categories, setCategories] = React.useState<Category[]>([]);
-  const [pagination, setPagination] = React.useState<PaginationInfo>({
-    page: 1,
-    page_size: DEFAULT_PAGE_SIZE,
-    total_items: 0,
-    total_pages: 0,
-  });
-  // Filters are initialized as null until we resolve the default bill
-  // statement (the current month). This avoids an "all expenses" flash
-  // before the month-scoped fetch lands.
   const [filters, setFilters] = React.useState<ExpenseFilters | null>(null);
   const [isLoading, setIsLoading] = React.useState(true);
+  const [isLoadingMore, setIsLoadingMore] = React.useState(false);
+  const [hasMore, setHasMore] = React.useState(true);
+  const [currentPage, setCurrentPage] = React.useState(1);
+  const [totalItems, setTotalItems] = React.useState(0);
 
-  // Track if user is authenticated
+  const sentinelRef = React.useRef<HTMLDivElement>(null);
   const isAuthenticated = !!session?.user;
 
-  // Check authentication and redirect if not logged in
+  // Auth redirect
   React.useEffect(() => {
     if (!isSessionLoading && !session?.user) {
       router.replace(`/login?callbackUrl=${encodeURIComponent("/expenses")}`);
     }
   }, [session, isSessionLoading, router]);
 
-  // Fetch categories once on mount
+  // Fetch categories once
   const fetchCategories = React.useCallback(async () => {
     try {
       const response = await getCategories();
@@ -68,37 +59,14 @@ export default function ExpensesPage() {
     }
   }, []);
 
-  const fetchExpenses = React.useCallback(async () => {
-    if (!filters) return;
-    setIsLoading(true);
-    try {
-      const response = await getExpenses(filters);
-      setExpenses(response.data.data);
-      setPagination(response.data.pagination);
-    } catch (error) {
-      // Don't show toast for auth errors - let the redirect handle it
-      if (error instanceof Error && error.message.includes("401")) {
-        return;
-      }
-      toast.error(
-        error instanceof Error ? error.message : "Failed to fetch expenses",
-      );
-      setExpenses([]);
-    } finally {
-      setIsLoading(false);
-    }
-  }, [filters]);
-
-  // Resolve default filters once authenticated. Default the bill statement
-  // filter to the current month (e.g. "May 2026") if a matching bill
-  // statement exists; otherwise fall back to no bill-statement filter.
+  // Resolve default filters (current month bill statement)
   React.useEffect(() => {
     if (!isAuthenticated || filters !== null) return;
     let cancelled = false;
     (async () => {
       const baseFilters: ExpenseFilters = {
         page: 1,
-        page_size: 20,
+        page_size: PAGE_SIZE,
         sort_by: "date",
         sort_order: "desc",
       };
@@ -111,7 +79,6 @@ export default function ExpensesPage() {
           baseFilters.bill_statement_id = match.id;
         }
       } catch (error) {
-        // If we can't load bill statements, just fall back to no filter.
         console.error("Failed to load bill statements for default:", error);
       }
       if (!cancelled) {
@@ -123,51 +90,99 @@ export default function ExpensesPage() {
     };
   }, [isAuthenticated, filters]);
 
-  // Fetch data when authenticated and when filters change
-  // biome-ignore lint/correctness/useExhaustiveDependencies: Only react to filters changes, not callback identity changes
+  // Initial fetch + reset when filters change
+  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional
   React.useEffect(() => {
     if (!isAuthenticated || !filters) return;
 
     fetchCategories();
-    fetchExpenses();
+
+    // Reset state for new filter
+    setExpenses([]);
+    setCurrentPage(1);
+    setHasMore(true);
+    setIsLoading(true);
+
+    (async () => {
+      try {
+        const response = await getExpenses({ ...filters, page: 1, page_size: PAGE_SIZE });
+        setExpenses(response.data.data);
+        setTotalItems(response.data.pagination.total_items);
+        const totalPages = response.data.pagination.total_pages;
+        setHasMore(totalPages > 1);
+        setCurrentPage(1);
+      } catch (error) {
+        if (error instanceof Error && error.message.includes("401")) return;
+        toast.error(
+          error instanceof Error ? error.message : "Failed to fetch expenses",
+        );
+        setExpenses([]);
+      } finally {
+        setIsLoading(false);
+      }
+    })();
   }, [isAuthenticated, filters]);
+
+  // Load more (next page)
+  const loadMore = React.useCallback(async () => {
+    if (!filters || isLoadingMore || !hasMore) return;
+    const nextPage = currentPage + 1;
+    setIsLoadingMore(true);
+    try {
+      const response = await getExpenses({ ...filters, page: nextPage, page_size: PAGE_SIZE });
+      setExpenses((prev) => [...prev, ...response.data.data]);
+      setTotalItems(response.data.pagination.total_items);
+      const totalPages = response.data.pagination.total_pages;
+      setHasMore(nextPage < totalPages);
+      setCurrentPage(nextPage);
+    } catch (error) {
+      console.error("Failed to load more expenses:", error);
+    } finally {
+      setIsLoadingMore(false);
+    }
+  }, [filters, isLoadingMore, hasMore, currentPage]);
+
+  // IntersectionObserver for infinite scroll
+  React.useEffect(() => {
+    const sentinel = sentinelRef.current;
+    if (!sentinel) return;
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries[0].isIntersecting && hasMore && !isLoading && !isLoadingMore) {
+          loadMore();
+        }
+      },
+      { rootMargin: "200px" },
+    );
+    observer.observe(sentinel);
+    return () => observer.disconnect();
+  }, [hasMore, isLoading, isLoadingMore, loadMore]);
 
   const handleFiltersChange = (newFilters: ExpenseFilters) => {
     setFilters(newFilters);
   };
 
-  const handlePageChange = (page: number) => {
+  // Refresh helper (after create/update/delete)
+  const refreshExpenses = React.useCallback(async () => {
     if (!filters) return;
-    setFilters({ ...filters, page });
-  };
+    setIsLoading(true);
+    try {
+      // Re-fetch all currently loaded pages worth of data (or just first page for simplicity)
+      const response = await getExpenses({ ...filters, page: 1, page_size: PAGE_SIZE });
+      setExpenses(response.data.data);
+      setTotalItems(response.data.pagination.total_items);
+      const totalPages = response.data.pagination.total_pages;
+      setHasMore(totalPages > 1);
+      setCurrentPage(1);
+    } catch (error) {
+      console.error("Failed to refresh:", error);
+    } finally {
+      setIsLoading(false);
+    }
+  }, [filters]);
 
-  const handlePageSizeChange = (pageSize: number) => {
-    if (!filters) return;
-    setFilters({ ...filters, page_size: pageSize, page: 1 });
-  };
-
-  // Show loading state while checking session
-  if (isSessionLoading) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <div className="inline-block h-10 w-10 animate-spin border-4 border-solid border-foreground border-r-transparent" />
-      </div>
-    );
-  }
-
-  // Don't render content if not authenticated (redirect is happening)
-  if (!session?.user) {
-    return (
-      <div className="flex h-screen items-center justify-center bg-background">
-        <div className="inline-block h-10 w-10 animate-spin border-4 border-solid border-foreground border-r-transparent" />
-      </div>
-    );
-  }
-
-  // Wait for default filters (current-month bill statement) before rendering
-  // the filter bar / table — keeps the first paint scoped to the current
-  // month instead of flashing "all expenses" first.
-  if (!filters) {
+  if (isSessionLoading || !session?.user || !filters) {
     return (
       <div className="flex h-screen items-center justify-center bg-background">
         <div className="inline-block h-10 w-10 animate-spin border-4 border-solid border-foreground border-r-transparent" />
@@ -186,12 +201,15 @@ export default function ExpensesPage() {
               </CardTitle>
               <CardDescription className="text-xs sm:text-sm">
                 Track and manage all your expenses
+                {totalItems > 0 && (
+                  <span className="ml-2 text-foreground font-bold">
+                    ({expenses.length} of {totalItems})
+                  </span>
+                )}
               </CardDescription>
             </div>
             <CreateExpenseDialog
-              onExpenseCreated={() => {
-                fetchExpenses();
-              }}
+              onExpenseCreated={refreshExpenses}
             />
           </div>
         </CardHeader>
@@ -206,19 +224,23 @@ export default function ExpensesPage() {
                 expenses={expenses}
                 categories={categories}
                 isLoading={isLoading}
-                onExpenseUpdated={() => {
-                  fetchExpenses();
-                }}
-                onExpenseDeleted={() => {
-                  fetchExpenses();
-                }}
+                onExpenseUpdated={refreshExpenses}
+                onExpenseDeleted={refreshExpenses}
               />
-              {!isLoading && expenses.length > 0 && (
-                <ExpensesPagination
-                  pagination={pagination}
-                  onPageChange={handlePageChange}
-                  onPageSizeChange={handlePageSizeChange}
-                />
+              {/* Infinite scroll sentinel */}
+              <div ref={sentinelRef} className="h-4" />
+              {isLoadingMore && (
+                <div className="flex justify-center py-4">
+                  <div className="inline-block h-6 w-6 animate-spin border-3 border-solid border-foreground border-r-transparent" />
+                  <span className="ml-2 text-sm font-bold text-muted-foreground">
+                    Loading more...
+                  </span>
+                </div>
+              )}
+              {!hasMore && expenses.length > 0 && !isLoading && (
+                <p className="text-center text-sm text-muted-foreground font-bold py-2">
+                  All {totalItems} expenses loaded
+                </p>
               )}
             </div>
             <div className="lg:col-span-3">

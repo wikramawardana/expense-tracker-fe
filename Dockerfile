@@ -5,8 +5,11 @@ FROM node:22-alpine AS deps
 RUN apk add --no-cache libc6-compat
 WORKDIR /app
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Install pnpm. Pinned to a specific version to avoid breakage from
+# `pnpm@latest` rolling forward. pnpm 10.4.0 was released Feb 2025
+# and predates the strict ERR_PNPM_IGNORED_BUILDS gate that the very
+# latest pnpm releases enforce on docker builds.
+RUN corepack enable && corepack prepare pnpm@10.4.0 --activate
 
 # Copy package files
 COPY package.json pnpm-lock.yaml ./
@@ -23,8 +26,8 @@ RUN pnpm install --frozen-lockfile
 FROM node:22-alpine AS builder
 WORKDIR /app
 
-# Install pnpm
-RUN corepack enable && corepack prepare pnpm@latest --activate
+# Install pnpm (pinned, see deps stage above)
+RUN corepack enable && corepack prepare pnpm@10.4.0 --activate
 
 # Copy dependencies from deps stage
 COPY --from=deps /app/node_modules ./node_modules

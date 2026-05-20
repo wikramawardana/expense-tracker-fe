@@ -105,7 +105,11 @@ export default function ExpensesPage() {
 
     (async () => {
       try {
-        const response = await getExpenses({ ...filters, page: 1, page_size: PAGE_SIZE });
+        const response = await getExpenses({
+          ...filters,
+          page: 1,
+          page_size: PAGE_SIZE,
+        });
         setExpenses(response.data.data);
         setTotalItems(response.data.pagination.total_items);
         const totalPages = response.data.pagination.total_pages;
@@ -129,7 +133,11 @@ export default function ExpensesPage() {
     const nextPage = currentPage + 1;
     setIsLoadingMore(true);
     try {
-      const response = await getExpenses({ ...filters, page: nextPage, page_size: PAGE_SIZE });
+      const response = await getExpenses({
+        ...filters,
+        page: nextPage,
+        page_size: PAGE_SIZE,
+      });
       setExpenses((prev) => [...prev, ...response.data.data]);
       setTotalItems(response.data.pagination.total_items);
       const totalPages = response.data.pagination.total_pages;
@@ -149,7 +157,12 @@ export default function ExpensesPage() {
 
     const observer = new IntersectionObserver(
       (entries) => {
-        if (entries[0].isIntersecting && hasMore && !isLoading && !isLoadingMore) {
+        if (
+          entries[0].isIntersecting &&
+          hasMore &&
+          !isLoading &&
+          !isLoadingMore
+        ) {
           loadMore();
         }
       },
@@ -168,8 +181,11 @@ export default function ExpensesPage() {
     if (!filters) return;
     setIsLoading(true);
     try {
-      // Re-fetch all currently loaded pages worth of data (or just first page for simplicity)
-      const response = await getExpenses({ ...filters, page: 1, page_size: PAGE_SIZE });
+      const response = await getExpenses({
+        ...filters,
+        page: 1,
+        page_size: PAGE_SIZE,
+      });
       setExpenses(response.data.data);
       setTotalItems(response.data.pagination.total_items);
       const totalPages = response.data.pagination.total_pages;
@@ -208,9 +224,7 @@ export default function ExpensesPage() {
                 )}
               </CardDescription>
             </div>
-            <CreateExpenseDialog
-              onExpenseCreated={refreshExpenses}
-            />
+            <CreateExpenseDialog onExpenseCreated={refreshExpenses} />
           </div>
         </CardHeader>
         <CardContent className="space-y-4 px-3 sm:space-y-6 sm:px-6">

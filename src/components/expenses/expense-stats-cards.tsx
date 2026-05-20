@@ -1,13 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import {
-  CheckCircle2,
-  Clock,
-  Filter,
-  Receipt,
-  Wallet,
-} from "lucide-react";
+import { CheckCircle2, Clock, Filter, Receipt, Wallet } from "lucide-react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -43,7 +37,10 @@ interface StatCardProps {
   accent: "indigo" | "emerald" | "amber" | "slate";
 }
 
-const accentStyles: Record<StatCardProps["accent"], { ring: string; iconBg: string; iconText: string }> = {
+const accentStyles: Record<
+  StatCardProps["accent"],
+  { ring: string; iconBg: string; iconText: string }
+> = {
   indigo: {
     ring: "",
     iconBg: "bg-indigo-50 dark:bg-indigo-950/40",
@@ -66,7 +63,13 @@ const accentStyles: Record<StatCardProps["accent"], { ring: string; iconBg: stri
   },
 };
 
-function StatCard({ title, value, subtitle, icon: Icon, accent }: StatCardProps) {
+function StatCard({
+  title,
+  value,
+  subtitle,
+  icon: Icon,
+  accent,
+}: StatCardProps) {
   const s = accentStyles[accent];
   return (
     <Card>
@@ -74,7 +77,12 @@ function StatCard({ title, value, subtitle, icon: Icon, accent }: StatCardProps)
         <CardTitle className="text-sm font-medium text-muted-foreground">
           {title}
         </CardTitle>
-        <div className={cn("flex h-8 w-8 items-center justify-center rounded-md", s.iconBg)}>
+        <div
+          className={cn(
+            "flex h-8 w-8 items-center justify-center rounded-md",
+            s.iconBg,
+          )}
+        >
           <Icon className={cn("h-4 w-4", s.iconText)} />
         </div>
       </CardHeader>

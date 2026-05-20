@@ -34,7 +34,9 @@ export default function DashboardPage() {
                 <div className="w-12 h-12 bg-background border border-border flex items-center justify-center mb-4 shadow-sm">
                   <Receipt className="h-6 w-6 text-foreground" />
                 </div>
-                <h2 className="text-lg font-semibold uppercase mb-2">Expenses</h2>
+                <h2 className="text-lg font-semibold uppercase mb-2">
+                  Expenses
+                </h2>
                 <p className="text-sm font-bold text-foreground/70">
                   View, create, and manage your expenses
                 </p>

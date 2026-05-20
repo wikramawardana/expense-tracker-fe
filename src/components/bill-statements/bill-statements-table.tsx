@@ -34,7 +34,9 @@ export function BillStatementsTable({
         accessorKey: "name",
         header: () => <div className="text-left">Name</div>,
         cell: ({ row }) => (
-          <div className="font-medium text-foreground">{row.getValue("name")}</div>
+          <div className="font-medium text-foreground">
+            {row.getValue("name")}
+          </div>
         ),
       },
       {

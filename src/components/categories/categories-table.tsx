@@ -67,8 +67,12 @@ export function DataTableShell<T>({
     return (
       <div className="rounded-lg border border-border bg-card shadow-sm">
         <div className="p-12 text-center">
-          <p className="text-base font-semibold text-foreground">{emptyTitle}</p>
-          <p className="mt-1 text-sm text-muted-foreground">{emptyDescription}</p>
+          <p className="text-base font-semibold text-foreground">
+            {emptyTitle}
+          </p>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {emptyDescription}
+          </p>
         </div>
       </div>
     );
@@ -128,14 +132,18 @@ export function CategoriesTable({
         accessorKey: "icon",
         header: () => <div className="text-center">Icon</div>,
         cell: ({ row }) => (
-          <div className="text-center text-xl">{row.getValue("icon") || "📁"}</div>
+          <div className="text-center text-xl">
+            {row.getValue("icon") || "📁"}
+          </div>
         ),
       },
       {
         accessorKey: "name",
         header: () => <div className="text-left">Name</div>,
         cell: ({ row }) => (
-          <div className="font-medium text-foreground">{row.getValue("name")}</div>
+          <div className="font-medium text-foreground">
+            {row.getValue("name")}
+          </div>
         ),
       },
       {
@@ -149,7 +157,9 @@ export function CategoriesTable({
                 className="h-5 w-5 rounded ring-1 ring-inset ring-border"
                 style={{ backgroundColor: color }}
               />
-              <span className="text-xs text-muted-foreground tabular-nums">{color}</span>
+              <span className="text-xs text-muted-foreground tabular-nums">
+                {color}
+              </span>
             </div>
           ) : (
             <span className="text-muted-foreground">—</span>

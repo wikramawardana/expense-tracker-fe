@@ -147,7 +147,13 @@ export function DashboardShell({ children }: DashboardShellProps) {
     );
   }
 
-  function Brand({ collapsed: c = false, onClick }: { collapsed?: boolean; onClick?: () => void }) {
+  function Brand({
+    collapsed: c = false,
+    onClick,
+  }: {
+    collapsed?: boolean;
+    onClick?: () => void;
+  }) {
     return c ? (
       <Link href="/dashboard" className="mx-auto" onClick={onClick}>
         <div className="flex h-9 w-9 items-center justify-center rounded-md bg-primary text-primary-foreground shadow-sm">
@@ -164,7 +170,9 @@ export function DashboardShell({ children }: DashboardShellProps) {
           <Wallet className="h-4 w-4" />
         </div>
         <div className="flex flex-col">
-          <span className="text-sm font-semibold leading-tight">Expense Tracker</span>
+          <span className="text-sm font-semibold leading-tight">
+            Expense Tracker
+          </span>
           <span className="text-[11px] text-muted-foreground leading-tight">
             Finance Management
           </span>
@@ -185,7 +193,9 @@ export function DashboardShell({ children }: DashboardShellProps) {
             >
               <PanelLeft className="h-4 w-4" />
             </Button>
-            <h2 className="text-sm font-semibold text-foreground">{pageTitle}</h2>
+            <h2 className="text-sm font-semibold text-foreground">
+              {pageTitle}
+            </h2>
             <div className="ml-auto">
               <UserMenu />
             </div>

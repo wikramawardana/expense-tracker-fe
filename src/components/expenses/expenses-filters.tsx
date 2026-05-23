@@ -38,6 +38,11 @@ interface ExpensesFiltersProps {
   onFiltersChange: (filters: ExpenseFilters) => void;
 }
 
+const neoControlClass =
+  "rounded-none border-2 border-foreground bg-background font-bold shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]";
+const neoButtonClass =
+  "rounded-none border-2 border-foreground font-black shadow-[3px_3px_0px_0px_rgba(26,26,26,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(26,26,26,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,251,245,1)] dark:hover:shadow-[1px_1px_0px_0px_rgba(255,251,245,1)]";
+
 export function ExpensesFilters({
   filters,
   onFiltersChange,
@@ -159,7 +164,7 @@ export function ExpensesFilters({
     sortOrder !== (filters.sort_order || "desc");
 
   return (
-    <div className="space-y-3 sm:space-y-4">
+    <div className="space-y-3 border-3 border-foreground bg-card p-3 shadow-[5px_5px_0px_0px_rgba(26,26,26,1)] dark:shadow-[5px_5px_0px_0px_rgba(255,251,245,1)] sm:space-y-4">
       {/* Top Row: Search, Category, Status */}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-4 sm:gap-3">
         {/* Search */}
@@ -170,16 +175,16 @@ export function ExpensesFilters({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
-            className="pl-9 w-full"
+            className={cn(neoControlClass, "w-full pl-9")}
           />
         </div>
 
         {/* Category Filter */}
         <Select value={category} onValueChange={setCategory}>
-          <SelectTrigger className="w-full">
+          <SelectTrigger className={cn(neoControlClass, "w-full")}>
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="rounded-none border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,251,245,1)]">
             <SelectItem value="all">All Categories</SelectItem>
             {EXPENSE_CATEGORIES.map((cat) => (
               <SelectItem key={cat.value} value={cat.value}>
@@ -191,10 +196,10 @@ export function ExpensesFilters({
 
         {/* Status Filter */}
         <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className="w-full">
+          <SelectTrigger className={cn(neoControlClass, "w-full")}>
             <SelectValue placeholder="All Status" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="rounded-none border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,251,245,1)]">
             <SelectItem value="all">All Status</SelectItem>
             {EXPENSE_STATUSES.map((s) => (
               <SelectItem key={s.value} value={s.value}>
@@ -209,10 +214,10 @@ export function ExpensesFilters({
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
         {/* Bill Statement Filter */}
         <Select value={billStatementId} onValueChange={setBillStatementId}>
-          <SelectTrigger className="w-full">
+          <SelectTrigger className={cn(neoControlClass, "w-full")}>
             <SelectValue placeholder="All Bill Statements" />
           </SelectTrigger>
-          <SelectContent>
+          <SelectContent className="rounded-none border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,251,245,1)]">
             <SelectItem value="all">All Bill Statements</SelectItem>
             {billStatements.map((bs) => (
               <SelectItem key={bs.id} value={bs.id}>
@@ -228,7 +233,8 @@ export function ExpensesFilters({
             <Button
               variant="outline"
               className={cn(
-                "w-full justify-start text-left font-normal",
+                neoControlClass,
+                "w-full justify-start text-left",
                 !dateRange && "text-muted-foreground",
               )}
             >
@@ -247,7 +253,10 @@ export function ExpensesFilters({
               )}
             </Button>
           </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
+          <PopoverContent
+            className="w-auto rounded-none border-2 border-foreground p-0 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,251,245,1)]"
+            align="start"
+          >
             <Calendar
               initialFocus
               mode="range"
@@ -265,10 +274,10 @@ export function ExpensesFilters({
         <div className="flex items-center gap-2">
           {/* Sort By */}
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className="w-[130px]">
+            <SelectTrigger className={cn(neoControlClass, "w-[130px]")}>
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-none border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,251,245,1)]">
               {SORT_OPTIONS.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
@@ -282,10 +291,10 @@ export function ExpensesFilters({
             value={sortOrder}
             onValueChange={(v) => setSortOrder(v as "asc" | "desc")}
           >
-            <SelectTrigger className="w-[100px]">
+            <SelectTrigger className={cn(neoControlClass, "w-[100px]")}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent>
+            <SelectContent className="rounded-none border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,251,245,1)]">
               <SelectItem value="asc">Asc</SelectItem>
               <SelectItem value="desc">Desc</SelectItem>
             </SelectContent>
@@ -298,7 +307,7 @@ export function ExpensesFilters({
               variant="ghost"
               size="sm"
               onClick={handleClearFilters}
-              className="h-9 px-3"
+              className={cn(neoButtonClass, "h-9 bg-background px-3")}
             >
               <X className="mr-1 h-4 w-4" />
               Clear
@@ -307,7 +316,7 @@ export function ExpensesFilters({
           <Button
             onClick={handleApplyFilters}
             size="sm"
-            className="h-9 px-4"
+            className={cn(neoButtonClass, "h-9 bg-primary px-4")}
             disabled={!hasUnappliedChanges}
           >
             <Filter className="mr-1 h-4 w-4" />

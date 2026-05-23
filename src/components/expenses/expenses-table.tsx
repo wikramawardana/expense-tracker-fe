@@ -136,10 +136,10 @@ export function ExpensesTable({
 
   if (isLoading) {
     return (
-      <div className="rounded-lg border border-border bg-card shadow-sm">
+      <div className="border-3 border-foreground bg-card shadow-[5px_5px_0px_0px_rgba(26,26,26,1)] dark:shadow-[5px_5px_0px_0px_rgba(255,251,245,1)]">
         <div className="p-12 text-center">
-          <div className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
-          <p className="mt-3 text-sm text-muted-foreground">
+          <div className="inline-block h-8 w-8 animate-spin border-4 border-solid border-foreground border-r-transparent" />
+          <p className="mt-3 text-sm font-black uppercase text-muted-foreground">
             Loading expenses…
           </p>
         </div>
@@ -149,12 +149,12 @@ export function ExpensesTable({
 
   if (expenses.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-card shadow-sm">
+      <div className="border-3 border-foreground bg-card shadow-[5px_5px_0px_0px_rgba(26,26,26,1)] dark:shadow-[5px_5px_0px_0px_rgba(255,251,245,1)]">
         <div className="p-12 text-center">
-          <p className="text-base font-semibold text-foreground">
+          <p className="text-base font-black uppercase text-foreground">
             No expenses found
           </p>
-          <p className="mt-1 text-sm text-muted-foreground">
+          <p className="mt-1 text-sm font-bold text-muted-foreground">
             Adjust filters or add your first expense to get started.
           </p>
         </div>
@@ -163,16 +163,16 @@ export function ExpensesTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+    <div className="overflow-hidden border-3 border-foreground bg-card shadow-[5px_5px_0px_0px_rgba(26,26,26,1)] dark:shadow-[5px_5px_0px_0px_rgba(255,251,245,1)]">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-muted/50 border-b border-border">
+          <thead className="border-b-3 border-foreground bg-secondary">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="h-11 px-4 text-left align-middle text-xs font-medium text-muted-foreground"
+                    className="h-11 px-4 text-left align-middle text-xs font-black uppercase text-secondary-foreground"
                   >
                     {header.isPlaceholder
                       ? null
@@ -185,9 +185,12 @@ export function ExpensesTable({
               </tr>
             ))}
           </thead>
-          <tbody className="divide-y divide-border">
+          <tbody className="divide-y-2 divide-foreground/15">
             {table.getRowModel().rows.map((row) => (
-              <tr key={row.id} className="transition-colors hover:bg-muted/40">
+              <tr
+                key={row.id}
+                className="transition-colors hover:bg-secondary/70"
+              >
                 {row.getVisibleCells().map((cell) => (
                   <td key={cell.id} className="px-4 py-3 align-middle">
                     {flexRender(cell.column.columnDef.cell, cell.getContext())}

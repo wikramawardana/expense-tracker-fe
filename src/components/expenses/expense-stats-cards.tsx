@@ -55,44 +55,44 @@ export function ExpenseStatsCards({
       value: (stats?.total_count ?? 0).toLocaleString(),
       helper: "matching filters",
       icon: TrendingUp,
-      tone: "bg-[#88AAEE]",
+      tone: "bg-primary text-primary-foreground",
     },
     {
       label: "Total spent",
       value: formatCurrency(stats?.total_amount ?? 0),
       helper: "all selected expenses",
       icon: DollarSign,
-      tone: "bg-[#A3E636]",
+      tone: "bg-secondary text-secondary-foreground",
     },
     {
       label: "Paid",
       value: formatCurrency(stats?.approved_amount ?? 0),
       helper: "settled amount",
       icon: CheckCircle,
-      tone: "bg-[#7DF9FF]",
+      tone: "bg-success text-success-foreground",
     },
     {
       label: "Pending",
       value: formatCurrency(stats?.pending_amount ?? 0),
       helper: "waiting to be paid",
       icon: Clock,
-      tone: "bg-[#FFE156]",
+      tone: "bg-warning text-warning-foreground",
     },
     {
       label: "Unpaid",
       value: formatCurrency(stats?.rejected_amount ?? 0),
       helper: "not settled yet",
       icon: CircleAlert,
-      tone: "bg-[#FF8FAB]",
+      tone: "bg-destructive text-destructive-foreground",
     },
   ];
 
   if (isLoading) {
     return (
-      <section className="border-3 border-foreground bg-white p-3 shadow-[5px_5px_0px_0px_rgba(26,26,26,1)] dark:bg-black dark:shadow-[5px_5px_0px_0px_rgba(255,251,245,1)]">
+      <section className="border-3 border-foreground bg-card p-3 shadow-[5px_5px_0px_0px_rgba(26,26,26,1)] dark:shadow-[5px_5px_0px_0px_rgba(255,251,245,1)]">
         <div className="mb-3 flex items-center justify-between gap-3">
           <div className="h-5 w-32 animate-pulse border-2 border-foreground bg-muted" />
-          <div className="h-7 w-24 animate-pulse border-2 border-foreground bg-[#FFE156]" />
+          <div className="h-7 w-24 animate-pulse border-2 border-foreground bg-primary" />
         </div>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           {[...Array(5)].map((_, i) => (
@@ -114,28 +114,28 @@ export function ExpenseStatsCards({
   }
 
   return (
-    <section className="border-3 border-foreground bg-white p-3 shadow-[5px_5px_0px_0px_rgba(26,26,26,1)] dark:bg-black dark:shadow-[5px_5px_0px_0px_rgba(255,251,245,1)]">
+    <section className="border-3 border-foreground bg-card p-3 shadow-[5px_5px_0px_0px_rgba(26,26,26,1)] dark:shadow-[5px_5px_0px_0px_rgba(255,251,245,1)]">
       <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-bold text-foreground">
-        <span className="inline-flex items-center gap-1.5 border-2 border-foreground bg-[#FFE156] px-2 py-1 font-black uppercase shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]">
+        <span className="inline-flex items-center gap-1.5 border-2 border-foreground bg-primary px-2 py-1 font-black uppercase text-primary-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]">
           <Filter className="h-3.5 w-3.5" />
           Summary
         </span>
         {dateRange ? (
-          <span className="inline-flex items-center border-2 border-foreground bg-white px-2 py-1 font-bold text-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:bg-black dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]">
+          <span className="inline-flex items-center border-2 border-foreground bg-secondary px-2 py-1 font-bold text-secondary-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]">
             {dateRange}
           </span>
         ) : (
-          <span className="inline-flex items-center border-2 border-foreground bg-white px-2 py-1 font-bold text-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:bg-black dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]">
+          <span className="inline-flex items-center border-2 border-foreground bg-secondary px-2 py-1 font-bold text-secondary-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]">
             All dates
           </span>
         )}
         {filters?.category && (
-          <span className="inline-flex items-center border-2 border-foreground bg-[#88AAEE] px-2 py-1 font-bold text-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]">
+          <span className="inline-flex items-center border-2 border-foreground bg-accent px-2 py-1 font-bold text-accent-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]">
             {filters.category}
           </span>
         )}
         {filters?.status && (
-          <span className="inline-flex items-center border-2 border-foreground bg-[#C4B5FD] px-2 py-1 font-bold capitalize text-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]">
+          <span className="inline-flex items-center border-2 border-foreground bg-muted px-2 py-1 font-bold capitalize text-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]">
             {filters.status}
           </span>
         )}
@@ -157,10 +157,10 @@ export function ExpenseStatsCards({
             >
               <div className="mb-2 flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-xs font-black uppercase text-foreground/70">
+                  <p className="text-xs font-black uppercase text-current/70">
                     {metric.label}
                   </p>
-                  <p className="mt-1 truncate text-lg font-black text-foreground sm:text-xl">
+                  <p className="mt-1 truncate text-lg font-black sm:text-xl">
                     {metric.value}
                   </p>
                 </div>
@@ -168,7 +168,7 @@ export function ExpenseStatsCards({
                   <Icon className="h-4 w-4" />
                 </span>
               </div>
-              <p className="text-xs font-bold text-foreground/70">
+              <p className="text-xs font-bold text-current/70">
                 {metric.helper}
               </p>
             </div>

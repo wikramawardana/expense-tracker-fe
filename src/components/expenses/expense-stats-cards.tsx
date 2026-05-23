@@ -55,57 +55,57 @@ export function ExpenseStatsCards({
       value: (stats?.total_count ?? 0).toLocaleString(),
       helper: "matching filters",
       icon: TrendingUp,
-      tone: "bg-blue-50 text-blue-700 border-blue-200",
+      tone: "bg-[#88AAEE]",
     },
     {
       label: "Total spent",
       value: formatCurrency(stats?.total_amount ?? 0),
       helper: "all selected expenses",
       icon: DollarSign,
-      tone: "bg-emerald-50 text-emerald-700 border-emerald-200",
+      tone: "bg-[#A3E636]",
     },
     {
       label: "Paid",
       value: formatCurrency(stats?.approved_amount ?? 0),
       helper: "settled amount",
       icon: CheckCircle,
-      tone: "bg-cyan-50 text-cyan-700 border-cyan-200",
+      tone: "bg-[#7DF9FF]",
     },
     {
       label: "Pending",
       value: formatCurrency(stats?.pending_amount ?? 0),
       helper: "waiting to be paid",
       icon: Clock,
-      tone: "bg-amber-50 text-amber-700 border-amber-200",
+      tone: "bg-[#FFE156]",
     },
     {
       label: "Unpaid",
       value: formatCurrency(stats?.rejected_amount ?? 0),
       helper: "not settled yet",
       icon: CircleAlert,
-      tone: "bg-rose-50 text-rose-700 border-rose-200",
+      tone: "bg-[#FF8FAB]",
     },
   ];
 
   if (isLoading) {
     return (
-      <section className="rounded-lg border bg-muted/20 p-3">
+      <section className="border-3 border-foreground bg-white p-3 shadow-[5px_5px_0px_0px_rgba(26,26,26,1)] dark:bg-black dark:shadow-[5px_5px_0px_0px_rgba(255,251,245,1)]">
         <div className="mb-3 flex items-center justify-between gap-3">
-          <div className="h-4 w-32 animate-pulse rounded bg-foreground/10" />
-          <div className="h-6 w-24 animate-pulse rounded-full bg-foreground/10" />
+          <div className="h-5 w-32 animate-pulse border-2 border-foreground bg-muted" />
+          <div className="h-7 w-24 animate-pulse border-2 border-foreground bg-[#FFE156]" />
         </div>
-        <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           {[...Array(5)].map((_, i) => (
             <div
               key={i}
-              className="min-h-20 animate-pulse rounded-md border bg-background p-3"
+              className="min-h-20 animate-pulse border-2 border-foreground bg-background p-3 shadow-[3px_3px_0px_0px_rgba(26,26,26,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,251,245,1)]"
             >
               <div className="mb-3 flex items-center justify-between">
-                <div className="h-3 w-20 rounded bg-foreground/10" />
-                <div className="h-7 w-7 rounded-md bg-foreground/10" />
+                <div className="h-3 w-20 bg-foreground/20" />
+                <div className="h-7 w-7 border-2 border-foreground bg-muted" />
               </div>
-              <div className="h-6 w-28 rounded bg-foreground/10" />
-              <div className="mt-2 h-3 w-24 rounded bg-foreground/10" />
+              <div className="h-6 w-28 bg-foreground/20" />
+              <div className="mt-2 h-3 w-24 bg-foreground/20" />
             </div>
           ))}
         </div>
@@ -114,61 +114,63 @@ export function ExpenseStatsCards({
   }
 
   return (
-    <section className="rounded-lg border bg-muted/20 p-3">
-      <div className="mb-3 flex flex-wrap items-center gap-2 text-xs text-muted-foreground">
-        <span className="inline-flex items-center gap-1.5 font-semibold text-foreground">
+    <section className="border-3 border-foreground bg-white p-3 shadow-[5px_5px_0px_0px_rgba(26,26,26,1)] dark:bg-black dark:shadow-[5px_5px_0px_0px_rgba(255,251,245,1)]">
+      <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-bold text-foreground">
+        <span className="inline-flex items-center gap-1.5 border-2 border-foreground bg-[#FFE156] px-2 py-1 font-black uppercase shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]">
           <Filter className="h-3.5 w-3.5" />
           Summary
         </span>
         {dateRange ? (
-          <span className="inline-flex items-center rounded-full border bg-background px-2 py-1 font-medium text-foreground">
+          <span className="inline-flex items-center border-2 border-foreground bg-white px-2 py-1 font-bold text-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:bg-black dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]">
             {dateRange}
           </span>
         ) : (
-          <span className="inline-flex items-center rounded-full border bg-background px-2 py-1 font-medium text-foreground">
+          <span className="inline-flex items-center border-2 border-foreground bg-white px-2 py-1 font-bold text-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:bg-black dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]">
             All dates
           </span>
         )}
         {filters?.category && (
-          <span className="inline-flex items-center rounded-full border bg-background px-2 py-1 font-medium text-foreground">
+          <span className="inline-flex items-center border-2 border-foreground bg-[#88AAEE] px-2 py-1 font-bold text-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]">
             {filters.category}
           </span>
         )}
         {filters?.status && (
-          <span className="inline-flex items-center rounded-full border bg-background px-2 py-1 font-medium capitalize text-foreground">
+          <span className="inline-flex items-center border-2 border-foreground bg-[#C4B5FD] px-2 py-1 font-bold capitalize text-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]">
             {filters.status}
           </span>
         )}
         {!hasFilters && (
-          <span className="text-muted-foreground">No filters applied</span>
+          <span className="font-bold text-muted-foreground">
+            No filters applied
+          </span>
         )}
       </div>
 
-      <div className="grid gap-2 sm:grid-cols-2 xl:grid-cols-5">
+      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
         {metrics.map((metric) => {
           const Icon = metric.icon;
 
           return (
             <div
               key={metric.label}
-              className="min-h-20 rounded-md border bg-background p-3"
+              className={`min-h-20 border-2 border-foreground p-3 text-foreground shadow-[3px_3px_0px_0px_rgba(26,26,26,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,251,245,1)] ${metric.tone}`}
             >
               <div className="mb-2 flex items-start justify-between gap-3">
                 <div className="min-w-0">
-                  <p className="text-xs font-medium text-muted-foreground">
+                  <p className="text-xs font-black uppercase text-foreground/70">
                     {metric.label}
                   </p>
-                  <p className="mt-1 truncate text-lg font-semibold text-foreground sm:text-xl">
+                  <p className="mt-1 truncate text-lg font-black text-foreground sm:text-xl">
                     {metric.value}
                   </p>
                 </div>
-                <span
-                  className={`inline-flex h-8 w-8 shrink-0 items-center justify-center rounded-md border ${metric.tone}`}
-                >
+                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center border-2 border-foreground bg-white text-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:bg-black dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]">
                   <Icon className="h-4 w-4" />
                 </span>
               </div>
-              <p className="text-xs text-muted-foreground">{metric.helper}</p>
+              <p className="text-xs font-bold text-foreground/70">
+                {metric.helper}
+              </p>
             </div>
           );
         })}

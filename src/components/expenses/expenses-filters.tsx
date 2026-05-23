@@ -39,9 +39,11 @@ interface ExpensesFiltersProps {
 }
 
 const neoControlClass =
-  "rounded-none border-2 border-foreground bg-background font-bold shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]";
+  "rounded-md border-2 border-primary/35 bg-background font-bold shadow-[2px_2px_0px_0px_rgba(79,70,229,0.12)] dark:border-primary/45 dark:shadow-[2px_2px_0px_0px_rgba(129,140,248,0.18)]";
 const neoButtonClass =
-  "rounded-none border-2 border-foreground font-black shadow-[3px_3px_0px_0px_rgba(26,26,26,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(26,26,26,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,251,245,1)] dark:hover:shadow-[1px_1px_0px_0px_rgba(255,251,245,1)]";
+  "rounded-md border-2 border-primary/40 font-black shadow-[3px_3px_0px_0px_rgba(79,70,229,0.16)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(79,70,229,0.18)] dark:border-primary/50 dark:shadow-[3px_3px_0px_0px_rgba(129,140,248,0.22)] dark:hover:shadow-[1px_1px_0px_0px_rgba(129,140,248,0.24)]";
+const neoPopoverClass =
+  "rounded-md border-2 border-primary/35 shadow-[4px_4px_0px_0px_rgba(79,70,229,0.14)] dark:border-primary/45 dark:shadow-[4px_4px_0px_0px_rgba(129,140,248,0.2)]";
 
 export function ExpensesFilters({
   filters,
@@ -164,7 +166,7 @@ export function ExpensesFilters({
     sortOrder !== (filters.sort_order || "desc");
 
   return (
-    <div className="space-y-3 border-3 border-foreground bg-card p-3 shadow-[5px_5px_0px_0px_rgba(26,26,26,1)] dark:shadow-[5px_5px_0px_0px_rgba(255,251,245,1)] sm:space-y-4">
+    <div className="space-y-3 rounded-lg border-2 border-primary/35 bg-card p-3 shadow-[4px_4px_0px_0px_rgba(79,70,229,0.16)] dark:border-primary/45 dark:shadow-[4px_4px_0px_0px_rgba(129,140,248,0.22)] sm:space-y-4">
       {/* Top Row: Search, Category, Status */}
       <div className="grid grid-cols-1 gap-2 sm:grid-cols-4 sm:gap-3">
         {/* Search */}
@@ -184,7 +186,7 @@ export function ExpensesFilters({
           <SelectTrigger className={cn(neoControlClass, "w-full")}>
             <SelectValue placeholder="All Categories" />
           </SelectTrigger>
-          <SelectContent className="rounded-none border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,251,245,1)]">
+          <SelectContent className={neoPopoverClass}>
             <SelectItem value="all">All Categories</SelectItem>
             {EXPENSE_CATEGORIES.map((cat) => (
               <SelectItem key={cat.value} value={cat.value}>
@@ -199,7 +201,7 @@ export function ExpensesFilters({
           <SelectTrigger className={cn(neoControlClass, "w-full")}>
             <SelectValue placeholder="All Status" />
           </SelectTrigger>
-          <SelectContent className="rounded-none border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,251,245,1)]">
+          <SelectContent className={neoPopoverClass}>
             <SelectItem value="all">All Status</SelectItem>
             {EXPENSE_STATUSES.map((s) => (
               <SelectItem key={s.value} value={s.value}>
@@ -217,7 +219,7 @@ export function ExpensesFilters({
           <SelectTrigger className={cn(neoControlClass, "w-full")}>
             <SelectValue placeholder="All Bill Statements" />
           </SelectTrigger>
-          <SelectContent className="rounded-none border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,251,245,1)]">
+          <SelectContent className={neoPopoverClass}>
             <SelectItem value="all">All Bill Statements</SelectItem>
             {billStatements.map((bs) => (
               <SelectItem key={bs.id} value={bs.id}>
@@ -254,7 +256,7 @@ export function ExpensesFilters({
             </Button>
           </PopoverTrigger>
           <PopoverContent
-            className="w-auto rounded-none border-2 border-foreground p-0 shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,251,245,1)]"
+            className={`${neoPopoverClass} w-auto p-0`}
             align="start"
           >
             <Calendar
@@ -277,7 +279,7 @@ export function ExpensesFilters({
             <SelectTrigger className={cn(neoControlClass, "w-[130px]")}>
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
-            <SelectContent className="rounded-none border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,251,245,1)]">
+            <SelectContent className={neoPopoverClass}>
               {SORT_OPTIONS.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
@@ -294,7 +296,7 @@ export function ExpensesFilters({
             <SelectTrigger className={cn(neoControlClass, "w-[100px]")}>
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className="rounded-none border-2 border-foreground shadow-[4px_4px_0px_0px_rgba(26,26,26,1)] dark:shadow-[4px_4px_0px_0px_rgba(255,251,245,1)]">
+            <SelectContent className={neoPopoverClass}>
               <SelectItem value="asc">Asc</SelectItem>
               <SelectItem value="desc">Desc</SelectItem>
             </SelectContent>

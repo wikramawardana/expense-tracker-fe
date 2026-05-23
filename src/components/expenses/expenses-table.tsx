@@ -136,7 +136,7 @@ export function ExpensesTable({
 
   if (isLoading) {
     return (
-      <div className="border-3 border-foreground bg-card shadow-[5px_5px_0px_0px_rgba(26,26,26,1)] dark:shadow-[5px_5px_0px_0px_rgba(255,251,245,1)]">
+      <div className="rounded-lg border-2 border-primary/35 bg-card shadow-[4px_4px_0px_0px_rgba(79,70,229,0.16)] dark:border-primary/45 dark:shadow-[4px_4px_0px_0px_rgba(129,140,248,0.22)]">
         <div className="p-12 text-center">
           <div className="inline-block h-8 w-8 animate-spin border-4 border-solid border-foreground border-r-transparent" />
           <p className="mt-3 text-sm font-black uppercase text-muted-foreground">
@@ -149,7 +149,7 @@ export function ExpensesTable({
 
   if (expenses.length === 0) {
     return (
-      <div className="border-3 border-foreground bg-card shadow-[5px_5px_0px_0px_rgba(26,26,26,1)] dark:shadow-[5px_5px_0px_0px_rgba(255,251,245,1)]">
+      <div className="rounded-lg border-2 border-primary/35 bg-card shadow-[4px_4px_0px_0px_rgba(79,70,229,0.16)] dark:border-primary/45 dark:shadow-[4px_4px_0px_0px_rgba(129,140,248,0.22)]">
         <div className="p-12 text-center">
           <p className="text-base font-black uppercase text-foreground">
             No expenses found
@@ -163,10 +163,10 @@ export function ExpensesTable({
   }
 
   return (
-    <div className="overflow-hidden border-3 border-foreground bg-card shadow-[5px_5px_0px_0px_rgba(26,26,26,1)] dark:shadow-[5px_5px_0px_0px_rgba(255,251,245,1)]">
+    <div className="overflow-hidden rounded-lg border-2 border-primary/35 bg-card shadow-[4px_4px_0px_0px_rgba(79,70,229,0.16)] dark:border-primary/45 dark:shadow-[4px_4px_0px_0px_rgba(129,140,248,0.22)]">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="border-b-3 border-foreground bg-secondary">
+          <thead className="border-b-2 border-primary/30 bg-secondary">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
@@ -185,7 +185,7 @@ export function ExpensesTable({
               </tr>
             ))}
           </thead>
-          <tbody className="divide-y-2 divide-foreground/15">
+          <tbody className="divide-y divide-border">
             {table.getRowModel().rows.map((row) => (
               <tr
                 key={row.id}

@@ -18,6 +18,13 @@ interface ExpenseStatsCardsProps {
   isLoading?: boolean;
 }
 
+const neoSurfaceClass =
+  "rounded-lg border-2 border-primary/35 bg-card shadow-[4px_4px_0px_0px_rgba(79,70,229,0.16)] dark:border-primary/45 dark:shadow-[4px_4px_0px_0px_rgba(129,140,248,0.22)]";
+const neoItemClass =
+  "border-2 border-primary/35 shadow-[3px_3px_0px_0px_rgba(79,70,229,0.14)] dark:border-primary/45 dark:shadow-[3px_3px_0px_0px_rgba(129,140,248,0.2)]";
+const neoChipClass =
+  "inline-flex items-center border-2 border-primary/35 shadow-[2px_2px_0px_0px_rgba(79,70,229,0.14)] dark:border-primary/45 dark:shadow-[2px_2px_0px_0px_rgba(129,140,248,0.2)]";
+
 function formatDateRange(dateFrom?: string, dateTo?: string): string | null {
   if (!dateFrom && !dateTo) return null;
   try {
@@ -55,7 +62,7 @@ export function ExpenseStatsCards({
       value: (stats?.total_count ?? 0).toLocaleString(),
       helper: "matching filters",
       icon: TrendingUp,
-      tone: "bg-primary text-primary-foreground",
+      tone: "bg-primary/10 text-primary",
     },
     {
       label: "Total spent",
@@ -69,40 +76,40 @@ export function ExpenseStatsCards({
       value: formatCurrency(stats?.approved_amount ?? 0),
       helper: "settled amount",
       icon: CheckCircle,
-      tone: "bg-success text-success-foreground",
+      tone: "bg-success/15 text-success",
     },
     {
       label: "Pending",
       value: formatCurrency(stats?.pending_amount ?? 0),
       helper: "waiting to be paid",
       icon: Clock,
-      tone: "bg-warning text-warning-foreground",
+      tone: "bg-warning/20 text-warning-foreground",
     },
     {
       label: "Unpaid",
       value: formatCurrency(stats?.rejected_amount ?? 0),
       helper: "not settled yet",
       icon: CircleAlert,
-      tone: "bg-destructive text-destructive-foreground",
+      tone: "bg-destructive/10 text-destructive",
     },
   ];
 
   if (isLoading) {
     return (
-      <section className="border-3 border-foreground bg-card p-3 shadow-[5px_5px_0px_0px_rgba(26,26,26,1)] dark:shadow-[5px_5px_0px_0px_rgba(255,251,245,1)]">
+      <section className={`${neoSurfaceClass} p-3`}>
         <div className="mb-3 flex items-center justify-between gap-3">
-          <div className="h-5 w-32 animate-pulse border-2 border-foreground bg-muted" />
-          <div className="h-7 w-24 animate-pulse border-2 border-foreground bg-primary" />
+          <div className="h-5 w-32 animate-pulse border-2 border-primary/35 bg-muted" />
+          <div className="h-7 w-24 animate-pulse border-2 border-primary/35 bg-primary/15" />
         </div>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           {[...Array(5)].map((_, i) => (
             <div
               key={i}
-              className="min-h-20 animate-pulse border-2 border-foreground bg-background p-3 shadow-[3px_3px_0px_0px_rgba(26,26,26,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,251,245,1)]"
+              className={`${neoItemClass} min-h-20 animate-pulse bg-background p-3`}
             >
               <div className="mb-3 flex items-center justify-between">
                 <div className="h-3 w-20 bg-foreground/20" />
-                <div className="h-7 w-7 border-2 border-foreground bg-muted" />
+                <div className="h-7 w-7 border-2 border-primary/35 bg-muted" />
               </div>
               <div className="h-6 w-28 bg-foreground/20" />
               <div className="mt-2 h-3 w-24 bg-foreground/20" />
@@ -114,28 +121,38 @@ export function ExpenseStatsCards({
   }
 
   return (
-    <section className="border-3 border-foreground bg-card p-3 shadow-[5px_5px_0px_0px_rgba(26,26,26,1)] dark:shadow-[5px_5px_0px_0px_rgba(255,251,245,1)]">
+    <section className={`${neoSurfaceClass} p-3`}>
       <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-bold text-foreground">
-        <span className="inline-flex items-center gap-1.5 border-2 border-foreground bg-primary px-2 py-1 font-black uppercase text-primary-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]">
+        <span
+          className={`${neoChipClass} gap-1.5 bg-primary px-2 py-1 font-black uppercase text-primary-foreground`}
+        >
           <Filter className="h-3.5 w-3.5" />
           Summary
         </span>
         {dateRange ? (
-          <span className="inline-flex items-center border-2 border-foreground bg-secondary px-2 py-1 font-bold text-secondary-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]">
+          <span
+            className={`${neoChipClass} bg-secondary px-2 py-1 font-bold text-secondary-foreground`}
+          >
             {dateRange}
           </span>
         ) : (
-          <span className="inline-flex items-center border-2 border-foreground bg-secondary px-2 py-1 font-bold text-secondary-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]">
+          <span
+            className={`${neoChipClass} bg-secondary px-2 py-1 font-bold text-secondary-foreground`}
+          >
             All dates
           </span>
         )}
         {filters?.category && (
-          <span className="inline-flex items-center border-2 border-foreground bg-accent px-2 py-1 font-bold text-accent-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]">
+          <span
+            className={`${neoChipClass} bg-accent px-2 py-1 font-bold text-accent-foreground`}
+          >
             {filters.category}
           </span>
         )}
         {filters?.status && (
-          <span className="inline-flex items-center border-2 border-foreground bg-muted px-2 py-1 font-bold capitalize text-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]">
+          <span
+            className={`${neoChipClass} bg-muted px-2 py-1 font-bold capitalize text-foreground`}
+          >
             {filters.status}
           </span>
         )}
@@ -153,7 +170,7 @@ export function ExpenseStatsCards({
           return (
             <div
               key={metric.label}
-              className={`min-h-20 border-2 border-foreground p-3 text-foreground shadow-[3px_3px_0px_0px_rgba(26,26,26,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,251,245,1)] ${metric.tone}`}
+              className={`${neoItemClass} min-h-20 p-3 ${metric.tone}`}
             >
               <div className="mb-2 flex items-start justify-between gap-3">
                 <div className="min-w-0">
@@ -164,7 +181,9 @@ export function ExpenseStatsCards({
                     {metric.value}
                   </p>
                 </div>
-                <span className="inline-flex h-8 w-8 shrink-0 items-center justify-center border-2 border-foreground bg-white text-foreground shadow-[2px_2px_0px_0px_rgba(26,26,26,1)] dark:bg-black dark:shadow-[2px_2px_0px_0px_rgba(255,251,245,1)]">
+                <span
+                  className={`${neoChipClass} h-8 w-8 shrink-0 justify-center bg-card text-foreground`}
+                >
                   <Icon className="h-4 w-4" />
                 </span>
               </div>

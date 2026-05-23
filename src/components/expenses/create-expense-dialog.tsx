@@ -315,12 +315,12 @@ export function CreateExpenseDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="rounded-none border-2 border-foreground bg-primary font-black text-primary-foreground shadow-[3px_3px_0px_0px_rgba(26,26,26,1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(26,26,26,1)] dark:shadow-[3px_3px_0px_0px_rgba(255,251,245,1)] dark:hover:shadow-[1px_1px_0px_0px_rgba(255,251,245,1)]">
+        <Button className="rounded-md border-2 border-primary/40 bg-primary font-black text-primary-foreground shadow-[3px_3px_0px_0px_rgba(79,70,229,0.18)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(79,70,229,0.2)] dark:border-primary/50 dark:shadow-[3px_3px_0px_0px_rgba(129,140,248,0.24)] dark:hover:shadow-[1px_1px_0px_0px_rgba(129,140,248,0.26)]">
           <Plus className="mr-2 h-4 w-4" />
           Add Expense
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto rounded-none border-3 border-foreground shadow-[8px_8px_0px_0px_rgba(26,26,26,1)] dark:shadow-[8px_8px_0px_0px_rgba(255,251,245,1)] sm:max-w-4xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto rounded-lg border-2 border-primary/35 shadow-[6px_6px_0px_0px_rgba(79,70,229,0.18)] dark:border-primary/45 dark:shadow-[6px_6px_0px_0px_rgba(129,140,248,0.24)] sm:max-w-4xl">
         <DialogHeader className="space-y-2 pb-4 border-b">
           <DialogTitle className="text-xl font-bold">
             {isMulti ? "Add New Expenses" : "Add New Expense"}

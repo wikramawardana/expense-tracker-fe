@@ -22,9 +22,53 @@ import { getBillStatements } from "@/services/bill-statements.service";
 import { getCategories } from "@/services/categories.service";
 import { getExpenses } from "@/services/expenses.service";
 import type { Category } from "@/types/category.types";
-import type { Expense, ExpenseFilters } from "@/types/expense.types";
+import type {
+  Expense,
+  ExpenseFilters,
+  ExpenseStats,
+} from "@/types/expense.types";
 
 const PAGE_SIZE = 50;
+const STATS_PAGE_SIZE = 10_000;
+const emptyCategoryBreakdown: ExpenseStats["category_breakdown"] = {
+  food: 0,
+  transport: 0,
+  entertainment: 0,
+  shopping: 0,
+  bills: 0,
+  health: 0,
+  education: 0,
+  other: 0,
+};
+
+function buildExpenseStats(
+  expenses: Expense[],
+  totalCount: number,
+): ExpenseStats {
+  return {
+    total_count: totalCount,
+    total_amount: expenses.reduce(
+      (total, expense) => total + expense.amount,
+      0,
+    ),
+    approved_amount: expenses.reduce(
+      (total, expense) =>
+        expense.status === "paid" ? total + expense.amount : total,
+      0,
+    ),
+    pending_amount: expenses.reduce(
+      (total, expense) =>
+        expense.status === "pending" ? total + expense.amount : total,
+      0,
+    ),
+    rejected_amount: expenses.reduce(
+      (total, expense) =>
+        expense.status === "unpaid" ? total + expense.amount : total,
+      0,
+    ),
+    category_breakdown: emptyCategoryBreakdown,
+  };
+}
 
 export default function ExpensesPage() {
   const router = useRouter();
@@ -38,6 +82,8 @@ export default function ExpensesPage() {
   const [hasMore, setHasMore] = React.useState(true);
   const [currentPage, setCurrentPage] = React.useState(1);
   const [totalItems, setTotalItems] = React.useState(0);
+  const [stats, setStats] = React.useState<ExpenseStats | null>(null);
+  const [isStatsLoading, setIsStatsLoading] = React.useState(true);
 
   const sentinelRef = React.useRef<HTMLDivElement>(null);
   const isAuthenticated = !!session?.user;
@@ -58,6 +104,32 @@ export default function ExpensesPage() {
       console.error("Failed to fetch categories:", error);
     }
   }, []);
+
+  const fetchStats = React.useCallback(
+    async (activeFilters: ExpenseFilters) => {
+      setIsStatsLoading(true);
+      try {
+        const response = await getExpenses({
+          ...activeFilters,
+          page: 1,
+          page_size: STATS_PAGE_SIZE,
+        });
+        setStats(
+          buildExpenseStats(
+            response.data.data,
+            response.data.pagination.total_items,
+          ),
+        );
+      } catch (error) {
+        if (error instanceof Error && error.message.includes("401")) return;
+        console.error("Failed to fetch expense stats:", error);
+        setStats(null);
+      } finally {
+        setIsStatsLoading(false);
+      }
+    },
+    [],
+  );
 
   // Resolve default filters (current month bill statement)
   React.useEffect(() => {
@@ -91,11 +163,11 @@ export default function ExpensesPage() {
   }, [isAuthenticated, filters]);
 
   // Initial fetch + reset when filters change
-  // biome-ignore lint/correctness/useExhaustiveDependencies: intentional
   React.useEffect(() => {
     if (!isAuthenticated || !filters) return;
 
     fetchCategories();
+    fetchStats(filters);
 
     // Reset state for new filter
     setExpenses([]);
@@ -125,7 +197,7 @@ export default function ExpensesPage() {
         setIsLoading(false);
       }
     })();
-  }, [isAuthenticated, filters]);
+  }, [isAuthenticated, filters, fetchCategories, fetchStats]);
 
   // Load more (next page)
   const loadMore = React.useCallback(async () => {
@@ -180,6 +252,7 @@ export default function ExpensesPage() {
   const refreshExpenses = React.useCallback(async () => {
     if (!filters) return;
     setIsLoading(true);
+    fetchStats(filters);
     try {
       const response = await getExpenses({
         ...filters,
@@ -196,7 +269,7 @@ export default function ExpensesPage() {
     } finally {
       setIsLoading(false);
     }
-  }, [filters]);
+  }, [filters, fetchStats]);
 
   if (isSessionLoading || !session?.user || !filters) {
     return (
@@ -227,43 +300,38 @@ export default function ExpensesPage() {
             <CreateExpenseDialog onExpenseCreated={refreshExpenses} />
           </div>
         </CardHeader>
-        <CardContent className="space-y-4 px-3 sm:space-y-6 sm:px-6">
+        <CardContent className="space-y-4 px-3 sm:space-y-5 sm:px-6">
+          <ExpenseStatsCards
+            stats={stats}
+            filters={filters}
+            isLoading={isStatsLoading}
+          />
           <ExpensesFilters
             filters={filters}
             onFiltersChange={handleFiltersChange}
           />
-          <div className="grid grid-cols-1 lg:grid-cols-10 gap-4">
-            <div className="lg:col-span-7 space-y-4">
-              <ExpensesTable
-                expenses={expenses}
-                categories={categories}
-                isLoading={isLoading}
-                onExpenseUpdated={refreshExpenses}
-                onExpenseDeleted={refreshExpenses}
-              />
-              {/* Infinite scroll sentinel */}
-              <div ref={sentinelRef} className="h-4" />
-              {isLoadingMore && (
-                <div className="flex justify-center py-4">
-                  <div className="inline-block h-6 w-6 animate-spin border border-solid border-foreground border-r-transparent" />
-                  <span className="ml-2 text-sm font-bold text-muted-foreground">
-                    Loading more...
-                  </span>
-                </div>
-              )}
-              {!hasMore && expenses.length > 0 && !isLoading && (
-                <p className="text-center text-sm text-muted-foreground font-bold py-2">
-                  All {totalItems} expenses loaded
-                </p>
-              )}
-            </div>
-            <div className="lg:col-span-3">
-              <ExpenseStatsCards
-                stats={null}
-                filters={filters}
-                isLoading={false}
-              />
-            </div>
+          <div className="space-y-4">
+            <ExpensesTable
+              expenses={expenses}
+              categories={categories}
+              isLoading={isLoading}
+              onExpenseUpdated={refreshExpenses}
+              onExpenseDeleted={refreshExpenses}
+            />
+            <div ref={sentinelRef} className="h-4" />
+            {isLoadingMore && (
+              <div className="flex justify-center py-4">
+                <div className="inline-block h-6 w-6 animate-spin border border-solid border-foreground border-r-transparent" />
+                <span className="ml-2 text-sm font-bold text-muted-foreground">
+                  Loading more...
+                </span>
+              </div>
+            )}
+            {!hasMore && expenses.length > 0 && !isLoading && (
+              <p className="text-center text-sm text-muted-foreground font-bold py-2">
+                All {totalItems} expenses loaded
+              </p>
+            )}
           </div>
         </CardContent>
       </Card>

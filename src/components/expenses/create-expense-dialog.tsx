@@ -23,16 +23,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
+import { SCHEDULE_TYPES } from "@/lib/constants";
 import { getBillStatements } from "@/services/bill-statements.service";
 import { getCategories } from "@/services/categories.service";
 import { createExpense, createExpensesBulk } from "@/services/expenses.service";
 import { getPaymentMethods } from "@/services/payment-methods.service";
-import { getRecurrenceTypes } from "@/services/recurrence-types.service";
 import type { BillStatement } from "@/types/bill-statement.types";
 import type { Category } from "@/types/category.types";
 import type { CreateExpensePayload } from "@/types/expense.types";
 import type { PaymentMethod as PaymentMethodRecord } from "@/types/payment-method.types";
-import type { RecurrenceType as RecurrenceTypeModel } from "@/types/recurrence-type.types";
 
 interface CreateExpenseDialogProps {
   onExpenseCreated?: () => void;
@@ -85,11 +84,6 @@ export function CreateExpenseDialog({
   >([]);
   const [isPaymentMethodsLoading, setIsPaymentMethodsLoading] =
     React.useState(false);
-  const [recurrenceTypes, setRecurrenceTypes] = React.useState<
-    RecurrenceTypeModel[]
-  >([]);
-  const [isRecurrenceTypesLoading, setIsRecurrenceTypesLoading] =
-    React.useState(false);
 
   // Per-row state
   const [rows, setRows] = React.useState<ExpenseRow[]>([newRow()]);
@@ -103,8 +97,7 @@ export function CreateExpenseDialog({
   const [paidBy, setPaidBy] = React.useState("");
 
   // Schedule type (only available when there's a single row)
-  const [recurrenceTypeId, setRecurrenceTypeId] =
-    React.useState<string>("none");
+  const [scheduleType, setScheduleType] = React.useState("none");
   const [recurrenceCount, setRecurrenceCount] = React.useState("");
   const [recurrenceCurrent, setRecurrenceCurrent] = React.useState("");
   const [recurrenceTotalAmount, setRecurrenceTotalAmount] = React.useState("");
@@ -125,18 +118,10 @@ export function CreateExpenseDialog({
     );
   }, [billStatements, selectedPaymentMethod]);
 
-  const scheduleTypes = React.useMemo(
-    () =>
-      recurrenceTypes.filter(
-        (type) => type.name.toLowerCase() === "installment",
-      ),
-    [recurrenceTypes],
+  const selectedScheduleType = React.useMemo(
+    () => SCHEDULE_TYPES.find((type) => type.value === scheduleType),
+    [scheduleType],
   );
-
-  const selectedRecurrenceType = React.useMemo(() => {
-    if (recurrenceTypeId === "none") return null;
-    return scheduleTypes.find((rt) => rt.id === recurrenceTypeId);
-  }, [recurrenceTypeId, scheduleTypes]);
 
   React.useEffect(() => {
     if (isOpen && categories.length === 0) {
@@ -214,33 +199,16 @@ export function CreateExpenseDialog({
     }
   }, [billStatementId, selectedPaymentMethod, filteredBillStatements]);
 
-  React.useEffect(() => {
-    if (isOpen && recurrenceTypes.length === 0) {
-      setIsRecurrenceTypesLoading(true);
-      getRecurrenceTypes()
-        .then((response) => {
-          setRecurrenceTypes(response.data.filter((rt) => rt.is_active));
-        })
-        .catch((error) => {
-          toast.error("Failed to load schedule types");
-          console.error(error);
-        })
-        .finally(() => {
-          setIsRecurrenceTypesLoading(false);
-        });
-    }
-  }, [isOpen, recurrenceTypes.length]);
-
   // When switching to multi-row mode, reset recurrence to one-time since it is
   // not supported for bulk creation.
   React.useEffect(() => {
-    if (isMulti && recurrenceTypeId !== "none") {
-      setRecurrenceTypeId("none");
+    if (isMulti && scheduleType !== "none") {
+      setScheduleType("none");
       setRecurrenceCount("");
       setRecurrenceCurrent("");
       setRecurrenceTotalAmount("");
     }
-  }, [isMulti, recurrenceTypeId]);
+  }, [isMulti, scheduleType]);
 
   const resetForm = () => {
     setRows([newRow()]);
@@ -248,7 +216,7 @@ export function CreateExpenseDialog({
     setPaymentMethodId("");
     setExpenseDate(new Date().toISOString().split("T")[0]);
     setPaidBy("");
-    setRecurrenceTypeId("none");
+    setScheduleType("none");
     setRecurrenceCount("");
     setRecurrenceCurrent("");
     setRecurrenceTotalAmount("");
@@ -313,18 +281,16 @@ export function CreateExpenseDialog({
       }
     }
 
-    const recurrenceTypeName = selectedRecurrenceType?.name?.toLowerCase();
-
     if (!isMulti) {
       if (
-        recurrenceTypeName === "installment" &&
+        scheduleType === "installment" &&
         (!recurrenceCount || !recurrenceTotalAmount)
       ) {
         toast.error("Please fill in installment count and total amount");
         return;
       }
 
-      if (recurrenceTypeName === "installment" && recurrenceCurrent) {
+      if (scheduleType === "installment" && recurrenceCurrent) {
         const cur = Number(recurrenceCurrent);
         const total = Number(recurrenceCount);
         if (cur < 1 || cur > total) {
@@ -349,14 +315,12 @@ export function CreateExpenseDialog({
 
       if (!isMulti) {
         const payload = payloads[0];
-        if (recurrenceTypeId !== "none" && selectedRecurrenceType) {
-          payload.recurrence_type_id = recurrenceTypeId;
-          if (recurrenceTypeName === "installment") {
-            payload.recurrence_count = Number(recurrenceCount);
-            payload.recurrence_total_amount = Number(recurrenceTotalAmount);
-            if (recurrenceCurrent) {
-              payload.recurrence_current = Number(recurrenceCurrent);
-            }
+        if (scheduleType === "installment") {
+          payload.recurrence_type = "installment";
+          payload.recurrence_count = Number(recurrenceCount);
+          payload.recurrence_total_amount = Number(recurrenceTotalAmount);
+          if (recurrenceCurrent) {
+            payload.recurrence_current = Number(recurrenceCurrent);
           }
         }
         await createExpense(payload);
@@ -640,25 +604,14 @@ export function CreateExpenseDialog({
               <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                 <div className="space-y-2">
                   <Label>Schedule Type</Label>
-                  <Select
-                    value={recurrenceTypeId}
-                    onValueChange={setRecurrenceTypeId}
-                    disabled={isRecurrenceTypesLoading}
-                  >
+                  <Select value={scheduleType} onValueChange={setScheduleType}>
                     <SelectTrigger className="h-11">
-                      <SelectValue
-                        placeholder={
-                          isRecurrenceTypesLoading
-                            ? "Loading..."
-                            : "Select schedule type"
-                        }
-                      />
+                      <SelectValue placeholder="Select schedule type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">One-time</SelectItem>
-                      {scheduleTypes.map((type) => (
-                        <SelectItem key={type.id} value={type.id}>
-                          {type.name}
+                      {SCHEDULE_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -666,8 +619,7 @@ export function CreateExpenseDialog({
                 </div>
               </div>
 
-              {selectedRecurrenceType?.name?.toLowerCase() ===
-                "installment" && (
+              {selectedScheduleType?.value === "installment" && (
                 <div className="space-y-4 p-4 bg-muted rounded-lg border">
                   <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
                     <div className="space-y-2">

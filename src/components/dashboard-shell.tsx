@@ -7,7 +7,6 @@ import {
   LayoutDashboard,
   PanelLeft,
   Receipt,
-  RefreshCw,
   Tags,
   Wallet,
 } from "lucide-react";
@@ -44,7 +43,6 @@ const menuItems = [
   { title: "Expenses", href: "/expenses", icon: Receipt },
   { title: "Categories", href: "/categories", icon: Tags },
   { title: "Payment Methods", href: "/payment-methods", icon: CreditCard },
-  { title: "Schedule Types", href: "/recurrence-types", icon: RefreshCw },
   { title: "Bill Statements", href: "/bill-statements", icon: FileText },
 ];
 

@@ -17,7 +17,7 @@ export const PAYMENT_METHODS = [
   { value: "E-Wallet", label: "E-Wallet" },
 ] as const;
 
-export const RECURRENCE_TYPES = [
+export const SCHEDULE_TYPES = [
   { value: "none", label: "One-time" },
   { value: "installment", label: "Installment" },
 ] as const;

@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { EXPENSE_STATUSES } from "@/lib/constants";
+import { EXPENSE_STATUSES, SCHEDULE_TYPES } from "@/lib/constants";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { getBillStatements } from "@/services/bill-statements.service";
 import { getCategories } from "@/services/categories.service";
@@ -39,12 +39,10 @@ import {
   updateExpense,
 } from "@/services/expenses.service";
 import { getPaymentMethods } from "@/services/payment-methods.service";
-import { getRecurrenceTypes } from "@/services/recurrence-types.service";
 import type { BillStatement } from "@/types/bill-statement.types";
 import type { Category } from "@/types/category.types";
 import type { Expense, ExpenseStatus } from "@/types/expense.types";
 import type { PaymentMethod as PaymentMethodRecord } from "@/types/payment-method.types";
-import type { RecurrenceType as RecurrenceTypeModel } from "@/types/recurrence-type.types";
 import { StatusBadge } from "./status-badge";
 
 interface ExpenseActionDialogProps {
@@ -76,6 +74,14 @@ function findPaymentMethodId(
   );
 }
 
+function getScheduleType(expense: Expense) {
+  if (expense.recurrence_type?.trim().toLowerCase() === "installment") {
+    return "installment";
+  }
+
+  return "none";
+}
+
 export function ExpenseActionDialog({
   expense,
   categories: propCategories,
@@ -91,7 +97,7 @@ export function ExpenseActionDialog({
   const [currentExpense, setCurrentExpense] = React.useState<Expense>(expense);
   const [isExpenseLoading, setIsExpenseLoading] = React.useState(false);
 
-  // Categories, bill statements and schedule types for edit form
+  // Categories and bill statements for edit form
   const [categories, setCategories] = React.useState<Category[]>(
     propCategories || [],
   );
@@ -105,11 +111,6 @@ export function ExpenseActionDialog({
     PaymentMethodRecord[]
   >([]);
   const [isPaymentMethodsLoading, setIsPaymentMethodsLoading] =
-    React.useState(false);
-  const [recurrenceTypes, setRecurrenceTypes] = React.useState<
-    RecurrenceTypeModel[]
-  >([]);
-  const [isRecurrenceTypesLoading, setIsRecurrenceTypesLoading] =
     React.useState(false);
 
   // Edit form state
@@ -132,8 +133,8 @@ export function ExpenseActionDialog({
   const [paidBy, setPaidBy] = React.useState(expense.paid_by || "");
 
   // Schedule state
-  const [recurrenceTypeId, setRecurrenceTypeId] = React.useState<string>(
-    expense.recurrence_type_id || "none",
+  const [scheduleType, setScheduleType] = React.useState(
+    getScheduleType(expense),
   );
   const [recurrenceCount, setRecurrenceCount] = React.useState(
     expense.recurrence_count?.toString() || "",
@@ -142,19 +143,10 @@ export function ExpenseActionDialog({
     expense.recurrence_total_amount || "",
   );
 
-  const scheduleTypes = React.useMemo(
-    () =>
-      recurrenceTypes.filter(
-        (type) => type.name.toLowerCase() === "installment",
-      ),
-    [recurrenceTypes],
+  const selectedScheduleType = React.useMemo(
+    () => SCHEDULE_TYPES.find((type) => type.value === scheduleType),
+    [scheduleType],
   );
-
-  // Get the selected schedule type details
-  const selectedRecurrenceType = React.useMemo(() => {
-    if (recurrenceTypeId === "none") return null;
-    return scheduleTypes.find((rt) => rt.id === recurrenceTypeId);
-  }, [recurrenceTypeId, scheduleTypes]);
 
   // Get category info for display
   const categoryInfo = React.useMemo(() => {
@@ -260,24 +252,6 @@ export function ExpenseActionDialog({
     }
   }, [isEditOpen, paymentMethods.length, currentExpense]);
 
-  // Fetch schedule types when edit dialog opens
-  React.useEffect(() => {
-    if (isEditOpen && recurrenceTypes.length === 0) {
-      setIsRecurrenceTypesLoading(true);
-      getRecurrenceTypes()
-        .then((response) => {
-          setRecurrenceTypes(response.data.filter((rt) => rt.is_active));
-        })
-        .catch((error) => {
-          toast.error("Failed to load schedule types");
-          console.error(error);
-        })
-        .finally(() => {
-          setIsRecurrenceTypesLoading(false);
-        });
-    }
-  }, [isEditOpen, recurrenceTypes.length]);
-
   // Fetch categories for view dialog if not provided
   React.useEffect(() => {
     if (isViewOpen && categories.length === 0 && !propCategories) {
@@ -304,7 +278,7 @@ export function ExpenseActionDialog({
       setPaymentMethodId(currentExpense.payment_method_id || "");
       setPaidBy(currentExpense.paid_by || "");
       // Reset schedule fields
-      setRecurrenceTypeId(currentExpense.recurrence_type_id || "none");
+      setScheduleType(getScheduleType(currentExpense));
       setRecurrenceCount(currentExpense.recurrence_count?.toString() || "");
       setRecurrenceTotalAmount(currentExpense.recurrence_total_amount || "");
     }
@@ -362,12 +336,9 @@ export function ExpenseActionDialog({
       return;
     }
 
-    // Get selected schedule type name (lowercase) for validation
-    const recurrenceTypeName = selectedRecurrenceType?.name?.toLowerCase();
-
     // Validate schedule fields based on schedule type name
     if (
-      recurrenceTypeName === "installment" &&
+      scheduleType === "installment" &&
       (!recurrenceCount || !recurrenceTotalAmount)
     ) {
       toast.error("Please fill in installment count and total amount");
@@ -393,17 +364,14 @@ export function ExpenseActionDialog({
       };
 
       // Add schedule fields based on type
-      if (recurrenceTypeId === "none") {
+      if (scheduleType === "none") {
         // Clear schedule if set to "none" - use clear_recurrence flag for PATCH semantics
         updatePayload.clear_recurrence = true;
-      } else {
-        updatePayload.recurrence_type_id = recurrenceTypeId;
-
-        if (recurrenceTypeName === "installment") {
-          updatePayload.recurrence_count = Number(recurrenceCount);
-          updatePayload.recurrence_total_amount = Number(recurrenceTotalAmount);
-          updatePayload.recurrence_end_date = null;
-        }
+      } else if (scheduleType === "installment") {
+        updatePayload.recurrence_type = "installment";
+        updatePayload.recurrence_count = Number(recurrenceCount);
+        updatePayload.recurrence_total_amount = Number(recurrenceTotalAmount);
+        updatePayload.recurrence_end_date = null;
       }
 
       await updateExpense(expense.id, updatePayload);
@@ -914,25 +882,14 @@ export function ExpenseActionDialog({
               <div className="grid gap-4 grid-cols-1 md:grid-cols-3 mt-4">
                 <div className="space-y-2">
                   <Label>Schedule Type</Label>
-                  <Select
-                    value={recurrenceTypeId}
-                    onValueChange={setRecurrenceTypeId}
-                    disabled={isRecurrenceTypesLoading}
-                  >
+                  <Select value={scheduleType} onValueChange={setScheduleType}>
                     <SelectTrigger className="h-11">
-                      <SelectValue
-                        placeholder={
-                          isRecurrenceTypesLoading
-                            ? "Loading..."
-                            : "Select schedule type"
-                        }
-                      />
+                      <SelectValue placeholder="Select schedule type" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">One-time</SelectItem>
-                      {scheduleTypes.map((type) => (
-                        <SelectItem key={type.id} value={type.id}>
-                          {type.name}
+                      {SCHEDULE_TYPES.map((type) => (
+                        <SelectItem key={type.value} value={type.value}>
+                          {type.label}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -941,8 +898,7 @@ export function ExpenseActionDialog({
               </div>
 
               {/* Installment fields */}
-              {selectedRecurrenceType?.name?.toLowerCase() ===
-                "installment" && (
+              {selectedScheduleType?.value === "installment" && (
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-4 p-4 bg-muted rounded-lg border mt-4">
                   <div className="space-y-2">
                     <Label htmlFor="edit-recurrenceCount">

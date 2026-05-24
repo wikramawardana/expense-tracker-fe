@@ -15,8 +15,8 @@ export type ExpenseStatus = "pending" | "paid" | "unpaid";
 // Payment method display name from the payment_methods table.
 export type PaymentMethod = string;
 
-// Recurrence type
-export type RecurrenceType = "installment" | "subscription";
+// Schedule type
+export type ScheduleType = "none" | "installment";
 
 // Single expense item
 export interface Expense {
@@ -78,6 +78,7 @@ export interface CreateExpensePayload {
   expense_date: string;
   description?: string;
   paid_by?: string;
+  recurrence_type?: Exclude<ScheduleType, "none">;
   recurrence_type_id?: string;
   recurrence_count?: number;
   recurrence_current?: number;
@@ -110,8 +111,9 @@ export interface UpdateExpensePayload {
   payment_method_id?: string;
   paid_by?: string;
   notes?: string;
-  // Recurrence fields for installments and subscriptions
-  recurrence_type_id?: string | null; // UUID of the recurrence type, null to remove
+  // Schedule fields for installments
+  recurrence_type?: Exclude<ScheduleType, "none"> | null;
+  recurrence_type_id?: string | null;
   recurrence_count?: number | null; // For installments: number of payments
   recurrence_total_amount?: number | null;
   recurrence_end_date?: string | null;

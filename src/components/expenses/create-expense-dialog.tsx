@@ -102,13 +102,12 @@ export function CreateExpenseDialog({
   );
   const [paidBy, setPaidBy] = React.useState("");
 
-  // Recurrence (only available when there's a single row)
+  // Schedule type (only available when there's a single row)
   const [recurrenceTypeId, setRecurrenceTypeId] =
     React.useState<string>("none");
   const [recurrenceCount, setRecurrenceCount] = React.useState("");
   const [recurrenceCurrent, setRecurrenceCurrent] = React.useState("");
   const [recurrenceTotalAmount, setRecurrenceTotalAmount] = React.useState("");
-  const [recurrenceEndDate, setRecurrenceEndDate] = React.useState("");
 
   const isMulti = rows.length > 1;
 
@@ -126,10 +125,18 @@ export function CreateExpenseDialog({
     );
   }, [billStatements, selectedPaymentMethod]);
 
+  const scheduleTypes = React.useMemo(
+    () =>
+      recurrenceTypes.filter(
+        (type) => type.name.toLowerCase() === "installment",
+      ),
+    [recurrenceTypes],
+  );
+
   const selectedRecurrenceType = React.useMemo(() => {
     if (recurrenceTypeId === "none") return null;
-    return recurrenceTypes.find((rt) => rt.id === recurrenceTypeId);
-  }, [recurrenceTypeId, recurrenceTypes]);
+    return scheduleTypes.find((rt) => rt.id === recurrenceTypeId);
+  }, [recurrenceTypeId, scheduleTypes]);
 
   React.useEffect(() => {
     if (isOpen && categories.length === 0) {
@@ -215,7 +222,7 @@ export function CreateExpenseDialog({
           setRecurrenceTypes(response.data.filter((rt) => rt.is_active));
         })
         .catch((error) => {
-          toast.error("Failed to load recurrence types");
+          toast.error("Failed to load schedule types");
           console.error(error);
         })
         .finally(() => {
@@ -232,7 +239,6 @@ export function CreateExpenseDialog({
       setRecurrenceCount("");
       setRecurrenceCurrent("");
       setRecurrenceTotalAmount("");
-      setRecurrenceEndDate("");
     }
   }, [isMulti, recurrenceTypeId]);
 
@@ -246,7 +252,6 @@ export function CreateExpenseDialog({
     setRecurrenceCount("");
     setRecurrenceCurrent("");
     setRecurrenceTotalAmount("");
-    setRecurrenceEndDate("");
   };
 
   const updateRow = (rowId: string, patch: Partial<ExpenseRow>) => {
@@ -329,11 +334,6 @@ export function CreateExpenseDialog({
           return;
         }
       }
-
-      if (recurrenceTypeName === "subscription" && !recurrenceEndDate) {
-        toast.error("Please fill in subscription end date");
-        return;
-      }
     }
 
     setIsLoading(true);
@@ -356,15 +356,6 @@ export function CreateExpenseDialog({
             payload.recurrence_total_amount = Number(recurrenceTotalAmount);
             if (recurrenceCurrent) {
               payload.recurrence_current = Number(recurrenceCurrent);
-            }
-          } else if (
-            recurrenceTypeName === "subscription" ||
-            recurrenceTypeName === "recurring"
-          ) {
-            if (recurrenceEndDate) {
-              payload.recurrence_end_date = new Date(
-                recurrenceEndDate,
-              ).toISOString();
             }
           }
         }
@@ -638,17 +629,17 @@ export function CreateExpenseDialog({
             </div>
           </div>
 
-          {/* Recurrence (single-row only) */}
+          {/* Schedule (single-row only) */}
           {!isMulti && (
             <div className="space-y-4">
               <div className="flex items-center gap-2 pb-2 border-b">
                 <h3 className="text-sm font-semibold text-muted-foreground">
-                  Expense Type
+                  Schedule Type
                 </h3>
               </div>
               <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
                 <div className="space-y-2">
-                  <Label>Expense Type</Label>
+                  <Label>Schedule Type</Label>
                   <Select
                     value={recurrenceTypeId}
                     onValueChange={setRecurrenceTypeId}
@@ -659,13 +650,13 @@ export function CreateExpenseDialog({
                         placeholder={
                           isRecurrenceTypesLoading
                             ? "Loading..."
-                            : "Select expense type"
+                            : "Select schedule type"
                         }
                       />
                     </SelectTrigger>
                     <SelectContent>
                       <SelectItem value="none">One-time</SelectItem>
-                      {recurrenceTypes.map((type) => (
+                      {scheduleTypes.map((type) => (
                         <SelectItem key={type.id} value={type.id}>
                           {type.name}
                         </SelectItem>
@@ -731,46 +722,6 @@ export function CreateExpenseDialog({
                     <span className="font-medium">12</span> total to log this as{" "}
                     <span className="font-medium">3/12</span>.
                   </p>
-                </div>
-              )}
-
-              {selectedRecurrenceType?.name?.toLowerCase() ===
-                "subscription" && (
-                <div className="p-4 bg-muted rounded-lg border">
-                  <div className="space-y-2 max-w-sm">
-                    <Label htmlFor="recurrenceEndDate">
-                      Subscription End Date{" "}
-                      <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="recurrenceEndDate"
-                      type="date"
-                      value={recurrenceEndDate}
-                      onChange={(e) => setRecurrenceEndDate(e.target.value)}
-                      className="h-11"
-                    />
-                  </div>
-                </div>
-              )}
-
-              {selectedRecurrenceType?.name?.toLowerCase() === "recurring" && (
-                <div className="p-4 bg-muted rounded-lg border">
-                  <div className="space-y-2 max-w-sm">
-                    <Label htmlFor="recurrenceEndDate">
-                      End Date (Optional)
-                    </Label>
-                    <Input
-                      id="recurrenceEndDate"
-                      type="date"
-                      value={recurrenceEndDate}
-                      onChange={(e) => setRecurrenceEndDate(e.target.value)}
-                      placeholder="Leave empty for indefinite"
-                      className="h-11"
-                    />
-                    <p className="text-xs text-muted-foreground">
-                      Leave empty if this recurring expense has no end date
-                    </p>
-                  </div>
                 </div>
               )}
             </div>

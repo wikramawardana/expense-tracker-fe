@@ -20,7 +20,6 @@ export const PAYMENT_METHODS = [
 export const RECURRENCE_TYPES = [
   { value: "none", label: "One-time" },
   { value: "installment", label: "Installment" },
-  { value: "subscription", label: "Subscription" },
 ] as const;
 
 export const EXPENSE_STATUSES = [

@@ -39,7 +39,7 @@ export function CreateRecurrenceTypeDialog({
 
   const handleSubmit = async () => {
     if (!name.trim()) {
-      toast.error("Please enter a recurrence type name");
+      toast.error("Please enter a schedule type name");
       return;
     }
 
@@ -49,7 +49,7 @@ export function CreateRecurrenceTypeDialog({
         name: name.trim(),
         description: description.trim() || undefined,
       });
-      toast.success("Recurrence type created successfully");
+      toast.success("Schedule type created successfully");
       setIsOpen(false);
       resetForm();
       onRecurrenceTypeCreated?.();
@@ -57,7 +57,7 @@ export function CreateRecurrenceTypeDialog({
       toast.error(
         error instanceof Error
           ? error.message
-          : "Failed to create recurrence type",
+          : "Failed to create schedule type",
       );
     } finally {
       setIsLoading(false);
@@ -69,15 +69,15 @@ export function CreateRecurrenceTypeDialog({
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
-          Add Recurrence Type
+          Add Schedule Type
         </Button>
       </DialogTrigger>
       <DialogContent className="sm:max-w-[500px]">
         <DialogHeader>
-          <DialogTitle>Add New Recurrence Type</DialogTitle>
+          <DialogTitle>Add New Schedule Type</DialogTitle>
           <DialogDescription>
-            Create a new recurrence type for expenses. Fill in the details
-            below.
+            Create a new schedule type for expenses. Installment is the default
+            supported option.
           </DialogDescription>
         </DialogHeader>
         <div className="space-y-4">
@@ -89,7 +89,7 @@ export function CreateRecurrenceTypeDialog({
               id="name"
               value={name}
               onChange={(e) => setName(e.target.value)}
-              placeholder="e.g., Subscription, Installment"
+              placeholder="e.g., Installment"
             />
           </div>
 
@@ -99,7 +99,7 @@ export function CreateRecurrenceTypeDialog({
               id="description"
               value={description}
               onChange={(e) => setDescription(e.target.value)}
-              placeholder="e.g., Monthly recurring payments"
+              placeholder="e.g., Fixed-count monthly installment"
               rows={3}
             />
           </div>
@@ -113,7 +113,7 @@ export function CreateRecurrenceTypeDialog({
             Cancel
           </Button>
           <Button onClick={handleSubmit} disabled={isLoading}>
-            {isLoading ? "Creating..." : "Create Recurrence Type"}
+            {isLoading ? "Creating..." : "Create Schedule Type"}
           </Button>
         </DialogFooter>
       </DialogContent>

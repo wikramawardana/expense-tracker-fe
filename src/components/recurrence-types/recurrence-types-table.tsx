@@ -88,9 +88,9 @@ export function RecurrenceTypesTable({
     <DataTableShell
       table={table}
       isLoading={isLoading}
-      emptyTitle="No recurrence types found"
-      emptyDescription="Add your first recurrence type to get started."
-      loadingLabel="Loading recurrence types…"
+      emptyTitle="No schedule types found"
+      emptyDescription="Add Installment to start tracking split payments."
+      loadingLabel="Loading schedule types..."
     />
   );
 }

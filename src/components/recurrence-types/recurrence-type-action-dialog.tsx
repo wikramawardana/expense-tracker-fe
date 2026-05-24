@@ -53,7 +53,7 @@ export function RecurrenceTypeActionDialog({
   );
   const [isActive, setIsActive] = React.useState(recurrenceType.is_active);
 
-  // Reset form when recurrence type changes
+  // Reset form when schedule type changes
   React.useEffect(() => {
     setName(recurrenceType.name);
     setDescription(recurrenceType.description || "");
@@ -62,7 +62,7 @@ export function RecurrenceTypeActionDialog({
 
   const handleEdit = async () => {
     if (!name.trim()) {
-      toast.error("Please enter a recurrence type name");
+      toast.error("Please enter a schedule type name");
       return;
     }
 
@@ -73,14 +73,14 @@ export function RecurrenceTypeActionDialog({
         description: description.trim() || undefined,
         is_active: isActive,
       });
-      toast.success("Recurrence type updated successfully");
+      toast.success("Schedule type updated successfully");
       setIsEditOpen(false);
       onRecurrenceTypeUpdated?.();
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Failed to update recurrence type",
+          : "Failed to update schedule type",
       );
     } finally {
       setIsLoading(false);
@@ -91,14 +91,14 @@ export function RecurrenceTypeActionDialog({
     setIsLoading(true);
     try {
       await deleteRecurrenceType(recurrenceType.id);
-      toast.success("Recurrence type deleted successfully");
+      toast.success("Schedule type deleted successfully");
       setIsDeleteOpen(false);
       onRecurrenceTypeDeleted?.();
     } catch (error) {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Failed to delete recurrence type",
+          : "Failed to delete schedule type",
       );
     } finally {
       setIsLoading(false);
@@ -138,9 +138,9 @@ export function RecurrenceTypeActionDialog({
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Recurrence Type Details</DialogTitle>
+            <DialogTitle>Schedule Type Details</DialogTitle>
             <DialogDescription>
-              View detailed information about this recurrence type
+              View detailed information about this schedule type
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -191,9 +191,9 @@ export function RecurrenceTypeActionDialog({
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
         <DialogContent className="sm:max-w-[500px]">
           <DialogHeader>
-            <DialogTitle>Edit Recurrence Type</DialogTitle>
+            <DialogTitle>Edit Schedule Type</DialogTitle>
             <DialogDescription>
-              Update the recurrence type details
+              Update the schedule type details
             </DialogDescription>
           </DialogHeader>
           <div className="space-y-4">
@@ -205,7 +205,7 @@ export function RecurrenceTypeActionDialog({
                 id="edit-name"
                 value={name}
                 onChange={(e) => setName(e.target.value)}
-                placeholder="e.g., Subscription"
+                placeholder="e.g., Installment"
               />
             </div>
 
@@ -215,7 +215,7 @@ export function RecurrenceTypeActionDialog({
                 id="edit-description"
                 value={description}
                 onChange={(e) => setDescription(e.target.value)}
-                placeholder="e.g., Monthly recurring payments"
+                placeholder="e.g., Fixed-count monthly installment"
                 rows={3}
               />
             </div>
@@ -248,7 +248,7 @@ export function RecurrenceTypeActionDialog({
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
         <DialogContent className="sm:max-w-[400px]">
           <DialogHeader>
-            <DialogTitle>Delete Recurrence Type</DialogTitle>
+            <DialogTitle>Delete Schedule Type</DialogTitle>
             <DialogDescription>
               Are you sure you want to delete &quot;{recurrenceType.name}&quot;?
               This action cannot be undone.

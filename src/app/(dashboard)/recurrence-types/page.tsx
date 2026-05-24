@@ -52,7 +52,7 @@ export default function RecurrenceTypesPage() {
       toast.error(
         error instanceof Error
           ? error.message
-          : "Failed to fetch recurrence types",
+          : "Failed to fetch schedule types",
       );
       setRecurrenceTypes([]);
     } finally {
@@ -91,10 +91,10 @@ export default function RecurrenceTypesPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
               <CardTitle className="text-xl sm:text-2xl">
-                Recurrence Types
+                Schedule Types
               </CardTitle>
               <CardDescription className="text-xs sm:text-sm">
-                Manage your expense recurrence types
+                Manage schedule behavior for expenses
               </CardDescription>
             </div>
             <CreateRecurrenceTypeDialog

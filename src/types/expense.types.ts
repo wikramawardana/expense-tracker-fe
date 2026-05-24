@@ -115,7 +115,7 @@ export interface UpdateExpensePayload {
   recurrence_count?: number | null; // For installments: number of payments
   recurrence_total_amount?: number | null;
   recurrence_end_date?: string | null;
-  clear_recurrence?: boolean; // Set to true when changing from recurring to one-time
+  clear_recurrence?: boolean; // Set to true when changing from scheduled to one-time
 }
 
 export interface ExpenseFilters {

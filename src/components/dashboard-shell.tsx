@@ -44,7 +44,7 @@ const menuItems = [
   { title: "Expenses", href: "/expenses", icon: Receipt },
   { title: "Categories", href: "/categories", icon: Tags },
   { title: "Payment Methods", href: "/payment-methods", icon: CreditCard },
-  { title: "Recurrence Types", href: "/recurrence-types", icon: RefreshCw },
+  { title: "Schedule Types", href: "/recurrence-types", icon: RefreshCw },
   { title: "Bill Statements", href: "/bill-statements", icon: FileText },
 ];
 

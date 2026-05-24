@@ -1,6 +1,8 @@
 import { apiFetch, buildQueryString } from "@/lib/api.config";
 import type {
   BulkCreateExpensesResponse,
+  BulkExpenseActionPayload,
+  BulkExpenseActionResponse,
   CreateExpensePayload,
   CreateExpensesBulkPayload,
   ExpenseCategoryBreakdownResponse,
@@ -51,6 +53,18 @@ export async function createExpensesBulk(
 ): Promise<BulkCreateExpensesResponse> {
   return apiFetch<BulkCreateExpensesResponse>("/expenses/bulk", {
     method: "POST",
+    body: JSON.stringify(payload),
+  });
+}
+
+/**
+ * Apply one action to multiple expenses
+ */
+export async function applyBulkExpenseAction(
+  payload: BulkExpenseActionPayload,
+): Promise<BulkExpenseActionResponse> {
+  return apiFetch<BulkExpenseActionResponse>("/expenses/bulk", {
+    method: "PATCH",
     body: JSON.stringify(payload),
   });
 }

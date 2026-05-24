@@ -99,6 +99,25 @@ export interface BulkCreateExpensesResponse {
   };
 }
 
+export type BulkExpenseAction = "move_bill_statement" | "set_status" | "delete";
+
+export interface BulkExpenseActionPayload {
+  expense_ids: string[];
+  action: BulkExpenseAction;
+  status?: ExpenseStatus;
+  bill_statement_id?: string;
+}
+
+export interface BulkExpenseActionResponse {
+  status: string;
+  message: string;
+  data: {
+    updated: Expense[];
+    deleted_count: number;
+    count: number;
+  };
+}
+
 export interface UpdateExpensePayload {
   title?: string;
   description?: string;

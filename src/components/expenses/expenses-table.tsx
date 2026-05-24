@@ -11,6 +11,7 @@ import { formatCurrency, formatDate } from "@/lib/format";
 import type { Category } from "@/types/category.types";
 import type { Expense } from "@/types/expense.types";
 import { ExpenseActionDialog } from "./expense-action-dialog";
+import { ExpenseBulkActions } from "./expense-bulk-actions";
 import { CategoryBadge, PaymentMethodBadge, StatusBadge } from "./status-badge";
 
 interface ExpensesTableProps {
@@ -28,14 +29,104 @@ export function ExpensesTable({
   onExpenseUpdated,
   onExpenseDeleted,
 }: ExpensesTableProps) {
+  const [selectedIds, setSelectedIds] = React.useState<Set<string>>(
+    () => new Set(),
+  );
+  const selectAllRef = React.useRef<HTMLInputElement>(null);
+
   const categoryMap = React.useMemo(() => {
     const map = new Map<string, Category>();
     for (const cat of categories) map.set(cat.id, cat);
     return map;
   }, [categories]);
 
+  const visibleIds = React.useMemo(
+    () => expenses.map((expense) => expense.id),
+    [expenses],
+  );
+  const selectedExpenses = React.useMemo(
+    () => expenses.filter((expense) => selectedIds.has(expense.id)),
+    [expenses, selectedIds],
+  );
+  const hasVisibleRows = visibleIds.length > 0;
+  const allVisibleSelected =
+    hasVisibleRows && visibleIds.every((id) => selectedIds.has(id));
+  const someVisibleSelected =
+    hasVisibleRows && visibleIds.some((id) => selectedIds.has(id));
+
+  React.useEffect(() => {
+    setSelectedIds((current) => {
+      const visibleIdSet = new Set(visibleIds);
+      const next = new Set([...current].filter((id) => visibleIdSet.has(id)));
+      return next.size === current.size ? current : next;
+    });
+  }, [visibleIds]);
+
+  React.useEffect(() => {
+    if (!selectAllRef.current) return;
+    selectAllRef.current.indeterminate =
+      someVisibleSelected && !allVisibleSelected;
+  }, [allVisibleSelected, someVisibleSelected]);
+
+  const toggleAllVisible = React.useCallback(
+    (checked: boolean) => {
+      setSelectedIds((current) => {
+        const next = new Set(current);
+        for (const id of visibleIds) {
+          if (checked) {
+            next.add(id);
+          } else {
+            next.delete(id);
+          }
+        }
+        return next;
+      });
+    },
+    [visibleIds],
+  );
+
+  const toggleExpense = React.useCallback((id: string, checked: boolean) => {
+    setSelectedIds((current) => {
+      const next = new Set(current);
+      if (checked) {
+        next.add(id);
+      } else {
+        next.delete(id);
+      }
+      return next;
+    });
+  }, []);
+
+  const clearSelection = React.useCallback(() => {
+    setSelectedIds(new Set());
+  }, []);
+
   const columns = React.useMemo<ColumnDef<Expense>[]>(
     () => [
+      {
+        id: "select",
+        header: () => (
+          <input
+            ref={selectAllRef}
+            type="checkbox"
+            aria-label="Select all visible expenses"
+            checked={allVisibleSelected}
+            onChange={(event) => toggleAllVisible(event.target.checked)}
+            className="h-4 w-4 cursor-pointer rounded border-2 border-primary/45 accent-primary"
+          />
+        ),
+        cell: ({ row }) => (
+          <input
+            type="checkbox"
+            aria-label={`Select ${row.original.title}`}
+            checked={selectedIds.has(row.original.id)}
+            onChange={(event) =>
+              toggleExpense(row.original.id, event.target.checked)
+            }
+            className="h-4 w-4 cursor-pointer rounded border-2 border-primary/45 accent-primary"
+          />
+        ),
+      },
       {
         accessorKey: "title",
         header: () => <div className="text-left">Title</div>,
@@ -125,7 +216,16 @@ export function ExpensesTable({
         ),
       },
     ],
-    [onExpenseUpdated, onExpenseDeleted, categoryMap, categories],
+    [
+      allVisibleSelected,
+      onExpenseUpdated,
+      onExpenseDeleted,
+      toggleAllVisible,
+      toggleExpense,
+      selectedIds,
+      categoryMap,
+      categories,
+    ],
   );
 
   const table = useReactTable({
@@ -163,43 +263,60 @@ export function ExpensesTable({
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border-2 border-primary/35 bg-card shadow-[4px_4px_0px_0px_rgba(79,70,229,0.16)] dark:border-primary/45 dark:shadow-[4px_4px_0px_0px_rgba(129,140,248,0.22)]">
-      <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="border-b-2 border-primary/30 bg-secondary">
-            {table.getHeaderGroups().map((headerGroup) => (
-              <tr key={headerGroup.id}>
-                {headerGroup.headers.map((header) => (
-                  <th
-                    key={header.id}
-                    className="h-11 px-4 text-left align-middle text-xs font-black uppercase text-secondary-foreground"
+    <div className="space-y-3">
+      <ExpenseBulkActions
+        selectedExpenses={selectedExpenses}
+        onClearSelection={clearSelection}
+        onBulkActionComplete={onExpenseUpdated}
+      />
+
+      <div className="overflow-hidden rounded-lg border-2 border-primary/35 bg-card shadow-[4px_4px_0px_0px_rgba(79,70,229,0.16)] dark:border-primary/45 dark:shadow-[4px_4px_0px_0px_rgba(129,140,248,0.22)]">
+        <div className="overflow-x-auto">
+          <table className="w-full text-sm">
+            <thead className="border-b-2 border-primary/30 bg-secondary">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <th
+                      key={header.id}
+                      className="h-11 px-4 text-left align-middle text-xs font-black uppercase text-secondary-foreground"
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </th>
+                  ))}
+                </tr>
+              ))}
+            </thead>
+            <tbody className="divide-y divide-border">
+              {table.getRowModel().rows.map((row) => {
+                const isSelected = selectedIds.has(row.original.id);
+
+                return (
+                  <tr
+                    key={row.id}
+                    className={`transition-colors hover:bg-secondary/70 ${
+                      isSelected ? "bg-primary/5" : ""
+                    }`}
                   >
-                    {header.isPlaceholder
-                      ? null
-                      : flexRender(
-                          header.column.columnDef.header,
-                          header.getContext(),
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="px-4 py-3 align-middle">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
                         )}
-                  </th>
-                ))}
-              </tr>
-            ))}
-          </thead>
-          <tbody className="divide-y divide-border">
-            {table.getRowModel().rows.map((row) => (
-              <tr
-                key={row.id}
-                className="transition-colors hover:bg-secondary/70"
-              >
-                {row.getVisibleCells().map((cell) => (
-                  <td key={cell.id} className="px-4 py-3 align-middle">
-                    {flexRender(cell.column.columnDef.cell, cell.getContext())}
-                  </td>
-                ))}
-              </tr>
-            ))}
-          </tbody>
-        </table>
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </tbody>
+          </table>
+        </div>
       </div>
     </div>
   );

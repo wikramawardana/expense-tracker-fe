@@ -37,9 +37,9 @@ export interface CreateBillStatementPayload {
 // Payload for updating a bill statement
 export interface UpdateBillStatementPayload {
   name?: string;
-  payment_method_id?: string;
-  statement_date?: string;
-  due_date?: string;
-  description?: string;
+  payment_method_id?: string | null;
+  statement_date?: string | null;
+  due_date?: string | null;
+  description?: string | null;
   is_active?: boolean;
 }

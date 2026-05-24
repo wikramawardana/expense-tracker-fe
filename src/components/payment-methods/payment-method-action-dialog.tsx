@@ -49,7 +49,7 @@ interface PaymentMethodActionDialogProps {
 
 function getMethodTypeDisplay(methodType: string) {
   const type = PAYMENT_METHOD_TYPES.find((t) => t.value === methodType);
-  return type ? `${type.emoji} ${type.label}` : methodType;
+  return type ? type.label : methodType;
 }
 
 export function PaymentMethodActionDialog({
@@ -245,7 +245,7 @@ export function PaymentMethodActionDialog({
                 <SelectContent>
                   {PAYMENT_METHOD_TYPES.map((type) => (
                     <SelectItem key={type.value} value={type.value}>
-                      {type.emoji} {type.label}
+                      {type.label}
                     </SelectItem>
                   ))}
                 </SelectContent>

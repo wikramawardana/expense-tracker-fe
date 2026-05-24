@@ -88,9 +88,9 @@ export function BillStatementActionDialog({
         name: name.trim(),
         statement_date: statementDate
           ? new Date(statementDate).toISOString()
-          : undefined,
-        due_date: dueDate ? new Date(dueDate).toISOString() : undefined,
-        description: description.trim() || undefined,
+          : null,
+        due_date: dueDate ? new Date(dueDate).toISOString() : null,
+        description: description.trim() || null,
         is_active: isActive,
       });
       toast.success("Bill statement updated successfully");

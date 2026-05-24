@@ -12,13 +12,8 @@ export type ExpenseCategory =
 // Expense status
 export type ExpenseStatus = "pending" | "paid" | "unpaid";
 
-// Payment method
-export type PaymentMethod =
-  | "Cash"
-  | "Credit Card"
-  | "Debit Card"
-  | "Transfer"
-  | "E-Wallet";
+// Payment method display name from the payment_methods table.
+export type PaymentMethod = string;
 
 // Recurrence type
 export type RecurrenceType = "installment" | "subscription";
@@ -79,6 +74,7 @@ export interface CreateExpensePayload {
   category_id: string;
   bill_statement_id: string;
   payment_method: PaymentMethod;
+  payment_method_id?: string;
   expense_date: string;
   description?: string;
   paid_by?: string;
@@ -111,6 +107,7 @@ export interface UpdateExpensePayload {
   expense_date?: string;
   status?: ExpenseStatus;
   payment_method?: PaymentMethod;
+  payment_method_id?: string;
   paid_by?: string;
   notes?: string;
   // Recurrence fields for installments and subscriptions

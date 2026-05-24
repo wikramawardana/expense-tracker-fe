@@ -118,7 +118,7 @@ export function CreatePaymentMethodDialog({
               <SelectContent>
                 {PAYMENT_METHOD_TYPES.map((type) => (
                   <SelectItem key={type.value} value={type.value}>
-                    {type.emoji} {type.label}
+                    {type.label}
                   </SelectItem>
                 ))}
               </SelectContent>

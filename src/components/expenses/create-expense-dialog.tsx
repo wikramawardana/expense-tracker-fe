@@ -23,17 +23,15 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { PAYMENT_METHODS } from "@/lib/constants";
 import { getBillStatements } from "@/services/bill-statements.service";
 import { getCategories } from "@/services/categories.service";
 import { createExpense, createExpensesBulk } from "@/services/expenses.service";
+import { getPaymentMethods } from "@/services/payment-methods.service";
 import { getRecurrenceTypes } from "@/services/recurrence-types.service";
 import type { BillStatement } from "@/types/bill-statement.types";
 import type { Category } from "@/types/category.types";
-import type {
-  CreateExpensePayload,
-  PaymentMethod,
-} from "@/types/expense.types";
+import type { CreateExpensePayload } from "@/types/expense.types";
+import type { PaymentMethod as PaymentMethodRecord } from "@/types/payment-method.types";
 import type { RecurrenceType as RecurrenceTypeModel } from "@/types/recurrence-type.types";
 
 interface CreateExpenseDialogProps {
@@ -61,6 +59,15 @@ function newRow(): ExpenseRow {
   };
 }
 
+function getDefaultPaymentMethodId(paymentMethods: PaymentMethodRecord[]) {
+  return (
+    paymentMethods.find((method) => method.name.trim().toLowerCase() === "cash")
+      ?.id ??
+    paymentMethods[0]?.id ??
+    ""
+  );
+}
+
 export function CreateExpenseDialog({
   onExpenseCreated,
 }: CreateExpenseDialogProps) {
@@ -73,6 +80,11 @@ export function CreateExpenseDialog({
   );
   const [isBillStatementsLoading, setIsBillStatementsLoading] =
     React.useState(false);
+  const [paymentMethods, setPaymentMethods] = React.useState<
+    PaymentMethodRecord[]
+  >([]);
+  const [isPaymentMethodsLoading, setIsPaymentMethodsLoading] =
+    React.useState(false);
   const [recurrenceTypes, setRecurrenceTypes] = React.useState<
     RecurrenceTypeModel[]
   >([]);
@@ -84,8 +96,7 @@ export function CreateExpenseDialog({
 
   // Shared state across all rows
   const [billStatementId, setBillStatementId] = React.useState("");
-  const [paymentMethod, setPaymentMethod] =
-    React.useState<PaymentMethod>("Cash");
+  const [paymentMethodId, setPaymentMethodId] = React.useState("");
   const [expenseDate, setExpenseDate] = React.useState(
     new Date().toISOString().split("T")[0],
   );
@@ -100,6 +111,20 @@ export function CreateExpenseDialog({
   const [recurrenceEndDate, setRecurrenceEndDate] = React.useState("");
 
   const isMulti = rows.length > 1;
+
+  const selectedPaymentMethod = React.useMemo(
+    () => paymentMethods.find((method) => method.id === paymentMethodId),
+    [paymentMethods, paymentMethodId],
+  );
+
+  const filteredBillStatements = React.useMemo(() => {
+    if (!selectedPaymentMethod) return [];
+    return billStatements.filter(
+      (billStatement) =>
+        !billStatement.payment_method_id ||
+        billStatement.payment_method_id === selectedPaymentMethod.id,
+    );
+  }, [billStatements, selectedPaymentMethod]);
 
   const selectedRecurrenceType = React.useMemo(() => {
     if (recurrenceTypeId === "none") return null;
@@ -141,6 +166,48 @@ export function CreateExpenseDialog({
   }, [isOpen, billStatements.length]);
 
   React.useEffect(() => {
+    if (isOpen && paymentMethods.length === 0) {
+      setIsPaymentMethodsLoading(true);
+      getPaymentMethods()
+        .then((response) => {
+          const activePaymentMethods = response.data.filter(
+            (method) => method.is_active,
+          );
+          setPaymentMethods(activePaymentMethods);
+          setPaymentMethodId(
+            (current) =>
+              current || getDefaultPaymentMethodId(activePaymentMethods),
+          );
+        })
+        .catch((error) => {
+          toast.error("Failed to load payment methods");
+          console.error(error);
+        })
+        .finally(() => {
+          setIsPaymentMethodsLoading(false);
+        });
+    }
+  }, [isOpen, paymentMethods.length]);
+
+  React.useEffect(() => {
+    if (isOpen && !paymentMethodId && paymentMethods.length > 0) {
+      setPaymentMethodId(getDefaultPaymentMethodId(paymentMethods));
+    }
+  }, [isOpen, paymentMethodId, paymentMethods]);
+
+  React.useEffect(() => {
+    if (
+      billStatementId &&
+      selectedPaymentMethod &&
+      !filteredBillStatements.some(
+        (billStatement) => billStatement.id === billStatementId,
+      )
+    ) {
+      setBillStatementId("");
+    }
+  }, [billStatementId, selectedPaymentMethod, filteredBillStatements]);
+
+  React.useEffect(() => {
     if (isOpen && recurrenceTypes.length === 0) {
       setIsRecurrenceTypesLoading(true);
       getRecurrenceTypes()
@@ -172,7 +239,7 @@ export function CreateExpenseDialog({
   const resetForm = () => {
     setRows([newRow()]);
     setBillStatementId("");
-    setPaymentMethod("Cash");
+    setPaymentMethodId("");
     setExpenseDate(new Date().toISOString().split("T")[0]);
     setPaidBy("");
     setRecurrenceTypeId("none");
@@ -199,14 +266,22 @@ export function CreateExpenseDialog({
   };
 
   const buildPayload = (row: ExpenseRow): CreateExpensePayload | null => {
-    if (!row.title || !row.amount || !row.categoryId) return null;
+    if (
+      !row.title ||
+      !row.amount ||
+      !row.categoryId ||
+      !selectedPaymentMethod
+    ) {
+      return null;
+    }
     const formattedDate = new Date(expenseDate).toISOString();
     return {
       title: row.title,
       amount: Number(row.amount),
       category_id: row.categoryId,
       bill_statement_id: billStatementId,
-      payment_method: paymentMethod,
+      payment_method: selectedPaymentMethod.name,
+      payment_method_id: selectedPaymentMethod.id,
       expense_date: formattedDate,
       description: row.description || undefined,
       paid_by: paidBy || undefined,
@@ -214,8 +289,12 @@ export function CreateExpenseDialog({
   };
 
   const handleSubmit = async () => {
-    if (!billStatementId || !paymentMethod || !expenseDate) {
+    if (!billStatementId || !paymentMethodId || !expenseDate) {
       toast.error("Please fill in all shared required fields");
+      return;
+    }
+    if (!selectedPaymentMethod) {
+      toast.error("Please select an active payment method");
       return;
     }
 
@@ -333,7 +412,7 @@ export function CreateExpenseDialog({
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Shared: Date & Bill Statement */}
+          {/* Shared: Date, payment method, and bill statement */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 pb-2 border-b">
               <h3 className="text-sm font-semibold text-muted-foreground">
@@ -355,29 +434,26 @@ export function CreateExpenseDialog({
               </div>
               <div className="space-y-2">
                 <Label>
-                  Bill Statement <span className="text-red-500">*</span>
+                  Payment Method <span className="text-red-500">*</span>
                 </Label>
                 <Select
-                  value={billStatementId}
-                  onValueChange={setBillStatementId}
-                  disabled={isBillStatementsLoading}
+                  value={paymentMethodId}
+                  onValueChange={setPaymentMethodId}
+                  disabled={isPaymentMethodsLoading}
                 >
                   <SelectTrigger className="h-11">
                     <SelectValue
                       placeholder={
-                        isBillStatementsLoading
+                        isPaymentMethodsLoading
                           ? "Loading..."
-                          : "Select bill statement"
+                          : "Select payment method"
                       }
                     />
                   </SelectTrigger>
                   <SelectContent>
-                    {billStatements.map((billStatement) => (
-                      <SelectItem
-                        key={billStatement.id}
-                        value={billStatement.id}
-                      >
-                        {billStatement.name}
+                    {paymentMethods.map((method) => (
+                      <SelectItem key={method.id} value={method.id}>
+                        {method.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -387,19 +463,37 @@ export function CreateExpenseDialog({
             <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
               <div className="space-y-2">
                 <Label>
-                  Payment Method <span className="text-red-500">*</span>
+                  Bill Statement <span className="text-red-500">*</span>
                 </Label>
                 <Select
-                  value={paymentMethod}
-                  onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}
+                  value={billStatementId}
+                  onValueChange={setBillStatementId}
+                  disabled={
+                    isBillStatementsLoading ||
+                    !paymentMethodId ||
+                    filteredBillStatements.length === 0
+                  }
                 >
                   <SelectTrigger className="h-11">
-                    <SelectValue placeholder="Select payment method" />
+                    <SelectValue
+                      placeholder={
+                        isBillStatementsLoading
+                          ? "Loading..."
+                          : !paymentMethodId
+                            ? "Select payment method first"
+                            : filteredBillStatements.length === 0
+                              ? "No matching bill statements"
+                              : "Select bill statement"
+                      }
+                    />
                   </SelectTrigger>
                   <SelectContent>
-                    {PAYMENT_METHODS.map((method) => (
-                      <SelectItem key={method.value} value={method.value}>
-                        {method.emoji} {method.label}
+                    {filteredBillStatements.map((billStatement) => (
+                      <SelectItem
+                        key={billStatement.id}
+                        value={billStatement.id}
+                      >
+                        {billStatement.name}
                       </SelectItem>
                     ))}
                   </SelectContent>
@@ -570,14 +664,9 @@ export function CreateExpenseDialog({
                       />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">1️⃣ One-time</SelectItem>
+                      <SelectItem value="none">One-time</SelectItem>
                       {recurrenceTypes.map((type) => (
                         <SelectItem key={type.id} value={type.id}>
-                          {type.name === "Installment"
-                            ? "📅"
-                            : type.name === "Subscription"
-                              ? "🔄"
-                              : "📋"}{" "}
                           {type.name}
                         </SelectItem>
                       ))}
@@ -700,7 +789,12 @@ export function CreateExpenseDialog({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={isLoading || hasIncompleteRow || !billStatementId}
+            disabled={
+              isLoading ||
+              hasIncompleteRow ||
+              !billStatementId ||
+              !paymentMethodId
+            }
           >
             {isLoading
               ? "Creating..."

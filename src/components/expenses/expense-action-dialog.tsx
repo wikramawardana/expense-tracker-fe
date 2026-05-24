@@ -29,7 +29,7 @@ import {
   SelectValue,
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
-import { EXPENSE_STATUSES, PAYMENT_METHODS } from "@/lib/constants";
+import { EXPENSE_STATUSES } from "@/lib/constants";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { getBillStatements } from "@/services/bill-statements.service";
 import { getCategories } from "@/services/categories.service";
@@ -38,14 +38,12 @@ import {
   getExpenseById,
   updateExpense,
 } from "@/services/expenses.service";
+import { getPaymentMethods } from "@/services/payment-methods.service";
 import { getRecurrenceTypes } from "@/services/recurrence-types.service";
 import type { BillStatement } from "@/types/bill-statement.types";
 import type { Category } from "@/types/category.types";
-import type {
-  Expense,
-  ExpenseStatus,
-  PaymentMethod,
-} from "@/types/expense.types";
+import type { Expense, ExpenseStatus } from "@/types/expense.types";
+import type { PaymentMethod as PaymentMethodRecord } from "@/types/payment-method.types";
 import type { RecurrenceType as RecurrenceTypeModel } from "@/types/recurrence-type.types";
 import { StatusBadge } from "./status-badge";
 
@@ -54,6 +52,28 @@ interface ExpenseActionDialogProps {
   categories?: Category[];
   onExpenseUpdated?: () => void;
   onExpenseDeleted?: () => void;
+}
+
+function findPaymentMethodId(
+  paymentMethods: PaymentMethodRecord[],
+  paymentMethodId?: string | null,
+  paymentMethodName?: string | null,
+) {
+  if (
+    paymentMethodId &&
+    paymentMethods.some((method) => method.id === paymentMethodId)
+  ) {
+    return paymentMethodId;
+  }
+
+  const normalizedName = paymentMethodName?.trim().toLowerCase();
+  if (!normalizedName) return "";
+
+  return (
+    paymentMethods.find(
+      (method) => method.name.trim().toLowerCase() === normalizedName,
+    )?.id ?? ""
+  );
 }
 
 export function ExpenseActionDialog({
@@ -81,6 +101,11 @@ export function ExpenseActionDialog({
   );
   const [isBillStatementsLoading, setIsBillStatementsLoading] =
     React.useState(false);
+  const [paymentMethods, setPaymentMethods] = React.useState<
+    PaymentMethodRecord[]
+  >([]);
+  const [isPaymentMethodsLoading, setIsPaymentMethodsLoading] =
+    React.useState(false);
   const [recurrenceTypes, setRecurrenceTypes] = React.useState<
     RecurrenceTypeModel[]
   >([]);
@@ -101,9 +126,9 @@ export function ExpenseActionDialog({
     expense.expense_date?.split("T")[0] || "",
   );
   const [status, setStatus] = React.useState<ExpenseStatus>(expense.status);
-  const [paymentMethod, setPaymentMethod] = React.useState<
-    PaymentMethod | string
-  >(expense.payment_method || "Cash");
+  const [paymentMethodId, setPaymentMethodId] = React.useState(
+    expense.payment_method_id || "",
+  );
   const [paidBy, setPaidBy] = React.useState(expense.paid_by || "");
 
   // Recurrence state
@@ -131,6 +156,20 @@ export function ExpenseActionDialog({
     if (!currentExpense.category_id || categories.length === 0) return null;
     return categories.find((c) => c.id === currentExpense.category_id);
   }, [currentExpense.category_id, categories]);
+
+  const selectedPaymentMethod = React.useMemo(
+    () => paymentMethods.find((method) => method.id === paymentMethodId),
+    [paymentMethods, paymentMethodId],
+  );
+
+  const filteredBillStatements = React.useMemo(() => {
+    if (!selectedPaymentMethod) return [];
+    return billStatements.filter(
+      (billStatement) =>
+        !billStatement.payment_method_id ||
+        billStatement.payment_method_id === selectedPaymentMethod.id,
+    );
+  }, [billStatements, selectedPaymentMethod]);
 
   // Fetch expense by ID when view or edit dialog opens
   React.useEffect(() => {
@@ -186,6 +225,36 @@ export function ExpenseActionDialog({
     }
   }, [isEditOpen, billStatements.length]);
 
+  // Fetch payment methods when edit dialog opens
+  React.useEffect(() => {
+    if (isEditOpen && paymentMethods.length === 0) {
+      setIsPaymentMethodsLoading(true);
+      getPaymentMethods()
+        .then((response) => {
+          const activePaymentMethods = response.data.filter(
+            (method) => method.is_active,
+          );
+          setPaymentMethods(activePaymentMethods);
+          setPaymentMethodId(
+            (current) =>
+              current ||
+              findPaymentMethodId(
+                activePaymentMethods,
+                currentExpense.payment_method_id,
+                currentExpense.payment_method,
+              ),
+          );
+        })
+        .catch((error) => {
+          toast.error("Failed to load payment methods");
+          console.error(error);
+        })
+        .finally(() => {
+          setIsPaymentMethodsLoading(false);
+        });
+    }
+  }, [isEditOpen, paymentMethods.length, currentExpense]);
+
   // Fetch recurrence types when edit dialog opens
   React.useEffect(() => {
     if (isEditOpen && recurrenceTypes.length === 0) {
@@ -227,7 +296,7 @@ export function ExpenseActionDialog({
       setBillStatementId(currentExpense.bill_statement_id || "");
       setExpenseDate(currentExpense.expense_date?.split("T")[0] || "");
       setStatus(currentExpense.status);
-      setPaymentMethod(currentExpense.payment_method || "Cash");
+      setPaymentMethodId(currentExpense.payment_method_id || "");
       setPaidBy(currentExpense.paid_by || "");
       // Reset recurrence fields
       setRecurrenceTypeId(currentExpense.recurrence_type_id || "none");
@@ -239,9 +308,55 @@ export function ExpenseActionDialog({
     }
   }, [isEditOpen, currentExpense, isExpenseLoading]);
 
+  React.useEffect(() => {
+    if (
+      isEditOpen &&
+      !paymentMethodId &&
+      currentExpense.payment_method &&
+      paymentMethods.length > 0
+    ) {
+      const matchedPaymentMethodId = findPaymentMethodId(
+        paymentMethods,
+        currentExpense.payment_method_id,
+        currentExpense.payment_method,
+      );
+      if (matchedPaymentMethodId) {
+        setPaymentMethodId(matchedPaymentMethodId);
+      }
+    }
+  }, [isEditOpen, paymentMethodId, currentExpense, paymentMethods]);
+
+  React.useEffect(() => {
+    if (
+      isEditOpen &&
+      billStatementId &&
+      selectedPaymentMethod &&
+      !filteredBillStatements.some(
+        (billStatement) => billStatement.id === billStatementId,
+      )
+    ) {
+      setBillStatementId("");
+    }
+  }, [
+    isEditOpen,
+    billStatementId,
+    selectedPaymentMethod,
+    filteredBillStatements,
+  ]);
+
   const handleEdit = async () => {
-    if (!title || !amount || !categoryId || !billStatementId) {
+    if (
+      !title ||
+      !amount ||
+      !categoryId ||
+      !billStatementId ||
+      !paymentMethodId
+    ) {
       toast.error("Please fill in all required fields");
+      return;
+    }
+    if (!selectedPaymentMethod) {
+      toast.error("Please select an active payment method");
       return;
     }
 
@@ -275,7 +390,8 @@ export function ExpenseActionDialog({
         bill_statement_id: billStatementId,
         expense_date: formattedDate,
         status,
-        payment_method: paymentMethod as PaymentMethod,
+        payment_method: selectedPaymentMethod.name,
+        payment_method_id: selectedPaymentMethod.id,
         paid_by: paidBy || undefined,
       };
 
@@ -479,19 +595,7 @@ export function ExpenseActionDialog({
                       Payment Method
                     </Label>
                     <p className="font-semibold flex items-center gap-2">
-                      {(() => {
-                        const method = PAYMENT_METHODS.find(
-                          (m) => m.value === currentExpense.payment_method,
-                        );
-                        return method ? (
-                          <>
-                            <span>{method.emoji}</span>
-                            <span>{method.label}</span>
-                          </>
-                        ) : (
-                          currentExpense.payment_method || "-"
-                        );
-                      })()}
+                      {currentExpense.payment_method || "-"}
                     </p>
                   </div>
                   <div className="space-y-1">
@@ -734,19 +838,27 @@ export function ExpenseActionDialog({
                   <Select
                     value={billStatementId}
                     onValueChange={setBillStatementId}
-                    disabled={isBillStatementsLoading}
+                    disabled={
+                      isBillStatementsLoading ||
+                      !paymentMethodId ||
+                      filteredBillStatements.length === 0
+                    }
                   >
                     <SelectTrigger className="h-11">
                       <SelectValue
                         placeholder={
                           isBillStatementsLoading
                             ? "Loading..."
-                            : "Select bill statement"
+                            : !paymentMethodId
+                              ? "Select payment method first"
+                              : filteredBillStatements.length === 0
+                                ? "No matching bill statements"
+                                : "Select bill statement"
                         }
                       />
                     </SelectTrigger>
                     <SelectContent>
-                      {billStatements.map((billStatement) => (
+                      {filteredBillStatements.map((billStatement) => (
                         <SelectItem
                           key={billStatement.id}
                           value={billStatement.id}
@@ -773,16 +885,23 @@ export function ExpenseActionDialog({
                     Payment Method <span className="text-red-500">*</span>
                   </Label>
                   <Select
-                    value={paymentMethod}
-                    onValueChange={(v) => setPaymentMethod(v as PaymentMethod)}
+                    value={paymentMethodId}
+                    onValueChange={setPaymentMethodId}
+                    disabled={isPaymentMethodsLoading}
                   >
                     <SelectTrigger className="h-11">
-                      <SelectValue placeholder="Select payment method" />
+                      <SelectValue
+                        placeholder={
+                          isPaymentMethodsLoading
+                            ? "Loading..."
+                            : "Select payment method"
+                        }
+                      />
                     </SelectTrigger>
                     <SelectContent>
-                      {PAYMENT_METHODS.map((method) => (
-                        <SelectItem key={method.value} value={method.value}>
-                          {method.emoji} {method.label}
+                      {paymentMethods.map((method) => (
+                        <SelectItem key={method.id} value={method.id}>
+                          {method.name}
                         </SelectItem>
                       ))}
                     </SelectContent>
@@ -837,14 +956,9 @@ export function ExpenseActionDialog({
                       />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="none">1️⃣ One-time</SelectItem>
+                      <SelectItem value="none">One-time</SelectItem>
                       {recurrenceTypes.map((type) => (
                         <SelectItem key={type.id} value={type.id}>
-                          {type.name === "Installment"
-                            ? "📅"
-                            : type.name === "Subscription"
-                              ? "🔄"
-                              : "📋"}{" "}
                           {type.name}
                         </SelectItem>
                       ))}
@@ -961,7 +1075,8 @@ export function ExpenseActionDialog({
                 !title ||
                 !amount ||
                 !categoryId ||
-                !billStatementId
+                !billStatementId ||
+                !paymentMethodId
               }
             >
               {isLoading ? "Saving..." : "Save Changes"}

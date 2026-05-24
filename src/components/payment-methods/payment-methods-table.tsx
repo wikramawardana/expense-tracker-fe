@@ -24,7 +24,7 @@ interface PaymentMethodsTableProps {
 
 function getMethodTypeDisplay(methodType: string) {
   const type = PAYMENT_METHOD_TYPES.find((t) => t.value === methodType);
-  return type ? `${type.emoji} ${type.label}` : methodType;
+  return type ? type.label : methodType;
 }
 
 export function PaymentMethodsTable({

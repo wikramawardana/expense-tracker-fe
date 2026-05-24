@@ -102,14 +102,6 @@ export function PaymentMethodBadge({
     return <span className={cn("text-muted-foreground", className)}>—</span>;
   }
 
-  const methodInfo = [
-    { value: "Cash", label: "Cash", emoji: "💵" },
-    { value: "Credit Card", label: "Credit Card", emoji: "💳" },
-    { value: "Debit Card", label: "Debit Card", emoji: "💳" },
-    { value: "Transfer", label: "Bank Transfer", emoji: "🏦" },
-    { value: "E-Wallet", label: "E-Wallet", emoji: "📱" },
-  ].find((m) => m.value === paymentMethod || m.label === paymentMethod);
-
   return (
     <span
       className={cn(
@@ -117,8 +109,7 @@ export function PaymentMethodBadge({
         className,
       )}
     >
-      {methodInfo?.emoji && <span>{methodInfo.emoji}</span>}
-      <span>{methodInfo?.label || paymentMethod}</span>
+      <span>{paymentMethod}</span>
     </span>
   );
 }

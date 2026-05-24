@@ -50,11 +50,10 @@ export interface UpdatePaymentMethodPayload {
 export const PAYMENT_METHOD_TYPES: {
   value: PaymentMethodType;
   label: string;
-  emoji: string;
 }[] = [
-  { value: "cash", label: "Cash", emoji: "💵" },
-  { value: "credit_card", label: "Credit Card", emoji: "💳" },
-  { value: "debit_card", label: "Debit Card", emoji: "💳" },
-  { value: "e_wallet", label: "E-Wallet", emoji: "📱" },
-  { value: "bank_transfer", label: "Bank Transfer", emoji: "🏦" },
+  { value: "cash", label: "Cash" },
+  { value: "credit_card", label: "Credit Card" },
+  { value: "debit_card", label: "Debit Card" },
+  { value: "e_wallet", label: "E-Wallet" },
+  { value: "bank_transfer", label: "Bank Transfer" },
 ];

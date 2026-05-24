@@ -190,7 +190,7 @@ export function ExpensesFilters({
             <SelectItem value="all">All Categories</SelectItem>
             {EXPENSE_CATEGORIES.map((cat) => (
               <SelectItem key={cat.value} value={cat.value}>
-                {cat.emoji} {cat.label}
+                {cat.label}
               </SelectItem>
             ))}
           </SelectContent>

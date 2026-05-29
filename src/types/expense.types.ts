@@ -37,7 +37,6 @@ export interface Expense {
   recurrence_type_id?: string | null;
   recurrence_count?: number | null;
   recurrence_current?: number | null;
-  recurrence_total_amount?: number | null;
   recurrence_end_date?: string | null;
   recurrence_group_id?: string | null;
   notes?: string;
@@ -82,7 +81,6 @@ export interface CreateExpensePayload {
   recurrence_type_id?: string;
   recurrence_count?: number;
   recurrence_current?: number;
-  recurrence_total_amount?: number;
   recurrence_end_date?: string;
 }
 
@@ -134,7 +132,6 @@ export interface UpdateExpensePayload {
   recurrence_type?: Exclude<ScheduleType, "none"> | null;
   recurrence_type_id?: string | null;
   recurrence_count?: number | null; // For installments: number of payments
-  recurrence_total_amount?: number | null;
   recurrence_end_date?: string | null;
   clear_recurrence?: boolean; // Set to true when changing from scheduled to one-time
 }

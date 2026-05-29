@@ -139,9 +139,6 @@ export function ExpenseActionDialog({
   const [recurrenceCount, setRecurrenceCount] = React.useState(
     expense.recurrence_count?.toString() || "",
   );
-  const [recurrenceTotalAmount, setRecurrenceTotalAmount] = React.useState(
-    expense.recurrence_total_amount || "",
-  );
 
   const selectedScheduleType = React.useMemo(
     () => SCHEDULE_TYPES.find((type) => type.value === scheduleType),
@@ -280,7 +277,6 @@ export function ExpenseActionDialog({
       // Reset schedule fields
       setScheduleType(getScheduleType(currentExpense));
       setRecurrenceCount(currentExpense.recurrence_count?.toString() || "");
-      setRecurrenceTotalAmount(currentExpense.recurrence_total_amount || "");
     }
   }, [isEditOpen, currentExpense, isExpenseLoading]);
 
@@ -339,9 +335,9 @@ export function ExpenseActionDialog({
     // Validate schedule fields based on schedule type name
     if (
       scheduleType === "installment" &&
-      (!recurrenceCount || !recurrenceTotalAmount)
+      (!recurrenceCount || Number(recurrenceCount) < 1)
     ) {
-      toast.error("Please fill in installment count and total amount");
+      toast.error("Number of payments must be at least 1");
       return;
     }
 
@@ -370,7 +366,6 @@ export function ExpenseActionDialog({
       } else if (scheduleType === "installment") {
         updatePayload.recurrence_type = "installment";
         updatePayload.recurrence_count = Number(recurrenceCount);
-        updatePayload.recurrence_total_amount = Number(recurrenceTotalAmount);
         updatePayload.recurrence_end_date = null;
       }
 
@@ -577,7 +572,7 @@ export function ExpenseActionDialog({
                       Schedule Details
                     </h3>
                   </div>
-                  <div className="grid gap-4 grid-cols-1 md:grid-cols-3 p-4 bg-muted rounded-lg border">
+                  <div className="grid gap-4 grid-cols-1 md:grid-cols-2 p-4 bg-muted rounded-lg border">
                     <div className="space-y-1">
                       <Label className="text-muted-foreground text-xs uppercase">
                         Type
@@ -587,29 +582,15 @@ export function ExpenseActionDialog({
                       </p>
                     </div>
                     {currentExpense.recurrence_type === "installment" && (
-                      <>
-                        <div className="space-y-1">
-                          <Label className="text-muted-foreground text-xs uppercase">
-                            Progress
-                          </Label>
-                          <p className="font-semibold">
-                            {currentExpense.recurrence_current || 1} of{" "}
-                            {currentExpense.recurrence_count || "-"}
-                          </p>
-                        </div>
-                        <div className="space-y-1">
-                          <Label className="text-muted-foreground text-xs uppercase">
-                            Total Amount
-                          </Label>
-                          <p className="font-semibold">
-                            {currentExpense.recurrence_total_amount
-                              ? formatCurrency(
-                                  currentExpense.recurrence_total_amount,
-                                )
-                              : "-"}
-                          </p>
-                        </div>
-                      </>
+                      <div className="space-y-1">
+                        <Label className="text-muted-foreground text-xs uppercase">
+                          Progress
+                        </Label>
+                        <p className="font-semibold">
+                          {currentExpense.recurrence_current || 1} of{" "}
+                          {currentExpense.recurrence_count || "-"}
+                        </p>
+                      </div>
                     )}
                   </div>
                 </div>
@@ -910,19 +891,6 @@ export function ExpenseActionDialog({
                       value={recurrenceCount}
                       onChange={(e) => setRecurrenceCount(e.target.value)}
                       placeholder="e.g., 12"
-                      className="h-11"
-                    />
-                  </div>
-                  <div className="space-y-2">
-                    <Label htmlFor="edit-recurrenceTotalAmount">
-                      Total Amount <span className="text-red-500">*</span>
-                    </Label>
-                    <Input
-                      id="edit-recurrenceTotalAmount"
-                      type="number"
-                      value={recurrenceTotalAmount}
-                      onChange={(e) => setRecurrenceTotalAmount(e.target.value)}
-                      placeholder="e.g., 18000000"
                       className="h-11"
                     />
                   </div>

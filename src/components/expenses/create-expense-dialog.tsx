@@ -42,10 +42,16 @@ interface ExpenseRow {
   title: string;
   amount: string;
   categoryId: string;
+  billStatementId: string;
+  paymentMethodId: string;
+  paidBy: string;
+  scheduleType: string;
+  recurrenceCount: string;
+  recurrenceCurrent: string;
   description: string;
 }
 
-function newRow(): ExpenseRow {
+function newRow(paymentMethodId = ""): ExpenseRow {
   return {
     rowId:
       typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -54,6 +60,12 @@ function newRow(): ExpenseRow {
     title: "",
     amount: "",
     categoryId: "",
+    billStatementId: "",
+    paymentMethodId,
+    paidBy: "",
+    scheduleType: "none",
+    recurrenceCount: "",
+    recurrenceCurrent: "",
     description: "",
   };
 }
@@ -88,39 +100,25 @@ export function CreateExpenseDialog({
   // Per-row state
   const [rows, setRows] = React.useState<ExpenseRow[]>([newRow()]);
 
-  // Shared state across all rows
-  const [billStatementId, setBillStatementId] = React.useState("");
-  const [paymentMethodId, setPaymentMethodId] = React.useState("");
+  // Shared date across all rows
   const [expenseDate, setExpenseDate] = React.useState(
     new Date().toISOString().split("T")[0],
   );
-  const [paidBy, setPaidBy] = React.useState("");
 
-  // Schedule type (only available when there's a single row)
-  const [scheduleType, setScheduleType] = React.useState("none");
-  const [recurrenceCount, setRecurrenceCount] = React.useState("");
-  const [recurrenceCurrent, setRecurrenceCurrent] = React.useState("");
-  const [recurrenceTotalAmount, setRecurrenceTotalAmount] = React.useState("");
+  const getFilteredBillStatements = React.useCallback(
+    (paymentMethodId: string) => {
+      const selectedPaymentMethod = paymentMethods.find(
+        (method) => method.id === paymentMethodId,
+      );
+      if (!selectedPaymentMethod) return [];
 
-  const isMulti = rows.length > 1;
-
-  const selectedPaymentMethod = React.useMemo(
-    () => paymentMethods.find((method) => method.id === paymentMethodId),
-    [paymentMethods, paymentMethodId],
-  );
-
-  const filteredBillStatements = React.useMemo(() => {
-    if (!selectedPaymentMethod) return [];
-    return billStatements.filter(
-      (billStatement) =>
-        !billStatement.payment_method_id ||
-        billStatement.payment_method_id === selectedPaymentMethod.id,
-    );
-  }, [billStatements, selectedPaymentMethod]);
-
-  const selectedScheduleType = React.useMemo(
-    () => SCHEDULE_TYPES.find((type) => type.value === scheduleType),
-    [scheduleType],
+      return billStatements.filter(
+        (billStatement) =>
+          !billStatement.payment_method_id ||
+          billStatement.payment_method_id === selectedPaymentMethod.id,
+      );
+    },
+    [billStatements, paymentMethods],
   );
 
   React.useEffect(() => {
@@ -166,9 +164,14 @@ export function CreateExpenseDialog({
             (method) => method.is_active,
           );
           setPaymentMethods(activePaymentMethods);
-          setPaymentMethodId(
-            (current) =>
-              current || getDefaultPaymentMethodId(activePaymentMethods),
+          const defaultPaymentMethodId =
+            getDefaultPaymentMethodId(activePaymentMethods);
+          setRows((prev) =>
+            prev.map((row) =>
+              row.paymentMethodId
+                ? row
+                : { ...row, paymentMethodId: defaultPaymentMethodId },
+            ),
           );
         })
         .catch((error) => {
@@ -182,44 +185,47 @@ export function CreateExpenseDialog({
   }, [isOpen, paymentMethods.length]);
 
   React.useEffect(() => {
-    if (isOpen && !paymentMethodId && paymentMethods.length > 0) {
-      setPaymentMethodId(getDefaultPaymentMethodId(paymentMethods));
-    }
-  }, [isOpen, paymentMethodId, paymentMethods]);
+    if (!isOpen || paymentMethods.length === 0) return;
+
+    const defaultPaymentMethodId = getDefaultPaymentMethodId(paymentMethods);
+    setRows((prev) =>
+      prev.map((row) =>
+        row.paymentMethodId
+          ? row
+          : { ...row, paymentMethodId: defaultPaymentMethodId },
+      ),
+    );
+  }, [isOpen, paymentMethods]);
 
   React.useEffect(() => {
-    if (
-      billStatementId &&
-      selectedPaymentMethod &&
-      !filteredBillStatements.some(
-        (billStatement) => billStatement.id === billStatementId,
-      )
-    ) {
-      setBillStatementId("");
+    if (!isOpen || billStatements.length === 0 || paymentMethods.length === 0) {
+      return;
     }
-  }, [billStatementId, selectedPaymentMethod, filteredBillStatements]);
 
-  // When switching to multi-row mode, reset recurrence to one-time since it is
-  // not supported for bulk creation.
-  React.useEffect(() => {
-    if (isMulti && scheduleType !== "none") {
-      setScheduleType("none");
-      setRecurrenceCount("");
-      setRecurrenceCurrent("");
-      setRecurrenceTotalAmount("");
-    }
-  }, [isMulti, scheduleType]);
+    setRows((prev) =>
+      prev.map((row) => {
+        if (
+          !row.billStatementId ||
+          getFilteredBillStatements(row.paymentMethodId).some(
+            (billStatement) => billStatement.id === row.billStatementId,
+          )
+        ) {
+          return row;
+        }
+
+        return { ...row, billStatementId: "" };
+      }),
+    );
+  }, [
+    isOpen,
+    billStatements.length,
+    paymentMethods.length,
+    getFilteredBillStatements,
+  ]);
 
   const resetForm = () => {
-    setRows([newRow()]);
-    setBillStatementId("");
-    setPaymentMethodId("");
+    setRows([newRow(getDefaultPaymentMethodId(paymentMethods))]);
     setExpenseDate(new Date().toISOString().split("T")[0]);
-    setPaidBy("");
-    setScheduleType("none");
-    setRecurrenceCount("");
-    setRecurrenceCurrent("");
-    setRecurrenceTotalAmount("");
   };
 
   const updateRow = (rowId: string, patch: Partial<ExpenseRow>) => {
@@ -229,7 +235,10 @@ export function CreateExpenseDialog({
   };
 
   const addRow = () => {
-    setRows((prev) => [...prev, newRow()]);
+    setRows((prev) => [
+      ...prev,
+      newRow(getDefaultPaymentMethodId(paymentMethods)),
+    ]);
   };
 
   const removeRow = (rowId: string) => {
@@ -239,65 +248,92 @@ export function CreateExpenseDialog({
   };
 
   const buildPayload = (row: ExpenseRow): CreateExpensePayload | null => {
+    const selectedPaymentMethod = paymentMethods.find(
+      (method) => method.id === row.paymentMethodId,
+    );
+
     if (
       !row.title ||
       !row.amount ||
       !row.categoryId ||
+      !row.billStatementId ||
       !selectedPaymentMethod
     ) {
       return null;
     }
     const formattedDate = new Date(expenseDate).toISOString();
-    return {
+    const payload: CreateExpensePayload = {
       title: row.title,
       amount: Number(row.amount),
       category_id: row.categoryId,
-      bill_statement_id: billStatementId,
+      bill_statement_id: row.billStatementId,
       payment_method: selectedPaymentMethod.name,
       payment_method_id: selectedPaymentMethod.id,
       expense_date: formattedDate,
       description: row.description || undefined,
-      paid_by: paidBy || undefined,
+      paid_by: row.paidBy || undefined,
     };
+
+    if (row.scheduleType === "installment") {
+      payload.recurrence_type = "installment";
+      payload.recurrence_count = Number(row.recurrenceCount);
+      if (row.recurrenceCurrent) {
+        payload.recurrence_current = Number(row.recurrenceCurrent);
+      }
+    }
+
+    return payload;
   };
 
   const handleSubmit = async () => {
-    if (!billStatementId || !paymentMethodId || !expenseDate) {
-      toast.error("Please fill in all shared required fields");
-      return;
-    }
-    if (!selectedPaymentMethod) {
-      toast.error("Please select an active payment method");
+    if (!expenseDate) {
+      toast.error("Please fill in the expense date");
       return;
     }
 
     for (let i = 0; i < rows.length; i++) {
       const row = rows[i];
-      if (!row.title || !row.amount || !row.categoryId) {
+      const selectedPaymentMethod = paymentMethods.find(
+        (method) => method.id === row.paymentMethodId,
+      );
+
+      if (
+        !row.title ||
+        !row.amount ||
+        !row.categoryId ||
+        !row.billStatementId ||
+        !row.paymentMethodId
+      ) {
+        toast.error(`Please fill in all required fields for expense #${i + 1}`);
+        return;
+      }
+
+      if (!selectedPaymentMethod) {
         toast.error(
-          `Please fill in title, amount, and category for expense #${i + 1}`,
+          `Please select an active payment method for expense #${i + 1}`,
         );
         return;
       }
-    }
 
-    if (!isMulti) {
-      if (
-        scheduleType === "installment" &&
-        (!recurrenceCount || !recurrenceTotalAmount)
-      ) {
-        toast.error("Please fill in installment count and total amount");
-        return;
-      }
-
-      if (scheduleType === "installment" && recurrenceCurrent) {
-        const cur = Number(recurrenceCurrent);
-        const total = Number(recurrenceCount);
-        if (cur < 1 || cur > total) {
+      if (row.scheduleType === "installment") {
+        const total = Number(row.recurrenceCount);
+        if (!row.recurrenceCount || total < 1) {
           toast.error(
-            `Current payment must be between 1 and ${total || "total payments"}`,
+            `Number of payments for expense #${i + 1} must be at least 1`,
           );
           return;
+        }
+
+        if (row.recurrenceCurrent) {
+          const cur = Number(row.recurrenceCurrent);
+          if (cur < 1 || cur > total) {
+            toast.error(
+              `Current payment for expense #${i + 1} must be between 1 and ${
+                total || "total payments"
+              }`,
+            );
+            return;
+          }
         }
       }
     }
@@ -313,17 +349,8 @@ export function CreateExpenseDialog({
         return;
       }
 
-      if (!isMulti) {
-        const payload = payloads[0];
-        if (scheduleType === "installment") {
-          payload.recurrence_type = "installment";
-          payload.recurrence_count = Number(recurrenceCount);
-          payload.recurrence_total_amount = Number(recurrenceTotalAmount);
-          if (recurrenceCurrent) {
-            payload.recurrence_current = Number(recurrenceCurrent);
-          }
-        }
-        await createExpense(payload);
+      if (payloads.length === 1) {
+        await createExpense(payloads[0]);
         toast.success("Expense created successfully");
       } else {
         const response = await createExpensesBulk({ expenses: payloads });
@@ -343,7 +370,13 @@ export function CreateExpenseDialog({
   };
 
   const hasIncompleteRow = rows.some(
-    (row) => !row.title || !row.amount || !row.categoryId,
+    (row) =>
+      !row.title ||
+      !row.amount ||
+      !row.categoryId ||
+      !row.billStatementId ||
+      !row.paymentMethodId ||
+      (row.scheduleType === "installment" && !row.recurrenceCount),
   );
 
   return (
@@ -357,21 +390,20 @@ export function CreateExpenseDialog({
       <DialogContent className="max-h-[90vh] overflow-y-auto rounded-lg border-2 border-primary/35 shadow-[6px_6px_0px_0px_rgba(79,70,229,0.18)] dark:border-primary/45 dark:shadow-[6px_6px_0px_0px_rgba(129,140,248,0.24)] sm:max-w-4xl">
         <DialogHeader className="space-y-2 pb-4 border-b">
           <DialogTitle className="text-xl font-bold">
-            {isMulti ? "Add New Expenses" : "Add New Expense"}
+            {rows.length > 1 ? "Add New Expenses" : "Add New Expense"}
           </DialogTitle>
           <DialogDescription>
-            {isMulti
-              ? "Create multiple expense entries that share the same date, bill statement, and payment method."
-              : "Create a new expense entry. You can add more rows to log several expenses at once."}
+            Create expense entries that share a date. Each row can use its own
+            payment details and schedule.
           </DialogDescription>
         </DialogHeader>
 
         <div className="space-y-6 py-4">
-          {/* Shared: Date, payment method, and bill statement */}
+          {/* Shared date */}
           <div className="space-y-4">
             <div className="flex items-center gap-2 pb-2 border-b">
               <h3 className="text-sm font-semibold text-muted-foreground">
-                Shared Info
+                Shared Date
               </h3>
             </div>
             <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
@@ -384,83 +416,6 @@ export function CreateExpenseDialog({
                   type="date"
                   value={expenseDate}
                   onChange={(e) => setExpenseDate(e.target.value)}
-                  className="h-11"
-                />
-              </div>
-              <div className="space-y-2">
-                <Label>
-                  Payment Method <span className="text-red-500">*</span>
-                </Label>
-                <Select
-                  value={paymentMethodId}
-                  onValueChange={setPaymentMethodId}
-                  disabled={isPaymentMethodsLoading}
-                >
-                  <SelectTrigger className="h-11">
-                    <SelectValue
-                      placeholder={
-                        isPaymentMethodsLoading
-                          ? "Loading..."
-                          : "Select payment method"
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {paymentMethods.map((method) => (
-                      <SelectItem key={method.id} value={method.id}>
-                        {method.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-            </div>
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label>
-                  Bill Statement <span className="text-red-500">*</span>
-                </Label>
-                <Select
-                  value={billStatementId}
-                  onValueChange={setBillStatementId}
-                  disabled={
-                    isBillStatementsLoading ||
-                    !paymentMethodId ||
-                    filteredBillStatements.length === 0
-                  }
-                >
-                  <SelectTrigger className="h-11">
-                    <SelectValue
-                      placeholder={
-                        isBillStatementsLoading
-                          ? "Loading..."
-                          : !paymentMethodId
-                            ? "Select payment method first"
-                            : filteredBillStatements.length === 0
-                              ? "No matching bill statements"
-                              : "Select bill statement"
-                      }
-                    />
-                  </SelectTrigger>
-                  <SelectContent>
-                    {filteredBillStatements.map((billStatement) => (
-                      <SelectItem
-                        key={billStatement.id}
-                        value={billStatement.id}
-                      >
-                        {billStatement.name}
-                      </SelectItem>
-                    ))}
-                  </SelectContent>
-                </Select>
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="paidBy">Paid By</Label>
-                <Input
-                  id="paidBy"
-                  value={paidBy}
-                  onChange={(e) => setPaidBy(e.target.value)}
-                  placeholder="e.g., Wikra"
                   className="h-11"
                 />
               </div>
@@ -485,91 +440,265 @@ export function CreateExpenseDialog({
             </div>
 
             <div className="space-y-4">
-              {rows.map((row, index) => (
-                <div
-                  key={row.rowId}
-                  className="space-y-4 rounded-lg border p-4"
-                >
-                  <div className="flex items-center justify-between">
-                    <span className="text-xs font-medium text-muted-foreground">
-                      Expense #{index + 1}
-                    </span>
-                    {rows.length > 1 && (
-                      <Button
-                        type="button"
-                        variant="ghost"
-                        size="sm"
-                        onClick={() => removeRow(row.rowId)}
-                        aria-label={`Remove expense #${index + 1}`}
-                      >
-                        <Trash2 className="h-4 w-4" />
-                      </Button>
-                    )}
-                  </div>
+              {rows.map((row, index) => {
+                const rowFilteredBillStatements = getFilteredBillStatements(
+                  row.paymentMethodId,
+                );
+                const rowSelectedScheduleType = SCHEDULE_TYPES.find(
+                  (type) => type.value === row.scheduleType,
+                );
 
-                  <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor={`title-${row.rowId}`}>
-                        Title <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id={`title-${row.rowId}`}
-                        value={row.title}
-                        onChange={(e) =>
-                          updateRow(row.rowId, { title: e.target.value })
-                        }
-                        placeholder="e.g., Lunch at restaurant"
-                        className="h-11"
-                      />
+                return (
+                  <div
+                    key={row.rowId}
+                    className="space-y-4 rounded-lg border p-4"
+                  >
+                    <div className="flex items-center justify-between">
+                      <span className="text-xs font-medium text-muted-foreground">
+                        Expense #{index + 1}
+                      </span>
+                      {rows.length > 1 && (
+                        <Button
+                          type="button"
+                          variant="ghost"
+                          size="sm"
+                          onClick={() => removeRow(row.rowId)}
+                          aria-label={`Remove expense #${index + 1}`}
+                        >
+                          <Trash2 className="h-4 w-4" />
+                        </Button>
+                      )}
                     </div>
-                    <div className="space-y-2">
-                      <Label>
-                        Category <span className="text-red-500">*</span>
-                      </Label>
-                      <Select
-                        value={row.categoryId}
-                        onValueChange={(v) =>
-                          updateRow(row.rowId, { categoryId: v })
-                        }
-                        disabled={isCategoriesLoading}
-                      >
-                        <SelectTrigger className="h-11">
-                          <SelectValue
-                            placeholder={
-                              isCategoriesLoading
-                                ? "Loading..."
-                                : "Select category"
+
+                    <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor={`title-${row.rowId}`}>
+                          Title <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id={`title-${row.rowId}`}
+                          value={row.title}
+                          onChange={(e) =>
+                            updateRow(row.rowId, { title: e.target.value })
+                          }
+                          placeholder="e.g., Lunch at restaurant"
+                          className="h-11"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>
+                          Category <span className="text-red-500">*</span>
+                        </Label>
+                        <Select
+                          value={row.categoryId}
+                          onValueChange={(v) =>
+                            updateRow(row.rowId, { categoryId: v })
+                          }
+                          disabled={isCategoriesLoading}
+                        >
+                          <SelectTrigger className="h-11">
+                            <SelectValue
+                              placeholder={
+                                isCategoriesLoading
+                                  ? "Loading..."
+                                  : "Select category"
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {categories.map((category) => (
+                              <SelectItem key={category.id} value={category.id}>
+                                {category.icon && `${category.icon} `}
+                                {category.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label htmlFor={`amount-${row.rowId}`}>
+                          Amount <span className="text-red-500">*</span>
+                        </Label>
+                        <Input
+                          id={`amount-${row.rowId}`}
+                          type="number"
+                          value={row.amount}
+                          onChange={(e) =>
+                            updateRow(row.rowId, { amount: e.target.value })
+                          }
+                          placeholder="0"
+                          className="h-11"
+                        />
+                      </div>
+                      <div className="space-y-2">
+                        <Label>
+                          Payment Method <span className="text-red-500">*</span>
+                        </Label>
+                        <Select
+                          value={row.paymentMethodId}
+                          onValueChange={(value) =>
+                            updateRow(row.rowId, {
+                              paymentMethodId: value,
+                              billStatementId: "",
+                            })
+                          }
+                          disabled={isPaymentMethodsLoading}
+                        >
+                          <SelectTrigger className="h-11">
+                            <SelectValue
+                              placeholder={
+                                isPaymentMethodsLoading
+                                  ? "Loading..."
+                                  : "Select payment method"
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {paymentMethods.map((method) => (
+                              <SelectItem key={method.id} value={method.id}>
+                                {method.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+
+                    <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                      <div className="space-y-2">
+                        <Label>
+                          Bill Statement <span className="text-red-500">*</span>
+                        </Label>
+                        <Select
+                          value={row.billStatementId}
+                          onValueChange={(value) =>
+                            updateRow(row.rowId, { billStatementId: value })
+                          }
+                          disabled={
+                            isBillStatementsLoading ||
+                            !row.paymentMethodId ||
+                            rowFilteredBillStatements.length === 0
+                          }
+                        >
+                          <SelectTrigger className="h-11">
+                            <SelectValue
+                              placeholder={
+                                isBillStatementsLoading
+                                  ? "Loading..."
+                                  : !row.paymentMethodId
+                                    ? "Select payment method first"
+                                    : rowFilteredBillStatements.length === 0
+                                      ? "No matching bill statements"
+                                      : "Select bill statement"
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {rowFilteredBillStatements.map((billStatement) => (
+                              <SelectItem
+                                key={billStatement.id}
+                                value={billStatement.id}
+                              >
+                                {billStatement.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="space-y-2">
+                        <Label htmlFor={`paidBy-${row.rowId}`}>Paid By</Label>
+                        <Input
+                          id={`paidBy-${row.rowId}`}
+                          value={row.paidBy}
+                          onChange={(e) =>
+                            updateRow(row.rowId, { paidBy: e.target.value })
+                          }
+                          placeholder="e.g., Wikra"
+                          className="h-11"
+                        />
+                      </div>
+                    </div>
+
+                    <div className="space-y-4 border-t pt-4">
+                      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
+                        <div className="space-y-2">
+                          <Label>Schedule Type</Label>
+                          <Select
+                            value={row.scheduleType}
+                            onValueChange={(value) =>
+                              updateRow(row.rowId, {
+                                scheduleType: value,
+                                recurrenceCount:
+                                  value === "installment"
+                                    ? row.recurrenceCount
+                                    : "",
+                                recurrenceCurrent:
+                                  value === "installment"
+                                    ? row.recurrenceCurrent
+                                    : "",
+                              })
                             }
-                          />
-                        </SelectTrigger>
-                        <SelectContent>
-                          {categories.map((category) => (
-                            <SelectItem key={category.id} value={category.id}>
-                              {category.icon && `${category.icon} `}
-                              {category.name}
-                            </SelectItem>
-                          ))}
-                        </SelectContent>
-                      </Select>
-                    </div>
-                  </div>
+                          >
+                            <SelectTrigger className="h-11">
+                              <SelectValue placeholder="Select schedule type" />
+                            </SelectTrigger>
+                            <SelectContent>
+                              {SCHEDULE_TYPES.map((type) => (
+                                <SelectItem key={type.value} value={type.value}>
+                                  {type.label}
+                                </SelectItem>
+                              ))}
+                            </SelectContent>
+                          </Select>
+                        </div>
+                      </div>
 
-                  <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                    <div className="space-y-2">
-                      <Label htmlFor={`amount-${row.rowId}`}>
-                        Amount <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id={`amount-${row.rowId}`}
-                        type="number"
-                        value={row.amount}
-                        onChange={(e) =>
-                          updateRow(row.rowId, { amount: e.target.value })
-                        }
-                        placeholder="0"
-                        className="h-11"
-                      />
+                      {rowSelectedScheduleType?.value === "installment" && (
+                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+                          <div className="space-y-2">
+                            <Label htmlFor={`recurrenceCurrent-${row.rowId}`}>
+                              Current Payment #
+                            </Label>
+                            <Input
+                              id={`recurrenceCurrent-${row.rowId}`}
+                              type="number"
+                              min={1}
+                              value={row.recurrenceCurrent}
+                              onChange={(e) =>
+                                updateRow(row.rowId, {
+                                  recurrenceCurrent: e.target.value,
+                                })
+                              }
+                              placeholder="e.g., 3"
+                              className="h-11"
+                            />
+                          </div>
+                          <div className="space-y-2">
+                            <Label htmlFor={`recurrenceCount-${row.rowId}`}>
+                              Number of Payments{" "}
+                              <span className="text-red-500">*</span>
+                            </Label>
+                            <Input
+                              id={`recurrenceCount-${row.rowId}`}
+                              type="number"
+                              min={1}
+                              value={row.recurrenceCount}
+                              onChange={(e) =>
+                                updateRow(row.rowId, {
+                                  recurrenceCount: e.target.value,
+                                })
+                              }
+                              placeholder="e.g., 12"
+                              className="h-11"
+                            />
+                          </div>
+                        </div>
+                      )}
                     </div>
+
                     <div className="space-y-2">
                       <Label htmlFor={`description-${row.rowId}`}>
                         Description
@@ -588,96 +717,10 @@ export function CreateExpenseDialog({
                       />
                     </div>
                   </div>
-                </div>
-              ))}
+                );
+              })}
             </div>
           </div>
-
-          {/* Schedule (single-row only) */}
-          {!isMulti && (
-            <div className="space-y-4">
-              <div className="flex items-center gap-2 pb-2 border-b">
-                <h3 className="text-sm font-semibold text-muted-foreground">
-                  Schedule Type
-                </h3>
-              </div>
-              <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                <div className="space-y-2">
-                  <Label>Schedule Type</Label>
-                  <Select value={scheduleType} onValueChange={setScheduleType}>
-                    <SelectTrigger className="h-11">
-                      <SelectValue placeholder="Select schedule type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {SCHEDULE_TYPES.map((type) => (
-                        <SelectItem key={type.value} value={type.value}>
-                          {type.label}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-              </div>
-
-              {selectedScheduleType?.value === "installment" && (
-                <div className="space-y-4 p-4 bg-muted rounded-lg border">
-                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                    <div className="space-y-2">
-                      <Label htmlFor="recurrenceCurrent">
-                        Current Payment #
-                      </Label>
-                      <Input
-                        id="recurrenceCurrent"
-                        type="number"
-                        min={1}
-                        value={recurrenceCurrent}
-                        onChange={(e) => setRecurrenceCurrent(e.target.value)}
-                        placeholder="e.g., 3"
-                        className="h-11"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="recurrenceCount">
-                        Number of Payments{" "}
-                        <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="recurrenceCount"
-                        type="number"
-                        min={1}
-                        value={recurrenceCount}
-                        onChange={(e) => setRecurrenceCount(e.target.value)}
-                        placeholder="e.g., 12"
-                        className="h-11"
-                      />
-                    </div>
-                    <div className="space-y-2">
-                      <Label htmlFor="recurrenceTotalAmount">
-                        Total Amount <span className="text-red-500">*</span>
-                      </Label>
-                      <Input
-                        id="recurrenceTotalAmount"
-                        type="number"
-                        value={recurrenceTotalAmount}
-                        onChange={(e) =>
-                          setRecurrenceTotalAmount(e.target.value)
-                        }
-                        placeholder="e.g., 18000000"
-                        className="h-11"
-                      />
-                    </div>
-                  </div>
-                  <p className="text-xs text-muted-foreground">
-                    Leave <span className="font-medium">Current Payment #</span>{" "}
-                    empty to start from <span className="font-medium">1</span>.
-                    Set it to e.g. <span className="font-medium">3</span> with{" "}
-                    <span className="font-medium">12</span> total to log this as{" "}
-                    <span className="font-medium">3/12</span>.
-                  </p>
-                </div>
-              )}
-            </div>
-          )}
         </div>
 
         <DialogFooter className="border-t pt-4 flex flex-row gap-3 sm:gap-3">
@@ -692,16 +735,11 @@ export function CreateExpenseDialog({
           </Button>
           <Button
             onClick={handleSubmit}
-            disabled={
-              isLoading ||
-              hasIncompleteRow ||
-              !billStatementId ||
-              !paymentMethodId
-            }
+            disabled={isLoading || hasIncompleteRow}
           >
             {isLoading
               ? "Creating..."
-              : isMulti
+              : rows.length > 1
                 ? `Create ${rows.length} Expenses`
                 : "Create Expense"}
           </Button>

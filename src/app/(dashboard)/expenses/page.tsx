@@ -26,6 +26,7 @@ import type {
   Expense,
   ExpenseFilters,
   ExpenseStats,
+  PaymentMethodBreakdown,
 } from "@/types/expense.types";
 
 const PAGE_SIZE = 50;
@@ -40,6 +41,35 @@ const emptyCategoryBreakdown: ExpenseStats["category_breakdown"] = {
   education: 0,
   other: 0,
 };
+
+function buildPaymentMethodBreakdown(
+  expenses: Expense[],
+): ExpenseStats["payment_method_breakdown"] {
+  const map = new Map<string, PaymentMethodBreakdown>();
+
+  for (const expense of expenses) {
+    const key = expense.payment_method?.trim() || "Unknown";
+    const entry = map.get(key) ?? {
+      payment_method: key,
+      count: 0,
+      total: 0,
+      paid: 0,
+      pending: 0,
+      unpaid: 0,
+    };
+
+    entry.count += 1;
+    entry.total += expense.amount;
+    if (expense.status === "paid") entry.paid += expense.amount;
+    else if (expense.status === "pending") entry.pending += expense.amount;
+    else if (expense.status === "unpaid") entry.unpaid += expense.amount;
+
+    map.set(key, entry);
+  }
+
+  // Sort by total spending descending
+  return Array.from(map.values()).sort((a, b) => b.total - a.total);
+}
 
 function buildExpenseStats(
   expenses: Expense[],
@@ -67,6 +97,7 @@ function buildExpenseStats(
       0,
     ),
     category_breakdown: emptyCategoryBreakdown,
+    payment_method_breakdown: buildPaymentMethodBreakdown(expenses),
   };
 }
 

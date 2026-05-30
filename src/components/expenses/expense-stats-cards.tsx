@@ -1,14 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import {
-  CheckCircle,
-  CircleAlert,
-  Clock,
-  DollarSign,
-  Filter,
-  TrendingUp,
-} from "lucide-react";
+import { CreditCard, Filter } from "lucide-react";
 import { formatCurrency } from "@/lib/format";
 import type { ExpenseFilters, ExpenseStats } from "@/types/expense.types";
 
@@ -56,43 +49,6 @@ export function ExpenseStatsCards({
     filters?.status ||
     filters?.bill_statement_id ||
     dateRange;
-  const metrics = [
-    {
-      label: "Transactions",
-      value: (stats?.total_count ?? 0).toLocaleString(),
-      helper: "matching filters",
-      icon: TrendingUp,
-      tone: "bg-primary/10 text-primary",
-    },
-    {
-      label: "Total spent",
-      value: formatCurrency(stats?.total_amount ?? 0),
-      helper: "all selected expenses",
-      icon: DollarSign,
-      tone: "bg-secondary text-secondary-foreground",
-    },
-    {
-      label: "Paid",
-      value: formatCurrency(stats?.approved_amount ?? 0),
-      helper: "settled amount",
-      icon: CheckCircle,
-      tone: "bg-success/15 text-success",
-    },
-    {
-      label: "Pending",
-      value: formatCurrency(stats?.pending_amount ?? 0),
-      helper: "waiting to be paid",
-      icon: Clock,
-      tone: "bg-warning/20 text-warning-foreground",
-    },
-    {
-      label: "Unpaid",
-      value: formatCurrency(stats?.rejected_amount ?? 0),
-      helper: "not settled yet",
-      icon: CircleAlert,
-      tone: "bg-destructive/10 text-destructive",
-    },
-  ];
 
   if (isLoading) {
     return (
@@ -101,18 +57,18 @@ export function ExpenseStatsCards({
           <div className="h-5 w-32 animate-pulse border-2 border-foreground/20 bg-muted" />
           <div className="h-7 w-24 animate-pulse border-2 border-foreground/20 bg-primary/15" />
         </div>
-        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-          {[...Array(5)].map((_, i) => (
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {[...Array(3)].map((_, i) => (
             <div
               key={i}
-              className={`${neoItemClass} min-h-20 animate-pulse bg-background p-3`}
+              className={`${neoItemClass} min-h-32 animate-pulse bg-background p-3`}
             >
               <div className="mb-3 flex items-center justify-between">
-                <div className="h-3 w-20 bg-foreground/20" />
+                <div className="h-3 w-24 bg-foreground/20" />
                 <div className="h-7 w-7 border-2 border-foreground/20 bg-muted" />
               </div>
-              <div className="h-6 w-28 bg-foreground/20" />
-              <div className="mt-2 h-3 w-24 bg-foreground/20" />
+              <div className="h-7 w-32 bg-foreground/20" />
+              <div className="mt-3 h-3 w-full bg-foreground/20" />
             </div>
           ))}
         </div>
@@ -120,14 +76,19 @@ export function ExpenseStatsCards({
     );
   }
 
+  const breakdown = stats?.payment_method_breakdown ?? [];
+  const totalSpent = stats?.total_amount ?? 0;
+  const totalCount = stats?.total_count ?? 0;
+
   return (
     <section className={`${neoSurfaceClass} p-3`}>
+      {/* Header chips */}
       <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-bold text-foreground">
         <span
           className={`${neoChipClass} gap-1.5 bg-primary px-2 py-1 font-black uppercase text-primary-foreground`}
         >
           <Filter className="h-3.5 w-3.5" />
-          Summary
+          By payment method
         </span>
         {dateRange ? (
           <span
@@ -142,20 +103,16 @@ export function ExpenseStatsCards({
             All dates
           </span>
         )}
-        {filters?.category && (
-          <span
-            className={`${neoChipClass} bg-accent px-2 py-1 font-bold text-accent-foreground`}
-          >
-            {filters.category}
-          </span>
-        )}
-        {filters?.status && (
-          <span
-            className={`${neoChipClass} bg-muted px-2 py-1 font-bold capitalize text-foreground`}
-          >
-            {filters.status}
-          </span>
-        )}
+        <span
+          className={`${neoChipClass} bg-secondary px-2 py-1 font-bold text-secondary-foreground`}
+        >
+          {totalCount.toLocaleString()} transactions
+        </span>
+        <span
+          className={`${neoChipClass} bg-foreground px-2 py-1 font-black text-background`}
+        >
+          Total {formatCurrency(totalSpent)}
+        </span>
         {!hasFilters && (
           <span className="font-bold text-muted-foreground">
             No filters applied
@@ -163,37 +120,71 @@ export function ExpenseStatsCards({
         )}
       </div>
 
-      <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
-        {metrics.map((metric) => {
-          const Icon = metric.icon;
-
-          return (
+      {/* Per-payment-method boxes */}
+      {breakdown.length === 0 ? (
+        <div
+          className={`${neoItemClass} bg-background p-6 text-center text-sm font-bold text-muted-foreground`}
+        >
+          No expenses to summarize
+        </div>
+      ) : (
+        <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-3">
+          {breakdown.map((method) => (
             <div
-              key={metric.label}
-              className={`${neoItemClass} min-h-20 p-3 ${metric.tone}`}
+              key={method.payment_method}
+              className={`${neoItemClass} bg-background p-3`}
             >
-              <div className="mb-2 flex items-start justify-between gap-3">
+              {/* Method name + total */}
+              <div className="mb-3 flex items-start justify-between gap-3 border-b-2 border-foreground/15 pb-2">
                 <div className="min-w-0">
-                  <p className="text-xs font-black uppercase text-current/70">
-                    {metric.label}
+                  <p className="truncate text-sm font-black uppercase text-foreground">
+                    {method.payment_method}
                   </p>
-                  <p className="mt-1 truncate text-lg font-black sm:text-xl">
-                    {metric.value}
+                  <p className="mt-1 truncate text-xl font-black text-foreground">
+                    {formatCurrency(method.total)}
+                  </p>
+                  <p className="text-xs font-bold text-muted-foreground">
+                    {method.count} transaction{method.count === 1 ? "" : "s"}
                   </p>
                 </div>
                 <span
                   className={`${neoChipClass} h-8 w-8 shrink-0 justify-center bg-card text-foreground`}
                 >
-                  <Icon className="h-4 w-4" />
+                  <CreditCard className="h-4 w-4" />
                 </span>
               </div>
-              <p className="text-xs font-bold text-current/70">
-                {metric.helper}
-              </p>
+
+              {/* Status breakdown */}
+              <div className="grid grid-cols-3 gap-2">
+                <div className="bg-success/15 px-2 py-1.5 text-center">
+                  <p className="text-[10px] font-black uppercase text-success">
+                    Paid
+                  </p>
+                  <p className="truncate text-xs font-black text-foreground">
+                    {formatCurrency(method.paid)}
+                  </p>
+                </div>
+                <div className="bg-warning/20 px-2 py-1.5 text-center">
+                  <p className="text-[10px] font-black uppercase text-warning-foreground">
+                    Pending
+                  </p>
+                  <p className="truncate text-xs font-black text-foreground">
+                    {formatCurrency(method.pending)}
+                  </p>
+                </div>
+                <div className="bg-destructive/10 px-2 py-1.5 text-center">
+                  <p className="text-[10px] font-black uppercase text-destructive">
+                    Unpaid
+                  </p>
+                  <p className="truncate text-xs font-black text-foreground">
+                    {formatCurrency(method.unpaid)}
+                  </p>
+                </div>
+              </div>
             </div>
-          );
-        })}
-      </div>
+          ))}
+        </div>
+      )}
     </section>
   );
 }

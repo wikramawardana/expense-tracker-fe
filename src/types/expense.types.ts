@@ -149,6 +149,15 @@ export interface ExpenseFilters {
   sort_order?: "asc" | "desc";
 }
 
+export interface PaymentMethodBreakdown {
+  payment_method: string;
+  count: number;
+  total: number;
+  paid: number;
+  pending: number;
+  unpaid: number;
+}
+
 export interface ExpenseStats {
   total_count: number;
   total_amount: number;
@@ -156,6 +165,7 @@ export interface ExpenseStats {
   pending_amount: number;
   rejected_amount: number;
   category_breakdown: Record<ExpenseCategory, number>;
+  payment_method_breakdown: PaymentMethodBreakdown[];
 }
 
 export interface ExpenseCountResponse {

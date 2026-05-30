@@ -38,10 +38,12 @@ import {
   getExpenseById,
   updateExpense,
 } from "@/services/expenses.service";
+import { getPaidByList } from "@/services/paid-by.service";
 import { getPaymentMethods } from "@/services/payment-methods.service";
 import type { BillStatement } from "@/types/bill-statement.types";
 import type { Category } from "@/types/category.types";
 import type { Expense, ExpenseStatus } from "@/types/expense.types";
+import type { PaidBy } from "@/types/paid-by.types";
 import type { PaymentMethod as PaymentMethodRecord } from "@/types/payment-method.types";
 import { StatusBadge } from "./status-badge";
 
@@ -112,6 +114,8 @@ export function ExpenseActionDialog({
   >([]);
   const [isPaymentMethodsLoading, setIsPaymentMethodsLoading] =
     React.useState(false);
+  const [paidByList, setPaidByList] = React.useState<PaidBy[]>([]);
+  const [isPaidByLoading, setIsPaidByLoading] = React.useState(false);
 
   // Edit form state
   const [title, setTitle] = React.useState(expense.title);
@@ -248,6 +252,24 @@ export function ExpenseActionDialog({
         });
     }
   }, [isEditOpen, paymentMethods.length, currentExpense]);
+
+  // Fetch paid-by list when edit dialog opens
+  React.useEffect(() => {
+    if (isEditOpen && paidByList.length === 0) {
+      setIsPaidByLoading(true);
+      getPaidByList()
+        .then((response) => {
+          setPaidByList(response.data.filter((pb) => pb.is_active));
+        })
+        .catch((error) => {
+          toast.error("Failed to load paid-by list");
+          console.error(error);
+        })
+        .finally(() => {
+          setIsPaidByLoading(false);
+        });
+    }
+  }, [isEditOpen, paidByList.length]);
 
   // Fetch categories for view dialog if not provided
   React.useEffect(() => {
@@ -827,13 +849,27 @@ export function ExpenseActionDialog({
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-paidBy">Paid By</Label>
-                  <Input
-                    id="edit-paidBy"
-                    value={paidBy}
-                    onChange={(e) => setPaidBy(e.target.value)}
-                    placeholder="e.g., Wikra"
-                    className="h-11"
-                  />
+                  <Select
+                    value={paidBy || "__none__"}
+                    onValueChange={(v) => setPaidBy(v === "__none__" ? "" : v)}
+                    disabled={isPaidByLoading}
+                  >
+                    <SelectTrigger className="h-11">
+                      <SelectValue
+                        placeholder={
+                          isPaidByLoading ? "Loading..." : "Select who paid"
+                        }
+                      />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="__none__">None</SelectItem>
+                      {paidByList.map((pb) => (
+                        <SelectItem key={pb.id} value={pb.name}>
+                          {pb.name}
+                        </SelectItem>
+                      ))}
+                    </SelectContent>
+                  </Select>
                 </div>
                 <div className="space-y-2">
                   <Label>Status</Label>

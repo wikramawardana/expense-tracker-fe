@@ -36,10 +36,12 @@ import { cn } from "@/lib/utils";
 import { getBillStatements } from "@/services/bill-statements.service";
 import { getCategories } from "@/services/categories.service";
 import { createExpense, createExpensesBulk } from "@/services/expenses.service";
+import { getPaidByList } from "@/services/paid-by.service";
 import { getPaymentMethods } from "@/services/payment-methods.service";
 import type { BillStatement } from "@/types/bill-statement.types";
 import type { Category } from "@/types/category.types";
 import type { CreateExpensePayload } from "@/types/expense.types";
+import type { PaidBy } from "@/types/paid-by.types";
 import type { PaymentMethod as PaymentMethodRecord } from "@/types/payment-method.types";
 
 interface CreateExpenseDialogProps {
@@ -105,6 +107,8 @@ export function CreateExpenseDialog({
   >([]);
   const [isPaymentMethodsLoading, setIsPaymentMethodsLoading] =
     React.useState(false);
+  const [paidByList, setPaidByList] = React.useState<PaidBy[]>([]);
+  const [isPaidByLoading, setIsPaidByLoading] = React.useState(false);
 
   // Per-row state
   const [rows, setRows] = React.useState<ExpenseRow[]>([newRow()]);
@@ -193,6 +197,23 @@ export function CreateExpenseDialog({
         });
     }
   }, [isOpen, paymentMethods.length]);
+
+  React.useEffect(() => {
+    if (isOpen && paidByList.length === 0) {
+      setIsPaidByLoading(true);
+      getPaidByList()
+        .then((response) => {
+          setPaidByList(response.data.filter((pb) => pb.is_active));
+        })
+        .catch((error) => {
+          toast.error("Failed to load paid-by list");
+          console.error(error);
+        })
+        .finally(() => {
+          setIsPaidByLoading(false);
+        });
+    }
+  }, [isOpen, paidByList.length]);
 
   React.useEffect(() => {
     if (!isOpen || paymentMethods.length === 0) return;
@@ -616,15 +637,33 @@ export function CreateExpenseDialog({
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor={`paidBy-${row.rowId}`}>Paid By</Label>
-                        <Input
-                          id={`paidBy-${row.rowId}`}
-                          value={row.paidBy}
-                          onChange={(e) =>
-                            updateRow(row.rowId, { paidBy: e.target.value })
+                        <Select
+                          value={row.paidBy || "__none__"}
+                          onValueChange={(v) =>
+                            updateRow(row.rowId, {
+                              paidBy: v === "__none__" ? "" : v,
+                            })
                           }
-                          placeholder="e.g., Wikra"
-                          className="h-11"
-                        />
+                          disabled={isPaidByLoading}
+                        >
+                          <SelectTrigger className="h-11">
+                            <SelectValue
+                              placeholder={
+                                isPaidByLoading
+                                  ? "Loading..."
+                                  : "Select who paid"
+                              }
+                            />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="__none__">None</SelectItem>
+                            {paidByList.map((pb) => (
+                              <SelectItem key={pb.id} value={pb.name}>
+                                {pb.name}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
                       </div>
                     </div>
 

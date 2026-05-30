@@ -8,6 +8,7 @@ import {
   PanelLeft,
   Receipt,
   Tags,
+  Users,
   Wallet,
 } from "lucide-react";
 import Link from "next/link";
@@ -44,6 +45,7 @@ const menuItems = [
   { title: "Categories", href: "/categories", icon: Tags },
   { title: "Payment Methods", href: "/payment-methods", icon: CreditCard },
   { title: "Bill Statements", href: "/bill-statements", icon: FileText },
+  { title: "Paid By", href: "/paid-by", icon: Users },
 ];
 
 function getPageTitle(pathname: string): string {

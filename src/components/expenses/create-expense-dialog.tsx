@@ -267,9 +267,16 @@ export function CreateExpenseDialog({
 
   const addRow = () => {
     setRows((prev) => [
-      ...prev,
       newRow(getDefaultPaymentMethodId(paymentMethods)),
+      ...prev,
     ]);
+    // Scroll dialog to top so the new row is visible
+    requestAnimationFrame(() => {
+      const dialog = document.querySelector(
+        '[data-slot="dialog-content"]',
+      ) as HTMLElement | null;
+      if (dialog) dialog.scrollTop = 0;
+    });
   };
 
   const removeRow = (rowId: string) => {

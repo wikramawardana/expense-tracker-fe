@@ -2,8 +2,10 @@
 
 import { Eye, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
 import * as React from "react";
+import type { DateRange } from "react-day-picker";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { DateRangePickerWithPresets } from "@/components/ui/date-range-picker";
 import {
   Dialog,
   DialogContent,
@@ -48,13 +50,16 @@ export function BillStatementActionDialog({
 
   // Edit form state
   const [name, setName] = React.useState(billStatement.name);
-  const [statementDate, setStatementDate] = React.useState(
-    billStatement.statement_date
-      ? billStatement.statement_date.split("T")[0]
-      : "",
-  );
-  const [dueDate, setDueDate] = React.useState(
-    billStatement.due_date ? billStatement.due_date.split("T")[0] : "",
+  const [dateRange, setDateRange] = React.useState<DateRange | undefined>(
+    () => {
+      const from = billStatement.statement_date
+        ? new Date(billStatement.statement_date)
+        : undefined;
+      const to = billStatement.due_date
+        ? new Date(billStatement.due_date)
+        : undefined;
+      return from || to ? { from, to } : undefined;
+    },
   );
   const [description, setDescription] = React.useState(
     billStatement.description || "",
@@ -64,14 +69,13 @@ export function BillStatementActionDialog({
   // Reset form when billStatement changes
   React.useEffect(() => {
     setName(billStatement.name);
-    setStatementDate(
-      billStatement.statement_date
-        ? billStatement.statement_date.split("T")[0]
-        : "",
-    );
-    setDueDate(
-      billStatement.due_date ? billStatement.due_date.split("T")[0] : "",
-    );
+    const from = billStatement.statement_date
+      ? new Date(billStatement.statement_date)
+      : undefined;
+    const to = billStatement.due_date
+      ? new Date(billStatement.due_date)
+      : undefined;
+    setDateRange(from || to ? { from, to } : undefined);
     setDescription(billStatement.description || "");
     setIsActive(billStatement.is_active);
   }, [billStatement]);
@@ -86,10 +90,8 @@ export function BillStatementActionDialog({
     try {
       await updateBillStatement(billStatement.id, {
         name: name.trim(),
-        statement_date: statementDate
-          ? new Date(statementDate).toISOString()
-          : null,
-        due_date: dueDate ? new Date(dueDate).toISOString() : null,
+        statement_date: dateRange?.from ? dateRange.from.toISOString() : null,
+        due_date: dateRange?.to ? dateRange.to.toISOString() : null,
         description: description.trim() || null,
         is_active: isActive,
       });
@@ -244,25 +246,14 @@ export function BillStatementActionDialog({
               />
             </div>
 
-            <div className="grid grid-cols-2 gap-4">
-              <div className="space-y-2">
-                <Label htmlFor="edit-statementDate">Statement Date</Label>
-                <Input
-                  id="edit-statementDate"
-                  type="date"
-                  value={statementDate}
-                  onChange={(e) => setStatementDate(e.target.value)}
-                />
-              </div>
-              <div className="space-y-2">
-                <Label htmlFor="edit-dueDate">Due Date</Label>
-                <Input
-                  id="edit-dueDate"
-                  type="date"
-                  value={dueDate}
-                  onChange={(e) => setDueDate(e.target.value)}
-                />
-              </div>
+            <div className="space-y-2">
+              <Label>Statement period</Label>
+              <DateRangePickerWithPresets
+                dateRange={dateRange}
+                onDateRangeChange={setDateRange}
+                triggerClassName="w-full"
+                align="start"
+              />
             </div>
 
             <div className="space-y-2">

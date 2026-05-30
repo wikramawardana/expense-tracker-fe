@@ -2,8 +2,10 @@
 
 import { Plus } from "lucide-react";
 import * as React from "react";
+import type { DateRange } from "react-day-picker";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { DateRangePickerWithPresets } from "@/components/ui/date-range-picker";
 import {
   Dialog,
   DialogContent,
@@ -30,14 +32,14 @@ export function CreateBillStatementDialog({
 
   // Form state
   const [name, setName] = React.useState("");
-  const [statementDate, setStatementDate] = React.useState("");
-  const [dueDate, setDueDate] = React.useState("");
+  const [dateRange, setDateRange] = React.useState<DateRange | undefined>(
+    undefined,
+  );
   const [description, setDescription] = React.useState("");
 
   const resetForm = () => {
     setName("");
-    setStatementDate("");
-    setDueDate("");
+    setDateRange(undefined);
     setDescription("");
   };
 
@@ -51,10 +53,10 @@ export function CreateBillStatementDialog({
     try {
       await createBillStatement({
         name: name.trim(),
-        statement_date: statementDate
-          ? new Date(statementDate).toISOString()
+        statement_date: dateRange?.from
+          ? dateRange.from.toISOString()
           : undefined,
-        due_date: dueDate ? new Date(dueDate).toISOString() : undefined,
+        due_date: dateRange?.to ? dateRange.to.toISOString() : undefined,
         description: description.trim() || undefined,
       });
       toast.success("Bill statement created successfully");
@@ -100,25 +102,14 @@ export function CreateBillStatementDialog({
             />
           </div>
 
-          <div className="grid grid-cols-2 gap-4">
-            <div className="space-y-2">
-              <Label htmlFor="statementDate">Statement Date</Label>
-              <Input
-                id="statementDate"
-                type="date"
-                value={statementDate}
-                onChange={(e) => setStatementDate(e.target.value)}
-              />
-            </div>
-            <div className="space-y-2">
-              <Label htmlFor="dueDate">Due Date</Label>
-              <Input
-                id="dueDate"
-                type="date"
-                value={dueDate}
-                onChange={(e) => setDueDate(e.target.value)}
-              />
-            </div>
+          <div className="space-y-2">
+            <Label>Statement period</Label>
+            <DateRangePickerWithPresets
+              dateRange={dateRange}
+              onDateRangeChange={setDateRange}
+              triggerClassName="w-full"
+              align="start"
+            />
           </div>
 
           <div className="space-y-2">

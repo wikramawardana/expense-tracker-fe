@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 import {
+  BillStatementsFilters,
   BillStatementsTable,
   CreateBillStatementDialog,
 } from "@/components/bill-statements";
@@ -25,6 +26,9 @@ export default function BillStatementsPage() {
   const [billStatements, setBillStatements] = React.useState<BillStatement[]>(
     [],
   );
+  const [filteredBillStatements, setFilteredBillStatements] = React.useState<
+    BillStatement[]
+  >([]);
   const [isLoading, setIsLoading] = React.useState(true);
 
   // Track if user is authenticated
@@ -66,13 +70,18 @@ export default function BillStatementsPage() {
     fetchBillStatements();
   }, [isAuthenticated, fetchBillStatements]);
 
+  // Sync filtered state when billStatements changes
+  React.useEffect(() => {
+    setFilteredBillStatements(billStatements);
+  }, [billStatements]);
+
   // Calculate stats
   const overdueCount = React.useMemo(() => {
     const now = new Date();
-    return billStatements.filter(
+    return filteredBillStatements.filter(
       (bs) => bs.due_date && new Date(bs.due_date) < now && bs.is_active,
     ).length;
-  }, [billStatements]);
+  }, [filteredBillStatements]);
 
   // Show loading state while checking session
   if (isSessionLoading) {
@@ -130,7 +139,8 @@ export default function BillStatementsPage() {
                 <div className="text-2xl font-semibold text-green-600">
                   {isLoading
                     ? "-"
-                    : billStatements.filter((bs) => bs.is_active).length}
+                    : filteredBillStatements.filter((bs) => bs.is_active)
+                        .length}
                 </div>
               </CardContent>
             </Card>
@@ -142,7 +152,8 @@ export default function BillStatementsPage() {
                 <div className="text-2xl font-semibold text-gray-500">
                   {isLoading
                     ? "-"
-                    : billStatements.filter((bs) => !bs.is_active).length}
+                    : filteredBillStatements.filter((bs) => !bs.is_active)
+                        .length}
                 </div>
               </CardContent>
             </Card>
@@ -157,8 +168,12 @@ export default function BillStatementsPage() {
               </CardContent>
             </Card>
           </div>
-          <BillStatementsTable
+          <BillStatementsFilters
             billStatements={billStatements}
+            onFilteredChange={setFilteredBillStatements}
+          />
+          <BillStatementsTable
+            billStatements={filteredBillStatements}
             isLoading={isLoading}
             onBillStatementUpdated={fetchBillStatements}
             onBillStatementDeleted={fetchBillStatements}

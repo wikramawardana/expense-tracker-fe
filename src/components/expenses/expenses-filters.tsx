@@ -1,6 +1,6 @@
 "use client";
 
-import { format } from "date-fns";
+import { format, parse } from "date-fns";
 import { Filter, Search, X } from "lucide-react";
 import * as React from "react";
 import type { DateRange } from "react-day-picker";
@@ -52,7 +52,24 @@ export function ExpensesFilters({
     const fetchBillStatements = async () => {
       try {
         const response = await getBillStatements();
-        setBillStatements(response.data);
+        // Sort chronologically (most recent first) by statement_date or by parsing the name
+        const sorted = [...response.data].sort((a, b) => {
+          if (a.statement_date && b.statement_date) {
+            return (
+              new Date(b.statement_date).getTime() -
+              new Date(a.statement_date).getTime()
+            );
+          }
+          // Fallback: parse name as "Month Year" format
+          try {
+            const dateA = parse(a.name, "MMMM yyyy", new Date());
+            const dateB = parse(b.name, "MMMM yyyy", new Date());
+            return dateB.getTime() - dateA.getTime();
+          } catch {
+            return 0;
+          }
+        });
+        setBillStatements(sorted);
       } catch (error) {
         console.error("Failed to fetch bill statements:", error);
       }

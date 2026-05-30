@@ -1,9 +1,11 @@
 "use client";
 
-import { Plus, Trash2 } from "lucide-react";
+import { format, parse } from "date-fns";
+import { CalendarIcon, Plus, Trash2 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -16,6 +18,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -24,6 +31,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { SCHEDULE_TYPES } from "@/lib/constants";
+import { cn } from "@/lib/utils";
 import { getBillStatements } from "@/services/bill-statements.service";
 import { getCategories } from "@/services/categories.service";
 import { createExpense, createExpensesBulk } from "@/services/expenses.service";
@@ -143,7 +151,25 @@ export function CreateExpenseDialog({
       setIsBillStatementsLoading(true);
       getBillStatements()
         .then((response) => {
-          setBillStatements(response.data.filter((b) => b.is_active));
+          const active = response.data.filter((b) => b.is_active);
+          // Sort chronologically (most recent first)
+          const sorted = [...active].sort((a, b) => {
+            if (a.statement_date && b.statement_date) {
+              return (
+                new Date(b.statement_date).getTime() -
+                new Date(a.statement_date).getTime()
+              );
+            }
+            // Fallback: parse name as "Month Year" format
+            try {
+              const dateA = parse(a.name, "MMMM yyyy", new Date());
+              const dateB = parse(b.name, "MMMM yyyy", new Date());
+              return dateB.getTime() - dateA.getTime();
+            } catch {
+              return 0;
+            }
+          });
+          setBillStatements(sorted);
         })
         .catch((error) => {
           toast.error("Failed to load bill statements");
@@ -382,12 +408,12 @@ export function CreateExpenseDialog({
   return (
     <Dialog open={isOpen} onOpenChange={setIsOpen}>
       <DialogTrigger asChild>
-        <Button className="rounded-md border-2 border-primary/40 bg-primary font-black text-primary-foreground shadow-[3px_3px_0px_0px_rgba(79,70,229,0.18)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(79,70,229,0.2)] dark:border-primary/50 dark:shadow-[3px_3px_0px_0px_rgba(129,140,248,0.24)] dark:hover:shadow-[1px_1px_0px_0px_rgba(129,140,248,0.26)]">
+        <Button>
           <Plus className="mr-2 h-4 w-4" />
           Add Expense
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto rounded-lg border-2 border-primary/35 shadow-[6px_6px_0px_0px_rgba(79,70,229,0.18)] dark:border-primary/45 dark:shadow-[6px_6px_0px_0px_rgba(129,140,248,0.24)] sm:max-w-4xl">
+      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
         <DialogHeader className="space-y-2 pb-4 border-b">
           <DialogTitle className="text-xl font-bold">
             {rows.length > 1 ? "Add New Expenses" : "Add New Expense"}
@@ -411,13 +437,32 @@ export function CreateExpenseDialog({
                 <Label htmlFor="expenseDate">
                   Date <span className="text-red-500">*</span>
                 </Label>
-                <Input
-                  id="expenseDate"
-                  type="date"
-                  value={expenseDate}
-                  onChange={(e) => setExpenseDate(e.target.value)}
-                  className="h-11"
-                />
+                <Popover>
+                  <PopoverTrigger asChild>
+                    <Button
+                      variant="outline"
+                      className={cn(
+                        "h-11 w-full justify-start text-left font-normal",
+                        !expenseDate && "text-muted-foreground",
+                      )}
+                    >
+                      <CalendarIcon className="mr-2 h-4 w-4" />
+                      {expenseDate
+                        ? format(new Date(expenseDate), "MMMM d, yyyy")
+                        : "Pick a date"}
+                    </Button>
+                  </PopoverTrigger>
+                  <PopoverContent className="w-auto p-0" align="start">
+                    <Calendar
+                      mode="single"
+                      selected={expenseDate ? new Date(expenseDate) : undefined}
+                      onSelect={(date) =>
+                        setExpenseDate(date ? format(date, "yyyy-MM-dd") : "")
+                      }
+                      initialFocus
+                    />
+                  </PopoverContent>
+                </Popover>
               </div>
             </div>
           </div>

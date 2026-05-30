@@ -112,7 +112,7 @@ export function ExpensesTable({
             aria-label="Select all visible expenses"
             checked={allVisibleSelected}
             onChange={(event) => toggleAllVisible(event.target.checked)}
-            className="h-4 w-4 cursor-pointer rounded border-2 border-primary/45 accent-primary"
+            className="h-4 w-4 cursor-pointer rounded border-2 border-foreground/30 accent-primary"
           />
         ),
         cell: ({ row }) => (
@@ -123,7 +123,7 @@ export function ExpensesTable({
             onChange={(event) =>
               toggleExpense(row.original.id, event.target.checked)
             }
-            className="h-4 w-4 cursor-pointer rounded border-2 border-primary/45 accent-primary"
+            className="h-4 w-4 cursor-pointer rounded border-2 border-foreground/30 accent-primary"
           />
         ),
       },
@@ -236,7 +236,7 @@ export function ExpensesTable({
 
   if (isLoading) {
     return (
-      <div className="rounded-lg border-2 border-primary/35 bg-card shadow-[4px_4px_0px_0px_rgba(79,70,229,0.16)] dark:border-primary/45 dark:shadow-[4px_4px_0px_0px_rgba(129,140,248,0.22)]">
+      <div className="rounded-sm border-2 border-foreground/20 bg-card shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] dark:border-foreground/15 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.08)]">
         <div className="p-12 text-center">
           <div className="inline-block h-8 w-8 animate-spin border-4 border-solid border-foreground border-r-transparent" />
           <p className="mt-3 text-sm font-black uppercase text-muted-foreground">
@@ -249,7 +249,7 @@ export function ExpensesTable({
 
   if (expenses.length === 0) {
     return (
-      <div className="rounded-lg border-2 border-primary/35 bg-card shadow-[4px_4px_0px_0px_rgba(79,70,229,0.16)] dark:border-primary/45 dark:shadow-[4px_4px_0px_0px_rgba(129,140,248,0.22)]">
+      <div className="rounded-sm border-2 border-foreground/20 bg-card shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] dark:border-foreground/15 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.08)]">
         <div className="p-12 text-center">
           <p className="text-base font-black uppercase text-foreground">
             No expenses found
@@ -270,10 +270,10 @@ export function ExpensesTable({
         onBulkActionComplete={onExpenseUpdated}
       />
 
-      <div className="overflow-hidden rounded-lg border-2 border-primary/35 bg-card shadow-[4px_4px_0px_0px_rgba(79,70,229,0.16)] dark:border-primary/45 dark:shadow-[4px_4px_0px_0px_rgba(129,140,248,0.22)]">
+      <div className="overflow-hidden rounded-sm border-2 border-foreground/20 bg-card shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] dark:border-foreground/15 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.08)]">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b-2 border-primary/30 bg-secondary">
+            <thead className="border-b-2 border-foreground/20 bg-secondary">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (

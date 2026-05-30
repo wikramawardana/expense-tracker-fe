@@ -19,11 +19,11 @@ interface ExpenseStatsCardsProps {
 }
 
 const neoSurfaceClass =
-  "rounded-lg border-2 border-primary/35 bg-card shadow-[4px_4px_0px_0px_rgba(79,70,229,0.16)] dark:border-primary/45 dark:shadow-[4px_4px_0px_0px_rgba(129,140,248,0.22)]";
+  "rounded-sm border-2 border-foreground/20 bg-card shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] dark:border-foreground/15 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.08)]";
 const neoItemClass =
-  "border-2 border-primary/35 shadow-[3px_3px_0px_0px_rgba(79,70,229,0.14)] dark:border-primary/45 dark:shadow-[3px_3px_0px_0px_rgba(129,140,248,0.2)]";
+  "border-2 border-foreground/20 shadow-[3px_3px_0px_0px_rgba(0,0,0,0.08)] dark:border-foreground/15 dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,0.06)]";
 const neoChipClass =
-  "inline-flex items-center border-2 border-primary/35 shadow-[2px_2px_0px_0px_rgba(79,70,229,0.14)] dark:border-primary/45 dark:shadow-[2px_2px_0px_0px_rgba(129,140,248,0.2)]";
+  "inline-flex items-center border-2 border-foreground/20 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.06)] dark:border-foreground/15 dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.05)]";
 
 function formatDateRange(dateFrom?: string, dateTo?: string): string | null {
   if (!dateFrom && !dateTo) return null;
@@ -98,8 +98,8 @@ export function ExpenseStatsCards({
     return (
       <section className={`${neoSurfaceClass} p-3`}>
         <div className="mb-3 flex items-center justify-between gap-3">
-          <div className="h-5 w-32 animate-pulse border-2 border-primary/35 bg-muted" />
-          <div className="h-7 w-24 animate-pulse border-2 border-primary/35 bg-primary/15" />
+          <div className="h-5 w-32 animate-pulse border-2 border-foreground/20 bg-muted" />
+          <div className="h-7 w-24 animate-pulse border-2 border-foreground/20 bg-primary/15" />
         </div>
         <div className="grid gap-3 sm:grid-cols-2 xl:grid-cols-5">
           {[...Array(5)].map((_, i) => (
@@ -109,7 +109,7 @@ export function ExpenseStatsCards({
             >
               <div className="mb-3 flex items-center justify-between">
                 <div className="h-3 w-20 bg-foreground/20" />
-                <div className="h-7 w-7 border-2 border-primary/35 bg-muted" />
+                <div className="h-7 w-7 border-2 border-foreground/20 bg-muted" />
               </div>
               <div className="h-6 w-28 bg-foreground/20" />
               <div className="mt-2 h-3 w-24 bg-foreground/20" />

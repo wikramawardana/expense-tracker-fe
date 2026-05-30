@@ -39,11 +39,11 @@ interface ExpenseBulkActionsProps {
 }
 
 const neoControlClass =
-  "rounded-md border-2 border-primary/35 bg-background font-bold shadow-[2px_2px_0px_0px_rgba(79,70,229,0.12)] dark:border-primary/45 dark:shadow-[2px_2px_0px_0px_rgba(129,140,248,0.18)]";
+  "rounded-sm border-2 border-foreground/20 bg-background font-bold shadow-[2px_2px_0px_0px_rgba(0,0,0,0.08)] dark:border-foreground/15 dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.06)]";
 const neoButtonClass =
-  "rounded-md border-2 border-primary/40 font-black shadow-[3px_3px_0px_0px_rgba(79,70,229,0.16)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(79,70,229,0.18)] dark:border-primary/50 dark:shadow-[3px_3px_0px_0px_rgba(129,140,248,0.22)] dark:hover:shadow-[1px_1px_0px_0px_rgba(129,140,248,0.24)]";
+  "rounded-sm border-2 border-foreground/25 font-black shadow-[3px_3px_0px_0px_rgba(0,0,0,0.1)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(0,0,0,0.1)] dark:border-foreground/20 dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,0.08)] dark:hover:shadow-[1px_1px_0px_0px_rgba(255,255,255,0.08)]";
 const neoPopoverClass =
-  "rounded-md border-2 border-primary/35 shadow-[4px_4px_0px_0px_rgba(79,70,229,0.14)] dark:border-primary/45 dark:shadow-[4px_4px_0px_0px_rgba(129,140,248,0.2)]";
+  "rounded-sm border-2 border-foreground/20 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] dark:border-foreground/15 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.08)]";
 
 function getBillStatementSortValue(billStatement: BillStatement): number {
   if (billStatement.statement_date) {
@@ -191,7 +191,7 @@ export function ExpenseBulkActions({
 
   return (
     <>
-      <div className="rounded-lg border-2 border-primary/35 bg-secondary/70 p-3 shadow-[4px_4px_0px_0px_rgba(79,70,229,0.14)] dark:border-primary/45 dark:shadow-[4px_4px_0px_0px_rgba(129,140,248,0.2)]">
+      <div className="rounded-sm border-2 border-foreground/20 bg-secondary/70 p-3 shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] dark:border-foreground/15 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.08)]">
         <div className="flex flex-col gap-3 lg:flex-row lg:items-end lg:justify-between">
           <div className="space-y-1">
             <p className="text-xs font-black uppercase text-muted-foreground">
@@ -291,7 +291,7 @@ export function ExpenseBulkActions({
       </div>
 
       <Dialog open={isDeleteOpen} onOpenChange={setIsDeleteOpen}>
-        <DialogContent className="rounded-lg border-2 border-destructive/70 shadow-[5px_5px_0px_0px_rgba(239,68,68,0.18)] sm:max-w-md">
+        <DialogContent className="rounded-sm border-2 border-foreground/30 shadow-[5px_5px_0px_0px_rgba(0,0,0,0.12)] sm:max-w-md">
           <DialogHeader>
             <DialogTitle>Delete Selected Expenses</DialogTitle>
             <DialogDescription>

@@ -1,0 +1,33 @@
+{
+  "project_type": "Next.js 16 App Router frontend with shadcn/ui + Tailwind CSS v4",
+  "language": "TypeScript/React",
+  "build_system": "pnpm with next build, biome for linting/formatting",
+  "test_framework": "No test framework configured (no test files found)",
+  "build_command": "pnpm build",
+  "test_command": "pnpm lint",
+  "verification_instructions": "1. Run pnpm build to verify TypeScript compiles and Next.js builds. 2. Run pnpm lint to verify biome linting passes.",
+  "snapshot_or_generated_files": null,
+  "setup_instructions": "pnpm install",
+  "environment_constraints": "OPEN_INTERNET network mode. Node v22 and pnpm 10 available. No test suite exists, so verification is build + lint only.",
+  "contribution_requirements": "Uses biome for formatting (2-space indent). Uses import aliases (@/). All components in src/components/. UI primitives in src/components/ui/. Feature components in feature folders (expenses/, bill-statements/). Uses shadcn/ui pattern for UI components.",
+  "key_patterns": "Components use 'use client' directive. State management via React hooks. Services layer for API calls. Types in src/types/. Constants in src/lib/constants.ts. Current filter styling uses neo-brutalist classes (neoControlClass, neoButtonClass, neoPopoverClass) with heavy box-shadows and thick borders. The expenses page Card also has neo-brutalist border-2 and box-shadow styling. The calendar is the standard shadcn/ui Calendar wrapping react-day-picker v9.",
+  "relevant_files": [
+    "src/components/expenses/expenses-filters.tsx",
+    "src/app/(dashboard)/expenses/page.tsx",
+    "src/app/(dashboard)/bill-statements/page.tsx",
+    "src/components/bill-statements/bill-statements-table.tsx",
+    "src/components/bill-statements/index.ts",
+    "src/components/ui/calendar.tsx",
+    "src/components/ui/select.tsx",
+    "src/components/ui/input.tsx",
+    "src/components/ui/button.tsx",
+    "src/components/ui/popover.tsx",
+    "src/components/ui/badge.tsx",
+    "src/lib/constants.ts",
+    "src/types/bill-statement.types.ts",
+    "src/types/expense.types.ts",
+    "src/services/bill-statements.service.ts",
+    "src/app/globals.css"
+  ],
+  "directory_structure": "src/app/(dashboard)/ - page routes. src/components/ui/ - shadcn primitives. src/components/expenses/ - expense feature components. src/components/bill-statements/ - bill statement feature components. src/lib/ - utilities, constants, auth. src/services/ - API service layer. src/types/ - TypeScript type definitions."
+}

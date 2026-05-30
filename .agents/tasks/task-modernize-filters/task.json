@@ -1,0 +1,7 @@
+{
+  "task_id": "task-modernize-filters",
+  "task_description": "Modernize the UI filter styling across the expense tracker app: remove neo-brutalist design from expenses filters, modernize the date/calendar picker with presets, and add a compact ordered filter UI to the bill statements page. Standardize naming to Sentence case.",
+  "status": "in_progress",
+  "feature_order": ["FEAT-001", "FEAT-002", "FEAT-003"],
+  "blocked_reason": null
+}

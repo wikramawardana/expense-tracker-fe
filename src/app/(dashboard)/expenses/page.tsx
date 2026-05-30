@@ -281,7 +281,7 @@ export default function ExpensesPage() {
 
   return (
     <div className="flex flex-1 flex-col gap-4 p-2 sm:p-4">
-      <Card className="rounded-lg border-2 border-primary/35 shadow-[5px_5px_0px_0px_rgba(79,70,229,0.16)] dark:border-primary/45 dark:shadow-[5px_5px_0px_0px_rgba(129,140,248,0.22)]">
+      <Card className="rounded-lg">
         <CardHeader className="flex flex-col gap-4 pb-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">

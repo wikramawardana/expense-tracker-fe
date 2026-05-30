@@ -1,12 +1,13 @@
 "use client";
 
-import { format, parse } from "date-fns";
+import { format } from "date-fns";
 import { Filter, Search, X } from "lucide-react";
 import * as React from "react";
 import type { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
 import { DateRangePickerWithPresets } from "@/components/ui/date-range-picker";
 import { Input } from "@/components/ui/input";
+import { MonthYearPicker } from "@/components/ui/month-year-picker";
 import {
   Select,
   SelectContent,
@@ -52,24 +53,7 @@ export function ExpensesFilters({
     const fetchBillStatements = async () => {
       try {
         const response = await getBillStatements();
-        // Sort chronologically (most recent first) by statement_date or by parsing the name
-        const sorted = [...response.data].sort((a, b) => {
-          if (a.statement_date && b.statement_date) {
-            return (
-              new Date(b.statement_date).getTime() -
-              new Date(a.statement_date).getTime()
-            );
-          }
-          // Fallback: parse name as "Month Year" format
-          try {
-            const dateA = parse(a.name, "MMMM yyyy", new Date());
-            const dateB = parse(b.name, "MMMM yyyy", new Date());
-            return dateB.getTime() - dateA.getTime();
-          } catch {
-            return 0;
-          }
-        });
-        setBillStatements(sorted);
+        setBillStatements(response.data);
       } catch (error) {
         console.error("Failed to fetch bill statements:", error);
       }
@@ -216,19 +200,12 @@ export function ExpensesFilters({
         </Select>
 
         {/* Bill Statement Filter */}
-        <Select value={billStatementId} onValueChange={setBillStatementId}>
-          <SelectTrigger className="w-full">
-            <SelectValue placeholder="All bill statements" />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All bill statements</SelectItem>
-            {billStatements.map((bs) => (
-              <SelectItem key={bs.id} value={bs.id}>
-                {bs.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <MonthYearPicker
+          billStatements={billStatements}
+          value={billStatementId}
+          onValueChange={setBillStatementId}
+          showAllOption={true}
+        />
       </div>
 
       {/* Second Row: Date Range + Sort + Actions */}

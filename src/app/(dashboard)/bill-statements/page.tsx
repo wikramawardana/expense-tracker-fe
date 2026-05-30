@@ -1,5 +1,6 @@
 "use client";
 
+import { parse } from "date-fns";
 import { useRouter } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
@@ -47,7 +48,23 @@ export default function BillStatementsPage() {
     setIsLoading(true);
     try {
       const response = await getBillStatements();
-      setBillStatements(response.data);
+      // Sort chronologically (most recent first) by parsing the name as "MMMM yyyy"
+      const sorted = [...response.data].sort((a, b) => {
+        if (a.statement_date && b.statement_date) {
+          return (
+            new Date(b.statement_date).getTime() -
+            new Date(a.statement_date).getTime()
+          );
+        }
+        try {
+          const dateA = parse(a.name, "MMMM yyyy", new Date());
+          const dateB = parse(b.name, "MMMM yyyy", new Date());
+          return dateB.getTime() - dateA.getTime();
+        } catch {
+          return 0;
+        }
+      });
+      setBillStatements(sorted);
     } catch (error) {
       // Don't show toast for auth errors - let the redirect handle it
       if (error instanceof Error && error.message.includes("401")) {

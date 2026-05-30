@@ -1,6 +1,6 @@
 "use client";
 
-import { format, parse } from "date-fns";
+import { format } from "date-fns";
 import { CalendarIcon, Plus, Trash2 } from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
@@ -17,6 +17,7 @@ import {
 } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
+import { MonthYearPicker } from "@/components/ui/month-year-picker";
 import {
   Popover,
   PopoverContent,
@@ -152,24 +153,7 @@ export function CreateExpenseDialog({
       getBillStatements()
         .then((response) => {
           const active = response.data.filter((b) => b.is_active);
-          // Sort chronologically (most recent first)
-          const sorted = [...active].sort((a, b) => {
-            if (a.statement_date && b.statement_date) {
-              return (
-                new Date(b.statement_date).getTime() -
-                new Date(a.statement_date).getTime()
-              );
-            }
-            // Fallback: parse name as "Month Year" format
-            try {
-              const dateA = parse(a.name, "MMMM yyyy", new Date());
-              const dateB = parse(b.name, "MMMM yyyy", new Date());
-              return dateB.getTime() - dateA.getTime();
-            } catch {
-              return 0;
-            }
-          });
-          setBillStatements(sorted);
+          setBillStatements(active);
         })
         .catch((error) => {
           toast.error("Failed to load bill statements");
@@ -617,7 +601,8 @@ export function CreateExpenseDialog({
                         <Label>
                           Bill Statement <span className="text-red-500">*</span>
                         </Label>
-                        <Select
+                        <MonthYearPicker
+                          billStatements={rowFilteredBillStatements}
                           value={row.billStatementId}
                           onValueChange={(value) =>
                             updateRow(row.rowId, { billStatementId: value })
@@ -627,31 +612,8 @@ export function CreateExpenseDialog({
                             !row.paymentMethodId ||
                             rowFilteredBillStatements.length === 0
                           }
-                        >
-                          <SelectTrigger className="h-11">
-                            <SelectValue
-                              placeholder={
-                                isBillStatementsLoading
-                                  ? "Loading..."
-                                  : !row.paymentMethodId
-                                    ? "Select payment method first"
-                                    : rowFilteredBillStatements.length === 0
-                                      ? "No matching bill statements"
-                                      : "Select bill statement"
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {rowFilteredBillStatements.map((billStatement) => (
-                              <SelectItem
-                                key={billStatement.id}
-                                value={billStatement.id}
-                              >
-                                {billStatement.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
+                          showAllOption={false}
+                        />
                       </div>
                       <div className="space-y-2">
                         <Label htmlFor={`paidBy-${row.rowId}`}>Paid By</Label>

@@ -48,21 +48,36 @@ export default function BillStatementsPage() {
     setIsLoading(true);
     try {
       const response = await getBillStatements();
-      // Sort chronologically (most recent first) by parsing the name as "MMMM yyyy"
+      // Sort with current month first, then past months descending, then future months ascending
+      const now = new Date();
+      const nowTime = now.getTime();
       const sorted = [...response.data].sort((a, b) => {
-        if (a.statement_date && b.statement_date) {
-          return (
-            new Date(b.statement_date).getTime() -
-            new Date(a.statement_date).getTime()
-          );
-        }
+        let dateA: Date;
+        let dateB: Date;
+
         try {
-          const dateA = parse(a.name, "MMMM yyyy", new Date());
-          const dateB = parse(b.name, "MMMM yyyy", new Date());
-          return dateB.getTime() - dateA.getTime();
+          dateA = a.statement_date
+            ? new Date(a.statement_date)
+            : parse(a.name, "MMMM yyyy", new Date());
+          dateB = b.statement_date
+            ? new Date(b.statement_date)
+            : parse(b.name, "MMMM yyyy", new Date());
         } catch {
           return 0;
         }
+
+        const aIsFuture = dateA.getTime() > nowTime;
+        const bIsFuture = dateB.getTime() > nowTime;
+
+        // Past/current dates come before future dates
+        if (!aIsFuture && bIsFuture) return -1;
+        if (aIsFuture && !bIsFuture) return 1;
+
+        // Within same group: past/current sorted descending (newest first), future sorted ascending
+        if (!aIsFuture && !bIsFuture) {
+          return dateB.getTime() - dateA.getTime();
+        }
+        return dateA.getTime() - dateB.getTime();
       });
       setBillStatements(sorted);
     } catch (error) {

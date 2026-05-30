@@ -168,11 +168,11 @@
     background: transparent;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb {
-    background: hsl(var(--muted-foreground) / 0.25);
+    background: color-mix(in oklch, var(--muted-foreground) 25%, transparent);
     border-radius: 4px;
   }
   .custom-scrollbar::-webkit-scrollbar-thumb:hover {
-    background: hsl(var(--muted-foreground) / 0.45);
+    background: color-mix(in oklch, var(--muted-foreground) 45%, transparent);
   }
 
   .transition-smooth {

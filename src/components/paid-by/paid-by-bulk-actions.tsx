@@ -25,14 +25,27 @@ export function PaidByBulkActions({
   const handleSetActive = async (isActive: boolean) => {
     setIsSubmitting(true);
     try {
-      await Promise.all(
+      const results = await Promise.allSettled(
         selectedPaidByList.map((pb) =>
           updatePaidBy(pb.id, { is_active: isActive }),
         ),
       );
-      toast.success(
-        `${selectedCount} paid-by entry(s) set to ${isActive ? "active" : "inactive"}`,
-      );
+      const successCount = results.filter(
+        (r) => r.status === "fulfilled",
+      ).length;
+      const failureCount = results.filter(
+        (r) => r.status === "rejected",
+      ).length;
+
+      if (failureCount === 0) {
+        toast.success(
+          `${successCount} paid-by entry(s) set to ${isActive ? "active" : "inactive"}`,
+        );
+      } else if (successCount === 0) {
+        toast.error("Failed to update paid-by entries");
+      } else {
+        toast.warning(`${successCount} updated, ${failureCount} failed`);
+      }
       onClearSelection();
       onBulkActionComplete?.();
     } catch (error) {

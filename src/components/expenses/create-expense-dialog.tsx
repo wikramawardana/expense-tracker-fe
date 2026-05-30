@@ -512,7 +512,7 @@ export function CreateExpenseDialog({
                   >
                     <div className="flex items-center justify-between">
                       <span className="text-xs font-medium text-muted-foreground">
-                        Expense #{index + 1}
+                        Expense #{rows.length - index}
                       </span>
                       {rows.length > 1 && (
                         <Button
@@ -520,7 +520,7 @@ export function CreateExpenseDialog({
                           variant="ghost"
                           size="sm"
                           onClick={() => removeRow(row.rowId)}
-                          aria-label={`Remove expense #${index + 1}`}
+                          aria-label={`Remove expense #${rows.length - index}`}
                         >
                           <Trash2 className="h-4 w-4" />
                         </Button>
@@ -772,18 +772,6 @@ export function CreateExpenseDialog({
                 );
               })}
             </div>
-
-            {/* Add another button at bottom for easy access */}
-            <Button
-              type="button"
-              variant="outline"
-              size="sm"
-              onClick={addRow}
-              className="w-full"
-            >
-              <Plus className="mr-2 h-4 w-4" />
-              Add another
-            </Button>
           </div>
         </div>
 

@@ -1,25 +1,12 @@
 "use client";
 
-import {
-  endOfDay,
-  endOfMonth,
-  format,
-  startOfDay,
-  startOfMonth,
-  subDays,
-  subMonths,
-} from "date-fns";
-import { CalendarIcon, Search, X } from "lucide-react";
+import { endOfDay, startOfDay } from "date-fns";
+import { Search, X } from "lucide-react";
 import * as React from "react";
 import type { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { DateRangePickerWithPresets } from "@/components/ui/date-range-picker";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -27,7 +14,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { cn } from "@/lib/utils";
 import type { BillStatement } from "@/types/bill-statement.types";
 
 interface BillStatementsFiltersProps {
@@ -40,6 +26,7 @@ export function BillStatementsFilters({
   onFilteredChange,
 }: BillStatementsFiltersProps) {
   const [search, setSearch] = React.useState("");
+  const [debouncedSearch, setDebouncedSearch] = React.useState("");
   const [status, setStatus] = React.useState<"all" | "active" | "inactive">(
     "all",
   );
@@ -50,13 +37,21 @@ export function BillStatementsFilters({
     undefined,
   );
 
+  // Debounce search input
+  React.useEffect(() => {
+    const timer = setTimeout(() => {
+      setDebouncedSearch(search);
+    }, 200);
+    return () => clearTimeout(timer);
+  }, [search]);
+
   // Compute filtered results whenever any filter state changes
   React.useEffect(() => {
     let filtered = billStatements;
 
     // Search by name (case-insensitive)
-    if (search) {
-      const lowerSearch = search.toLowerCase();
+    if (debouncedSearch) {
+      const lowerSearch = debouncedSearch.toLowerCase();
       filtered = filtered.filter((bs) =>
         bs.name.toLowerCase().includes(lowerSearch),
       );
@@ -85,7 +80,14 @@ export function BillStatementsFilters({
     }
 
     onFilteredChange(filtered);
-  }, [billStatements, search, status, dateField, dateRange, onFilteredChange]);
+  }, [
+    billStatements,
+    debouncedSearch,
+    status,
+    dateField,
+    dateRange,
+    onFilteredChange,
+  ]);
 
   const handleClearFilters = () => {
     setSearch("");
@@ -96,10 +98,6 @@ export function BillStatementsFilters({
 
   const hasActiveFilters =
     search !== "" || status !== "all" || dateRange !== undefined;
-
-  const handlePresetSelect = (from: Date, to: Date) => {
-    setDateRange({ from: startOfDay(from), to: endOfDay(to) });
-  };
 
   return (
     <div className="rounded-lg border bg-card p-3 sm:p-4 space-y-3">
@@ -147,105 +145,12 @@ export function BillStatementsFilters({
         </Select>
 
         {/* Date Range Picker */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                "w-full justify-start text-left",
-                !dateRange && "text-muted-foreground",
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {dateRange?.from ? (
-                dateRange.to ? (
-                  <>
-                    {format(dateRange.from, "LLL dd, y")} -{" "}
-                    {format(dateRange.to, "LLL dd, y")}
-                  </>
-                ) : (
-                  format(dateRange.from, "LLL dd, y")
-                )
-              ) : (
-                <span>Pick a date range</span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent className="w-auto p-0" align="start">
-            <div className="flex">
-              <div className="flex flex-col gap-1 border-r p-3">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="justify-start w-full"
-                  onClick={() => {
-                    const today = new Date();
-                    handlePresetSelect(today, today);
-                  }}
-                >
-                  Today
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="justify-start w-full"
-                  onClick={() => {
-                    const today = new Date();
-                    handlePresetSelect(subDays(today, 6), today);
-                  }}
-                >
-                  Last 7 days
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="justify-start w-full"
-                  onClick={() => {
-                    const today = new Date();
-                    handlePresetSelect(subDays(today, 29), today);
-                  }}
-                >
-                  Last 30 days
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="justify-start w-full"
-                  onClick={() => {
-                    const today = new Date();
-                    handlePresetSelect(startOfMonth(today), endOfMonth(today));
-                  }}
-                >
-                  This month
-                </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="justify-start w-full"
-                  onClick={() => {
-                    const lastMonth = subMonths(new Date(), 1);
-                    handlePresetSelect(
-                      startOfMonth(lastMonth),
-                      endOfMonth(lastMonth),
-                    );
-                  }}
-                >
-                  Last month
-                </Button>
-              </div>
-              <div className="p-3">
-                <Calendar
-                  initialFocus
-                  mode="range"
-                  defaultMonth={dateRange?.from}
-                  selected={dateRange}
-                  onSelect={setDateRange}
-                  numberOfMonths={2}
-                />
-              </div>
-            </div>
-          </PopoverContent>
-        </Popover>
+        <DateRangePickerWithPresets
+          dateRange={dateRange}
+          onDateRangeChange={setDateRange}
+          triggerClassName="w-full"
+          align="start"
+        />
       </div>
 
       {/* Clear Filters */}

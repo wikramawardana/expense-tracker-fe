@@ -127,8 +127,14 @@ export default function BillStatementsPage() {
                   Total Statements
                 </div>
                 <div className="text-2xl font-semibold">
-                  {isLoading ? "-" : billStatements.length}
+                  {isLoading ? "-" : filteredBillStatements.length}
                 </div>
+                {!isLoading &&
+                  filteredBillStatements.length !== billStatements.length && (
+                    <div className="text-xs text-muted-foreground">
+                      of {billStatements.length} total
+                    </div>
+                  )}
               </CardContent>
             </Card>
             <Card>

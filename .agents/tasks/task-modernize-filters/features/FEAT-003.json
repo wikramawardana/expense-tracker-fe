@@ -2,7 +2,7 @@
   "id": "FEAT-003",
   "type": "feat",
   "description": "Add a compact, well-ordered filter UI to the Bill Statements page. Filters should include search by name, status (active/inactive), and a date range picker for statement date or due date. The design should match the modernized expense filter style (clean, no neo-brutalist).",
-  "status": "in_progress",
+  "status": "completed",
   "steps": [
     "Create a new component src/components/bill-statements/bill-statements-filters.tsx. It should accept props: billStatements (the full array), onFilteredChange (callback that returns the filtered array). The component manages local filter state and applies client-side filtering (since the bill statements API does not support server-side filtering - it returns all statements).",
     "The filter UI should be a single compact row (responsive grid) with: (1) A search input filtering by name (with Search icon, same pattern as expenses filter), (2) A status select with options: 'All status', 'Active', 'Inactive', (3) A date filter select to choose which date field to filter: 'Statement date' or 'Due date', (4) A date range picker (same modern style with presets as the expenses date picker). Include a Clear button that resets all filters. Filters should apply immediately on change (no Apply button needed since this is client-side). Use standard shadcn/ui component styling (thin borders, no neo-brutalist shadows).",
@@ -24,5 +24,5 @@
     "Run pnpm lint to confirm no linting errors"
   ],
   "blocked_reason": null,
-  "findings": ""
+  "findings": "Build and lint pass cleanly. Pre-existing warnings in categories-table.tsx and sidebar.tsx remain (unrelated). Biome formatter auto-fixed line length issues in the new files during the lint-staged pre-commit hook."
 }

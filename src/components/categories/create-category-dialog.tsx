@@ -22,26 +22,6 @@ interface CreateCategoryDialogProps {
   onCategoryCreated?: () => void;
 }
 
-// Common emoji options for categories
-const EMOJI_OPTIONS = [
-  "🍔",
-  "🚗",
-  "🎬",
-  "🛒",
-  "💡",
-  "🏥",
-  "📚",
-  "💼",
-  "🏠",
-  "✈️",
-  "🎮",
-  "👕",
-  "💰",
-  "🎁",
-  "📱",
-  "🔧",
-];
-
 // Common color options
 const COLOR_OPTIONS = [
   "#3B82F6",
@@ -64,13 +44,11 @@ export function CreateCategoryDialog({
 
   // Form state
   const [name, setName] = React.useState("");
-  const [icon, setIcon] = React.useState("");
   const [color, setColor] = React.useState("");
   const [description, setDescription] = React.useState("");
 
   const resetForm = () => {
     setName("");
-    setIcon("");
     setColor("");
     setDescription("");
   };
@@ -85,7 +63,6 @@ export function CreateCategoryDialog({
     try {
       await createCategory({
         name: name.trim(),
-        icon: icon || undefined,
         color: color || undefined,
         description: description.trim() || undefined,
       });
@@ -127,32 +104,6 @@ export function CreateCategoryDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Transportation"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Icon</Label>
-            <div className="flex flex-wrap gap-2">
-              {EMOJI_OPTIONS.map((emoji) => (
-                <button
-                  key={emoji}
-                  type="button"
-                  onClick={() => setIcon(icon === emoji ? "" : emoji)}
-                  className={`w-10 h-10 text-xl rounded border-2 transition-all ${
-                    icon === emoji
-                      ? "border-foreground bg-muted shadow-sm"
-                      : "border-foreground/30 hover:border-foreground"
-                  }`}
-                >
-                  {emoji}
-                </button>
-              ))}
-            </div>
-            <Input
-              value={icon}
-              onChange={(e) => setIcon(e.target.value)}
-              placeholder="Or type custom emoji..."
-              className="mt-2"
             />
           </div>
 

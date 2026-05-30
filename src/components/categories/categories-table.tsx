@@ -129,15 +129,6 @@ export function CategoriesTable({
   const columns = React.useMemo<ColumnDef<Category>[]>(
     () => [
       {
-        accessorKey: "icon",
-        header: () => <div className="text-center">Icon</div>,
-        cell: ({ row }) => (
-          <div className="text-center text-xl">
-            {row.getValue("icon") || "📁"}
-          </div>
-        ),
-      },
-      {
         accessorKey: "name",
         header: () => <div className="text-left">Name</div>,
         cell: ({ row }) => (

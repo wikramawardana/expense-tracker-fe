@@ -481,9 +481,6 @@ export function ExpenseActionDialog({
                             color: categoryInfo.color ?? undefined,
                           }}
                         >
-                          {categoryInfo.icon && (
-                            <span>{categoryInfo.icon}</span>
-                          )}
                           <span>{categoryInfo.name}</span>
                         </span>
                       ) : (
@@ -710,7 +707,6 @@ export function ExpenseActionDialog({
                     <SelectContent>
                       {categories.map((category) => (
                         <SelectItem key={category.id} value={category.id}>
-                          {category.icon && `${category.icon} `}
                           {category.name}
                         </SelectItem>
                       ))}

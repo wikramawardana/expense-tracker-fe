@@ -33,26 +33,6 @@ interface CategoryActionDialogProps {
   onCategoryDeleted?: () => void;
 }
 
-// Common emoji options for categories
-const EMOJI_OPTIONS = [
-  "🍔",
-  "🚗",
-  "🎬",
-  "🛒",
-  "💡",
-  "🏥",
-  "📚",
-  "💼",
-  "🏠",
-  "✈️",
-  "🎮",
-  "👕",
-  "💰",
-  "🎁",
-  "📱",
-  "🔧",
-];
-
 // Common color options
 const COLOR_OPTIONS = [
   "#3B82F6",
@@ -79,7 +59,6 @@ export function CategoryActionDialog({
 
   // Edit form state
   const [name, setName] = React.useState(category.name);
-  const [icon, setIcon] = React.useState(category.icon || "");
   const [color, setColor] = React.useState(category.color || "");
   const [description, setDescription] = React.useState(
     category.description || "",
@@ -89,7 +68,6 @@ export function CategoryActionDialog({
   // Reset form when category changes
   React.useEffect(() => {
     setName(category.name);
-    setIcon(category.icon || "");
     setColor(category.color || "");
     setDescription(category.description || "");
     setIsActive(category.is_active);
@@ -105,7 +83,6 @@ export function CategoryActionDialog({
     try {
       await updateCategory(category.id, {
         name: name.trim(),
-        icon: icon || undefined,
         color: color || undefined,
         description: description.trim() || undefined,
         is_active: isActive,
@@ -183,8 +160,12 @@ export function CategoryActionDialog({
                 <p className="font-medium">{category.name}</p>
               </div>
               <div>
-                <Label className="text-muted-foreground">Icon</Label>
-                <p className="text-2xl">{category.icon || "📁"}</p>
+                <Label className="text-muted-foreground">Status</Label>
+                <p
+                  className={`font-medium ${category.is_active ? "text-green-600" : "text-gray-500"}`}
+                >
+                  {category.is_active ? "Active" : "Inactive"}
+                </p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -201,14 +182,6 @@ export function CategoryActionDialog({
                 ) : (
                   <p className="text-muted-foreground">Not set</p>
                 )}
-              </div>
-              <div>
-                <Label className="text-muted-foreground">Status</Label>
-                <p
-                  className={`font-medium ${category.is_active ? "text-green-600" : "text-gray-500"}`}
-                >
-                  {category.is_active ? "Active" : "Inactive"}
-                </p>
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -250,32 +223,6 @@ export function CategoryActionDialog({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Category name"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Icon</Label>
-              <div className="flex flex-wrap gap-2">
-                {EMOJI_OPTIONS.map((emoji) => (
-                  <button
-                    key={emoji}
-                    type="button"
-                    onClick={() => setIcon(icon === emoji ? "" : emoji)}
-                    className={`w-10 h-10 text-xl rounded border-2 transition-all ${
-                      icon === emoji
-                        ? "border-foreground bg-muted shadow-sm"
-                        : "border-foreground/30 hover:border-foreground"
-                    }`}
-                  >
-                    {emoji}
-                  </button>
-                ))}
-              </div>
-              <Input
-                value={icon}
-                onChange={(e) => setIcon(e.target.value)}
-                placeholder="Or type custom emoji..."
-                className="mt-2"
               />
             </div>
 

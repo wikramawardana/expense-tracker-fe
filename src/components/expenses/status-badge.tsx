@@ -83,7 +83,6 @@ export function CategoryBadge({ category, className }: CategoryBadgeProps) {
           : undefined
       }
     >
-      {category.icon && <span>{category.icon}</span>}
       <span>{category.name}</span>
     </span>
   );

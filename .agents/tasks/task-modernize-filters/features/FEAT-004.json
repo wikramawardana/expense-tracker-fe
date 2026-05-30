@@ -1,0 +1,25 @@
+{
+  "id": "FEAT-004",
+  "type": "fix",
+  "description": "Address review feedback: fix stats card inconsistency, add search debounce, extract shared DateRangePickerWithPresets component.",
+  "status": "completed",
+  "steps": [
+    "Fix stats card inconsistency on bill statements page: change Total Statements to show filteredBillStatements.length, with a secondary line showing 'of {billStatements.length} total' when filters are active.",
+    "Add debounced search in bill-statements-filters.tsx: introduce a debouncedSearch state with a 200ms setTimeout useEffect, and use debouncedSearch in the filtering useEffect instead of search.",
+    "Extract a shared DateRangePickerWithPresets component at src/components/ui/date-range-picker.tsx with props: dateRange, onDateRangeChange, triggerClassName, align. Replace inline date picker code in both expenses-filters.tsx and bill-statements-filters.tsx with this component."
+  ],
+  "acceptance_criteria": [
+    "Total Statements card shows filtered count and shows 'of X total' when filters are active",
+    "Bill statements search input is debounced at 200ms",
+    "A DateRangePickerWithPresets component exists at src/components/ui/date-range-picker.tsx",
+    "Both expenses-filters.tsx and bill-statements-filters.tsx use the extracted component",
+    "pnpm build passes without errors",
+    "pnpm lint passes without errors"
+  ],
+  "verification": [
+    "Run pnpm build to confirm the project compiles successfully",
+    "Run pnpm lint to confirm no linting errors"
+  ],
+  "blocked_reason": null,
+  "findings": "All three review items addressed. Build and lint pass cleanly (only pre-existing warnings remain). The date-range-picker.tsx component reduces code duplication by ~180 lines across the two filter files."
+}

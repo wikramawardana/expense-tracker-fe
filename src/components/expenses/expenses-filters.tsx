@@ -1,17 +1,12 @@
 "use client";
 
 import { format } from "date-fns";
-import { CalendarIcon, Filter, Search, X } from "lucide-react";
+import { Filter, Search, X } from "lucide-react";
 import * as React from "react";
 import type { DateRange } from "react-day-picker";
 import { Button } from "@/components/ui/button";
-import { Calendar } from "@/components/ui/calendar";
+import { DateRangePickerWithPresets } from "@/components/ui/date-range-picker";
 import { Input } from "@/components/ui/input";
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from "@/components/ui/popover";
 import {
   Select,
   SelectContent,
@@ -24,7 +19,6 @@ import {
   EXPENSE_STATUSES,
   SORT_OPTIONS,
 } from "@/lib/constants";
-import { cn } from "@/lib/utils";
 import { getBillStatements } from "@/services/bill-statements.service";
 import type { BillStatement } from "@/types/bill-statement.types";
 import type {
@@ -37,13 +31,6 @@ interface ExpensesFiltersProps {
   filters: ExpenseFilters;
   onFiltersChange: (filters: ExpenseFilters) => void;
 }
-
-const neoControlClass =
-  "rounded-md border-2 border-primary/35 bg-background font-bold shadow-[2px_2px_0px_0px_rgba(79,70,229,0.12)] dark:border-primary/45 dark:shadow-[2px_2px_0px_0px_rgba(129,140,248,0.18)]";
-const neoButtonClass =
-  "rounded-md border-2 border-primary/40 font-black shadow-[3px_3px_0px_0px_rgba(79,70,229,0.16)] transition-all hover:translate-x-[2px] hover:translate-y-[2px] hover:shadow-[1px_1px_0px_0px_rgba(79,70,229,0.18)] dark:border-primary/50 dark:shadow-[3px_3px_0px_0px_rgba(129,140,248,0.22)] dark:hover:shadow-[1px_1px_0px_0px_rgba(129,140,248,0.24)]";
-const neoPopoverClass =
-  "rounded-md border-2 border-primary/35 shadow-[4px_4px_0px_0px_rgba(79,70,229,0.14)] dark:border-primary/45 dark:shadow-[4px_4px_0px_0px_rgba(129,140,248,0.2)]";
 
 export function ExpensesFilters({
   filters,
@@ -166,9 +153,9 @@ export function ExpensesFilters({
     sortOrder !== (filters.sort_order || "desc");
 
   return (
-    <div className="space-y-3 rounded-lg border-2 border-primary/35 bg-card p-3 shadow-[4px_4px_0px_0px_rgba(79,70,229,0.16)] dark:border-primary/45 dark:shadow-[4px_4px_0px_0px_rgba(129,140,248,0.22)] sm:space-y-4">
-      {/* Top Row: Search, Category, Status */}
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-4 sm:gap-3">
+    <div className="rounded-lg border bg-card p-3 sm:p-4 space-y-3">
+      {/* Primary Filters Row */}
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -177,17 +164,17 @@ export function ExpensesFilters({
             value={search}
             onChange={(e) => setSearch(e.target.value)}
             onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
-            className={cn(neoControlClass, "w-full pl-9")}
+            className="w-full pl-9"
           />
         </div>
 
         {/* Category Filter */}
         <Select value={category} onValueChange={setCategory}>
-          <SelectTrigger className={cn(neoControlClass, "w-full")}>
-            <SelectValue placeholder="All Categories" />
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="All categories" />
           </SelectTrigger>
-          <SelectContent className={neoPopoverClass}>
-            <SelectItem value="all">All Categories</SelectItem>
+          <SelectContent>
+            <SelectItem value="all">All categories</SelectItem>
             {EXPENSE_CATEGORIES.map((cat) => (
               <SelectItem key={cat.value} value={cat.value}>
                 {cat.label}
@@ -198,11 +185,11 @@ export function ExpensesFilters({
 
         {/* Status Filter */}
         <Select value={status} onValueChange={setStatus}>
-          <SelectTrigger className={cn(neoControlClass, "w-full")}>
-            <SelectValue placeholder="All Status" />
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="All status" />
           </SelectTrigger>
-          <SelectContent className={neoPopoverClass}>
-            <SelectItem value="all">All Status</SelectItem>
+          <SelectContent>
+            <SelectItem value="all">All status</SelectItem>
             {EXPENSE_STATUSES.map((s) => (
               <SelectItem key={s.value} value={s.value}>
                 {s.label}
@@ -210,17 +197,14 @@ export function ExpensesFilters({
             ))}
           </SelectContent>
         </Select>
-      </div>
 
-      {/* Second Row: Bill Statement and Date Range */}
-      <div className="grid grid-cols-1 gap-2 sm:grid-cols-2 sm:gap-3">
         {/* Bill Statement Filter */}
         <Select value={billStatementId} onValueChange={setBillStatementId}>
-          <SelectTrigger className={cn(neoControlClass, "w-full")}>
-            <SelectValue placeholder="All Bill Statements" />
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="All bill statements" />
           </SelectTrigger>
-          <SelectContent className={neoPopoverClass}>
-            <SelectItem value="all">All Bill Statements</SelectItem>
+          <SelectContent>
+            <SelectItem value="all">All bill statements</SelectItem>
             {billStatements.map((bs) => (
               <SelectItem key={bs.id} value={bs.id}>
                 {bs.name}
@@ -228,58 +212,25 @@ export function ExpensesFilters({
             ))}
           </SelectContent>
         </Select>
-
-        {/* Date Range Filter */}
-        <Popover>
-          <PopoverTrigger asChild>
-            <Button
-              variant="outline"
-              className={cn(
-                neoControlClass,
-                "w-full justify-start text-left",
-                !dateRange && "text-muted-foreground",
-              )}
-            >
-              <CalendarIcon className="mr-2 h-4 w-4" />
-              {dateRange?.from ? (
-                dateRange.to ? (
-                  <>
-                    {format(dateRange.from, "LLL dd, y")} -{" "}
-                    {format(dateRange.to, "LLL dd, y")}
-                  </>
-                ) : (
-                  format(dateRange.from, "LLL dd, y")
-                )
-              ) : (
-                <span>Pick a date range</span>
-              )}
-            </Button>
-          </PopoverTrigger>
-          <PopoverContent
-            className={`${neoPopoverClass} w-auto p-0`}
-            align="start"
-          >
-            <Calendar
-              initialFocus
-              mode="range"
-              defaultMonth={dateRange?.from}
-              selected={dateRange}
-              onSelect={setDateRange}
-              numberOfMonths={2}
-            />
-          </PopoverContent>
-        </Popover>
       </div>
 
-      {/* Bottom Row: Sort and Actions */}
+      {/* Second Row: Date Range + Sort + Actions */}
       <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex items-center gap-2">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+          {/* Date Range Filter */}
+          <DateRangePickerWithPresets
+            dateRange={dateRange}
+            onDateRangeChange={setDateRange}
+            triggerClassName="w-full sm:w-[260px]"
+            align="start"
+          />
+
           {/* Sort By */}
           <Select value={sortBy} onValueChange={setSortBy}>
-            <SelectTrigger className={cn(neoControlClass, "w-[130px]")}>
+            <SelectTrigger className="w-full sm:w-[130px]">
               <SelectValue placeholder="Sort by" />
             </SelectTrigger>
-            <SelectContent className={neoPopoverClass}>
+            <SelectContent>
               {SORT_OPTIONS.map((option) => (
                 <SelectItem key={option.value} value={option.value}>
                   {option.label}
@@ -293,12 +244,12 @@ export function ExpensesFilters({
             value={sortOrder}
             onValueChange={(v) => setSortOrder(v as "asc" | "desc")}
           >
-            <SelectTrigger className={cn(neoControlClass, "w-[100px]")}>
+            <SelectTrigger className="w-full sm:w-[120px]">
               <SelectValue />
             </SelectTrigger>
-            <SelectContent className={neoPopoverClass}>
-              <SelectItem value="asc">Asc</SelectItem>
-              <SelectItem value="desc">Desc</SelectItem>
+            <SelectContent>
+              <SelectItem value="asc">Ascending</SelectItem>
+              <SelectItem value="desc">Descending</SelectItem>
             </SelectContent>
           </Select>
         </div>
@@ -309,7 +260,7 @@ export function ExpensesFilters({
               variant="ghost"
               size="sm"
               onClick={handleClearFilters}
-              className={cn(neoButtonClass, "h-9 bg-background px-3")}
+              className="h-9 px-3"
             >
               <X className="mr-1 h-4 w-4" />
               Clear
@@ -318,7 +269,7 @@ export function ExpensesFilters({
           <Button
             onClick={handleApplyFilters}
             size="sm"
-            className={cn(neoButtonClass, "h-9 bg-primary px-4")}
+            className="h-9 px-4"
             disabled={!hasUnappliedChanges}
           >
             <Filter className="mr-1 h-4 w-4" />

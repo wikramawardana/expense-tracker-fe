@@ -40,3 +40,21 @@ export function formatDateTime(dateString: string): string {
 export function formatNumber(num: number): string {
   return new Intl.NumberFormat("id-ID").format(num);
 }
+
+/**
+ * Strip everything except digits from an amount input value.
+ * Returns a raw digit string (e.g., "97168") suitable for Number().
+ */
+export function parseAmountInput(value: string): string {
+  return value.replace(/\D/g, "");
+}
+
+/**
+ * Format a raw digit string with thousand separators for display in an input.
+ * e.g., "97168" -> "97.168" (Indonesian grouping). Empty input stays empty.
+ */
+export function formatAmountInput(raw: string): string {
+  const digits = raw.replace(/\D/g, "");
+  if (!digits) return "";
+  return new Intl.NumberFormat("id-ID").format(Number(digits));
+}

@@ -32,6 +32,7 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { SCHEDULE_TYPES } from "@/lib/constants";
+import { formatAmountInput, parseAmountInput } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { getBillStatements } from "@/services/bill-statements.service";
 import { getCategories } from "@/services/categories.service";
@@ -578,16 +579,23 @@ export function CreateExpenseDialog({
                         <Label htmlFor={`amount-${row.rowId}`}>
                           Amount <span className="text-red-500">*</span>
                         </Label>
-                        <Input
-                          id={`amount-${row.rowId}`}
-                          type="number"
-                          value={row.amount}
-                          onChange={(e) =>
-                            updateRow(row.rowId, { amount: e.target.value })
-                          }
-                          placeholder="0"
-                          className="h-11"
-                        />
+                        <div className="relative">
+                          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">
+                            Rp
+                          </span>
+                          <Input
+                            id={`amount-${row.rowId}`}
+                            inputMode="numeric"
+                            value={formatAmountInput(row.amount)}
+                            onChange={(e) =>
+                              updateRow(row.rowId, {
+                                amount: parseAmountInput(e.target.value),
+                              })
+                            }
+                            placeholder="0"
+                            className="h-11 pl-9"
+                          />
+                        </div>
                       </div>
                       <div className="space-y-2">
                         <Label>

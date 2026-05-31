@@ -30,7 +30,12 @@ import {
 } from "@/components/ui/select";
 import { Textarea } from "@/components/ui/textarea";
 import { EXPENSE_STATUSES, SCHEDULE_TYPES } from "@/lib/constants";
-import { formatCurrency, formatDate } from "@/lib/format";
+import {
+  formatAmountInput,
+  formatCurrency,
+  formatDate,
+  parseAmountInput,
+} from "@/lib/format";
 import { getBillStatements } from "@/services/bill-statements.service";
 import { getCategories } from "@/services/categories.service";
 import {
@@ -750,14 +755,21 @@ export function ExpenseActionDialog({
                   <Label htmlFor="edit-amount">
                     Amount <span className="text-red-500">*</span>
                   </Label>
-                  <Input
-                    id="edit-amount"
-                    type="number"
-                    value={amount}
-                    onChange={(e) => setAmount(e.target.value)}
-                    placeholder="0"
-                    className="h-11"
-                  />
+                  <div className="relative">
+                    <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">
+                      Rp
+                    </span>
+                    <Input
+                      id="edit-amount"
+                      inputMode="numeric"
+                      value={formatAmountInput(amount)}
+                      onChange={(e) =>
+                        setAmount(parseAmountInput(e.target.value))
+                      }
+                      placeholder="0"
+                      className="h-11 pl-9"
+                    />
+                  </div>
                 </div>
                 <div className="space-y-2">
                   <Label htmlFor="edit-date">

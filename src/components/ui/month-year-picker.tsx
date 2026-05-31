@@ -180,29 +180,7 @@ export function MonthYearPicker({
     }
   };
 
-  // Default to current month/year on mount if no value is set
-  const hasInitialized = React.useRef(false);
-  React.useEffect(() => {
-    if (hasInitialized.current) return;
-    if (value || (showAllOption && value === "all")) return;
-    if (billStatements.length === 0) return;
-
-    const now = new Date();
-    const currentMonth = now.getMonth();
-    const currentYear = now.getFullYear();
-
-    const id = statementMap[`${currentMonth}-${currentYear}`];
-    if (id) {
-      hasInitialized.current = true;
-      onValueChange(id);
-    }
-  }, [
-    billStatements.length,
-    onValueChange,
-    showAllOption,
-    statementMap,
-    value,
-  ]);
+  // Default to empty (null) — user must explicitly pick a bill statement.
 
   if (isAllMode) {
     return (

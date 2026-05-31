@@ -18,6 +18,16 @@ const neoItemClass =
 const neoChipClass =
   "inline-flex items-center border-2 border-foreground/20 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.06)] dark:border-foreground/15 dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.05)]";
 
+// Colored neo-brutalist status boxes — colored border + matching hard shadow
+const neoTotalClass =
+  "border-2 border-foreground/25 bg-background shadow-[3px_3px_0px_0px_rgba(0,0,0,0.12)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,0.08)]";
+const neoPaidClass =
+  "border-2 border-emerald-500/70 bg-emerald-500/10 shadow-[3px_3px_0px_0px_rgba(16,185,129,0.35)]";
+const neoPendingClass =
+  "border-2 border-amber-500/70 bg-amber-500/10 shadow-[3px_3px_0px_0px_rgba(245,158,11,0.35)]";
+const neoUnpaidClass =
+  "border-2 border-rose-500/70 bg-rose-500/10 shadow-[4px_4px_0px_0px_rgba(244,63,94,0.4)]";
+
 function formatDateRange(dateFrom?: string, dateTo?: string): string | null {
   if (!dateFrom && !dateTo) return null;
   try {
@@ -125,7 +135,7 @@ export function ExpenseStatsCards({
 
       {/* Overall totals row */}
       <div className="mb-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className={`${neoItemClass} bg-background p-3`}>
+        <div className={`${neoTotalClass} p-3`}>
           <p className="text-[10px] font-black uppercase text-muted-foreground">
             Total spent
           </p>
@@ -133,22 +143,24 @@ export function ExpenseStatsCards({
             {formatCurrency(totalSpent)}
           </p>
         </div>
-        <div className={`${neoItemClass} bg-success/15 p-3`}>
-          <p className="text-[10px] font-black uppercase text-success">Paid</p>
+        <div className={`${neoPaidClass} p-3`}>
+          <p className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400">
+            Paid
+          </p>
           <p className="mt-1 truncate text-lg font-black text-foreground">
             {formatCurrency(totalPaid)}
           </p>
         </div>
-        <div className={`${neoItemClass} bg-warning/20 p-3`}>
-          <p className="text-[10px] font-black uppercase text-warning-foreground">
+        <div className={`${neoPendingClass} p-3`}>
+          <p className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">
             Pending
           </p>
           <p className="mt-1 truncate text-lg font-black text-foreground">
             {formatCurrency(totalPending)}
           </p>
         </div>
-        <div className={`${neoItemClass} bg-destructive/10 p-3`}>
-          <p className="text-[10px] font-black uppercase text-destructive">
+        <div className={`${neoUnpaidClass} p-3`}>
+          <p className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400">
             Total unpaid
           </p>
           <p className="mt-1 truncate text-lg font-black text-foreground">
@@ -193,24 +205,24 @@ export function ExpenseStatsCards({
 
               {/* Status breakdown */}
               <div className="grid grid-cols-3 gap-2">
-                <div className="bg-success/15 px-2 py-1.5 text-center">
-                  <p className="text-[10px] font-black uppercase text-success">
+                <div className="border-2 border-emerald-500/50 bg-emerald-500/10 px-2 py-1.5 text-center">
+                  <p className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400">
                     Paid
                   </p>
                   <p className="truncate text-xs font-black text-foreground">
                     {formatCurrency(method.paid)}
                   </p>
                 </div>
-                <div className="bg-warning/20 px-2 py-1.5 text-center">
-                  <p className="text-[10px] font-black uppercase text-warning-foreground">
+                <div className="border-2 border-amber-500/50 bg-amber-500/10 px-2 py-1.5 text-center">
+                  <p className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">
                     Pending
                   </p>
                   <p className="truncate text-xs font-black text-foreground">
                     {formatCurrency(method.pending)}
                   </p>
                 </div>
-                <div className="bg-destructive/10 px-2 py-1.5 text-center">
-                  <p className="text-[10px] font-black uppercase text-destructive">
+                <div className="border-2 border-rose-500/50 bg-rose-500/10 px-2 py-1.5 text-center">
+                  <p className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400">
                     Unpaid
                   </p>
                   <p className="truncate text-xs font-black text-foreground">

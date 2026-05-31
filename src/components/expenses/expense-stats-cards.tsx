@@ -79,6 +79,9 @@ export function ExpenseStatsCards({
   const breakdown = stats?.payment_method_breakdown ?? [];
   const totalSpent = stats?.total_amount ?? 0;
   const totalCount = stats?.total_count ?? 0;
+  const totalPaid = stats?.approved_amount ?? 0;
+  const totalPending = stats?.pending_amount ?? 0;
+  const totalUnpaid = stats?.rejected_amount ?? 0;
 
   return (
     <section className={`${neoSurfaceClass} p-3`}>
@@ -118,6 +121,40 @@ export function ExpenseStatsCards({
             No filters applied
           </span>
         )}
+      </div>
+
+      {/* Overall totals row */}
+      <div className="mb-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <div className={`${neoItemClass} bg-background p-3`}>
+          <p className="text-[10px] font-black uppercase text-muted-foreground">
+            Total spent
+          </p>
+          <p className="mt-1 truncate text-lg font-black text-foreground">
+            {formatCurrency(totalSpent)}
+          </p>
+        </div>
+        <div className={`${neoItemClass} bg-success/15 p-3`}>
+          <p className="text-[10px] font-black uppercase text-success">Paid</p>
+          <p className="mt-1 truncate text-lg font-black text-foreground">
+            {formatCurrency(totalPaid)}
+          </p>
+        </div>
+        <div className={`${neoItemClass} bg-warning/20 p-3`}>
+          <p className="text-[10px] font-black uppercase text-warning-foreground">
+            Pending
+          </p>
+          <p className="mt-1 truncate text-lg font-black text-foreground">
+            {formatCurrency(totalPending)}
+          </p>
+        </div>
+        <div className={`${neoItemClass} bg-destructive/10 p-3`}>
+          <p className="text-[10px] font-black uppercase text-destructive">
+            Total unpaid
+          </p>
+          <p className="mt-1 truncate text-lg font-black text-foreground">
+            {formatCurrency(totalUnpaid)}
+          </p>
+        </div>
       </div>
 
       {/* Per-payment-method boxes */}

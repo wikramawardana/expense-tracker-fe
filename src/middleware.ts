@@ -1,7 +1,7 @@
 import { getSessionCookie } from "better-auth/cookies";
 import { type NextRequest, NextResponse } from "next/server";
 
-const publicRoutes = ["/", "/login", "/api/auth"];
+const publicPrefixes = ["/login", "/api/auth"];
 const adminRoutes = ["/admin"];
 
 function logRequest(
@@ -31,7 +31,8 @@ function logRequest(
 }
 
 function isPublicRoute(pathname: string): boolean {
-  return publicRoutes.some((route) => pathname.startsWith(route));
+  if (pathname === "/") return true;
+  return publicPrefixes.some((prefix) => pathname.startsWith(prefix));
 }
 
 function getBaseUrl(request: NextRequest): string {

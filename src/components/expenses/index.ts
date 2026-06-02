@@ -5,4 +5,5 @@ export { ExpenseStatsCards } from "./expense-stats-cards";
 export { ExpensesFilters } from "./expenses-filters";
 export { ExpensesPagination } from "./expenses-pagination";
 export { ExpensesTable } from "./expenses-table";
+export { ImportExpensesCsvDialog } from "./import-expenses-csv-dialog";
 export { CategoryBadge, StatusBadge } from "./status-badge";

@@ -97,6 +97,15 @@ export interface BulkCreateExpensesResponse {
   };
 }
 
+export interface ImportExpensesCsvResponse {
+  status: string;
+  message: string;
+  data: {
+    created: Expense[];
+    count: number;
+  };
+}
+
 export type BulkExpenseAction = "move_bill_statement" | "set_status" | "delete";
 
 export interface BulkExpenseActionPayload {

@@ -1,4 +1,11 @@
-import { apiFetch, buildQueryString } from "@/lib/api.config";
+import {
+  API_BASE_URL,
+  ApiError,
+  apiFetch,
+  buildQueryString,
+  clearAuthTokenCache,
+  getAuthToken,
+} from "@/lib/api.config";
 import type {
   BulkCreateExpensesResponse,
   BulkExpenseActionPayload,
@@ -10,6 +17,7 @@ import type {
   ExpenseFilters,
   ExpenseSumResponse,
   ExpensesResponse,
+  ImportExpensesCsvResponse,
   SingleExpenseResponse,
   UpdateExpensePayload,
 } from "@/types/expense.types";
@@ -55,6 +63,91 @@ export async function createExpensesBulk(
     method: "POST",
     body: JSON.stringify(payload),
   });
+}
+
+/**
+ * Import expenses from a CSV file
+ */
+export async function importExpensesCsv(
+  file: File,
+): Promise<ImportExpensesCsvResponse> {
+  const token = await getAuthToken();
+  const formData = new FormData();
+  formData.append("file", file);
+
+  const headers: HeadersInit = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}/expenses/import-csv`, {
+    method: "POST",
+    headers,
+    body: formData,
+  });
+
+  if (!response.ok) {
+    let errorData: unknown;
+    try {
+      errorData = await response.json();
+    } catch {
+      errorData = null;
+    }
+
+    if (response.status === 401) {
+      clearAuthTokenCache();
+    }
+
+    const errorMessage =
+      (errorData as { message?: string })?.message ||
+      `HTTP error! status: ${response.status}`;
+    throw new ApiError(errorMessage, response.status, errorData);
+  }
+
+  return response.json();
+}
+
+/**
+ * Download the CSV import template
+ */
+export async function downloadExpenseImportTemplate(): Promise<void> {
+  const token = await getAuthToken();
+  const headers: HeadersInit = {};
+  if (token) {
+    headers.Authorization = `Bearer ${token}`;
+  }
+
+  const response = await fetch(`${API_BASE_URL}/expenses/import-template.csv`, {
+    headers,
+  });
+
+  if (!response.ok) {
+    let errorData: unknown;
+    try {
+      errorData = await response.json();
+    } catch {
+      errorData = null;
+    }
+
+    if (response.status === 401) {
+      clearAuthTokenCache();
+    }
+
+    const errorMessage =
+      (errorData as { message?: string })?.message ||
+      `HTTP error! status: ${response.status}`;
+    throw new ApiError(errorMessage, response.status, errorData);
+  }
+
+  const blob = await response.blob();
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "expense-import-template.csv";
+  document.body.appendChild(link);
+  link.click();
+  link.remove();
+  URL.revokeObjectURL(url);
 }
 
 /**

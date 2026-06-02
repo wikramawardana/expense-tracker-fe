@@ -9,6 +9,7 @@ import {
   ExpenseStatsCards,
   ExpensesFilters,
   ExpensesTable,
+  ImportExpensesCsvDialog,
 } from "@/components/expenses";
 import {
   Card,
@@ -328,7 +329,10 @@ export default function ExpensesPage() {
                 )}
               </CardDescription>
             </div>
-            <CreateExpenseDialog onExpenseCreated={refreshExpenses} />
+            <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+              <ImportExpensesCsvDialog onExpensesImported={refreshExpenses} />
+              <CreateExpenseDialog onExpenseCreated={refreshExpenses} />
+            </div>
           </div>
         </CardHeader>
         <CardContent className="space-y-4 px-3 sm:space-y-5 sm:px-6">

@@ -34,18 +34,50 @@ interface CategoryBadgeProps {
   className?: string;
 }
 
-/**
- * Convert a hex color to a soft background + readable foreground.
- * Falls back to a neutral slate badge if no color is provided.
- */
-function lighten(hex: string, alpha: number) {
-  const m = hex.replace("#", "");
-  if (m.length !== 6) return undefined;
-  const r = parseInt(m.slice(0, 2), 16);
-  const g = parseInt(m.slice(2, 4), 16);
-  const b = parseInt(m.slice(4, 6), 16);
-  if ([r, g, b].some((n) => Number.isNaN(n))) return undefined;
-  return `rgba(${r}, ${g}, ${b}, ${alpha})`;
+const fallbackPalette = [
+  "#0f766e",
+  "#2563eb",
+  "#7c3aed",
+  "#c2410c",
+  "#be123c",
+  "#15803d",
+  "#0369a1",
+  "#a16207",
+];
+
+function hashString(value: string) {
+  return [...value].reduce(
+    (hash, char) => (hash * 31 + char.charCodeAt(0)) >>> 0,
+    0,
+  );
+}
+
+function hexToRgb(hex: string) {
+  const normalized = hex.replace("#", "");
+  if (normalized.length !== 6) return null;
+
+  const r = parseInt(normalized.slice(0, 2), 16);
+  const g = parseInt(normalized.slice(2, 4), 16);
+  const b = parseInt(normalized.slice(4, 6), 16);
+
+  if ([r, g, b].some((n) => Number.isNaN(n))) return null;
+  return { r, g, b };
+}
+
+function rgba(hex: string, alpha: number) {
+  const rgb = hexToRgb(hex);
+  if (!rgb) return undefined;
+  return `rgba(${rgb.r}, ${rgb.g}, ${rgb.b}, ${alpha})`;
+}
+
+function colorForValue(value: string) {
+  return fallbackPalette[hashString(value) % fallbackPalette.length];
+}
+
+function categoryAccent(category: Category) {
+  return category.color && hexToRgb(category.color)
+    ? category.color
+    : colorForValue(category.name);
 }
 
 export function CategoryBadge({ category, className }: CategoryBadgeProps) {
@@ -63,26 +95,26 @@ export function CategoryBadge({ category, className }: CategoryBadgeProps) {
     );
   }
 
-  const bg = category.color ? lighten(category.color, 0.12) : undefined;
-  const ring = category.color ? lighten(category.color, 0.3) : undefined;
+  const accent = categoryAccent(category);
+  const bg = rgba(accent, 0.12);
+  const ring = rgba(accent, 0.28);
 
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset",
-        !bg && "bg-muted text-muted-foreground ring-border",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset",
         className,
       )}
-      style={
-        bg
-          ? {
-              backgroundColor: bg,
-              color: category.color ?? undefined,
-              boxShadow: `inset 0 0 0 1px ${ring}`,
-            }
-          : undefined
-      }
+      style={{
+        backgroundColor: bg,
+        color: accent,
+        boxShadow: `inset 0 0 0 1px ${ring}`,
+      }}
     >
+      <span
+        className="h-1.5 w-1.5 rounded-full"
+        style={{ backgroundColor: accent }}
+      />
       <span>{category.name}</span>
     </span>
   );
@@ -91,6 +123,26 @@ export function CategoryBadge({ category, className }: CategoryBadgeProps) {
 interface PaymentMethodBadgeProps {
   paymentMethod?: string | null;
   className?: string;
+}
+
+function paymentAccent(paymentMethod: string) {
+  const normalized = paymentMethod.trim().toLowerCase();
+
+  if (normalized.includes("cash")) return "#059669";
+  if (normalized.includes("credit")) return "#7c3aed";
+  if (normalized.includes("debit")) return "#2563eb";
+  if (normalized.includes("wallet") || normalized.includes("ewallet")) {
+    return "#c026d3";
+  }
+  if (
+    normalized.includes("transfer") ||
+    normalized.includes("bank") ||
+    normalized.includes("va")
+  ) {
+    return "#0891b2";
+  }
+
+  return colorForValue(paymentMethod);
 }
 
 export function PaymentMethodBadge({
@@ -104,10 +156,22 @@ export function PaymentMethodBadge({
   return (
     <span
       className={cn(
-        "inline-flex items-center gap-1.5 text-sm text-foreground",
+        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset",
         className,
       )}
+      style={{
+        backgroundColor: rgba(paymentAccent(paymentMethod), 0.12),
+        color: paymentAccent(paymentMethod),
+        boxShadow: `inset 0 0 0 1px ${rgba(
+          paymentAccent(paymentMethod),
+          0.28,
+        )}`,
+      }}
     >
+      <span
+        className="h-1.5 w-1.5 rounded-full"
+        style={{ backgroundColor: paymentAccent(paymentMethod) }}
+      />
       <span>{paymentMethod}</span>
     </span>
   );

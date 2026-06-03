@@ -22,6 +22,60 @@ interface ExpensesTableProps {
   onExpenseDeleted?: () => void;
 }
 
+interface ExpenseGroup {
+  paymentMethod: string;
+  expenses: Expense[];
+  total: number;
+  earliestDate: number;
+}
+
+function isInstallment(expense: Expense) {
+  return expense.recurrence_type?.trim().toLowerCase() === "installment";
+}
+
+function paymentMethodLabel(expense: Expense) {
+  return expense.payment_method?.trim() || "Unknown payment";
+}
+
+function dateValue(expense: Expense) {
+  const parsed = Date.parse(expense.expense_date);
+  return Number.isNaN(parsed) ? Number.MAX_SAFE_INTEGER : parsed;
+}
+
+function groupByPaymentMethod(expenses: Expense[]): ExpenseGroup[] {
+  const map = new Map<string, Expense[]>();
+
+  for (const expense of expenses) {
+    const key = paymentMethodLabel(expense);
+    map.set(key, [...(map.get(key) ?? []), expense]);
+  }
+
+  return Array.from(map.entries())
+    .map(([paymentMethod, groupExpenses]) => {
+      const sortedExpenses = [...groupExpenses].sort((a, b) => {
+        const dateDiff = dateValue(a) - dateValue(b);
+        if (dateDiff !== 0) return dateDiff;
+        return a.title.localeCompare(b.title);
+      });
+
+      return {
+        paymentMethod,
+        expenses: sortedExpenses,
+        total: sortedExpenses.reduce((sum, expense) => sum + expense.amount, 0),
+        earliestDate: Math.min(...sortedExpenses.map(dateValue)),
+      };
+    })
+    .sort((a, b) => {
+      const paymentDiff = a.paymentMethod.localeCompare(b.paymentMethod);
+      if (paymentDiff !== 0) return paymentDiff;
+      return a.earliestDate - b.earliestDate;
+    });
+}
+
+function flattenGroups(groups: ExpenseGroup[]) {
+  return groups.flatMap((group) => group.expenses);
+}
+
 export function ExpensesTable({
   expenses,
   categories = [],
@@ -48,6 +102,27 @@ export function ExpensesTable({
     () => expenses.filter((expense) => selectedIds.has(expense.id)),
     [expenses, selectedIds],
   );
+
+  const installmentGroups = React.useMemo(
+    () => groupByPaymentMethod(expenses.filter(isInstallment)),
+    [expenses],
+  );
+  const normalGroups = React.useMemo(
+    () =>
+      groupByPaymentMethod(
+        expenses.filter((expense) => !isInstallment(expense)),
+      ),
+    [expenses],
+  );
+  const installmentExpenses = React.useMemo(
+    () => flattenGroups(installmentGroups),
+    [installmentGroups],
+  );
+  const normalExpenses = React.useMemo(
+    () => flattenGroups(normalGroups),
+    [normalGroups],
+  );
+
   const hasVisibleRows = visibleIds.length > 0;
   const allVisibleSelected =
     hasVisibleRows && visibleIds.every((id) => selectedIds.has(id));
@@ -228,11 +303,108 @@ export function ExpensesTable({
     ],
   );
 
-  const table = useReactTable({
-    data: expenses,
+  const installmentTable = useReactTable({
+    data: installmentExpenses,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
+
+  const normalTable = useReactTable({
+    data: normalExpenses,
+    columns,
+    getCoreRowModel: getCoreRowModel(),
+  });
+
+  const renderGroupedTable = (
+    table: typeof installmentTable,
+    groups: ExpenseGroup[],
+    emptyMessage: string,
+  ) => {
+    const rowByExpenseId = new Map(
+      table.getRowModel().rows.map((row) => [row.original.id, row]),
+    );
+
+    if (groups.length === 0) {
+      return (
+        <div className="p-6 text-center text-sm font-semibold text-muted-foreground">
+          {emptyMessage}
+        </div>
+      );
+    }
+
+    return (
+      <table className="w-full text-sm">
+        <thead className="sticky top-0 z-10 border-b-2 border-foreground/20 bg-secondary">
+          {table.getHeaderGroups().map((headerGroup) => (
+            <tr key={headerGroup.id}>
+              {headerGroup.headers.map((header) => (
+                <th
+                  key={header.id}
+                  className="h-11 px-4 text-left align-middle text-xs font-black uppercase text-secondary-foreground"
+                >
+                  {header.isPlaceholder
+                    ? null
+                    : flexRender(
+                        header.column.columnDef.header,
+                        header.getContext(),
+                      )}
+                </th>
+              ))}
+            </tr>
+          ))}
+        </thead>
+        <tbody className="divide-y divide-border">
+          {groups.map((group) => (
+            <React.Fragment key={group.paymentMethod}>
+              <tr className="bg-muted/60">
+                <td colSpan={columns.length} className="px-4 py-2">
+                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
+                    <div className="flex items-center gap-2">
+                      <PaymentMethodBadge paymentMethod={group.paymentMethod} />
+                      <span className="text-xs font-bold text-muted-foreground">
+                        {group.expenses.length} expense
+                        {group.expenses.length === 1 ? "" : "s"}
+                      </span>
+                    </div>
+                    <div className="flex items-center gap-3 text-xs font-semibold text-muted-foreground">
+                      <span>
+                        Earliest {formatDate(group.expenses[0].expense_date)}
+                      </span>
+                      <span>{formatCurrency(group.total)}</span>
+                    </div>
+                  </div>
+                </td>
+              </tr>
+              {group.expenses.map((expense) => {
+                const row = rowByExpenseId.get(expense.id);
+                if (!row) return null;
+
+                const isSelected = selectedIds.has(row.original.id);
+
+                return (
+                  <tr
+                    key={row.original.id}
+                    className={`transition-colors hover:bg-secondary/70 ${
+                      isSelected ? "bg-primary/5" : ""
+                    }`}
+                  >
+                    {row.getVisibleCells().map((cell) => (
+                      <td key={cell.id} className="px-4 py-3 align-middle">
+                        {flexRender(
+                          cell.column.columnDef.cell,
+                          cell.getContext(),
+                        )}
+                      </td>
+                    ))}
+                  </tr>
+                );
+              })}
+            </React.Fragment>
+          ))}
+        </tbody>
+      </table>
+    );
+  };
 
   if (isLoading) {
     return (
@@ -271,51 +443,30 @@ export function ExpensesTable({
       />
 
       <div className="overflow-hidden rounded-sm border-2 border-foreground/20 bg-card shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] dark:border-foreground/15 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.08)]">
-        <div className="overflow-x-auto">
-          <table className="w-full text-sm">
-            <thead className="border-b-2 border-foreground/20 bg-secondary">
-              {table.getHeaderGroups().map((headerGroup) => (
-                <tr key={headerGroup.id}>
-                  {headerGroup.headers.map((header) => (
-                    <th
-                      key={header.id}
-                      className="h-11 px-4 text-left align-middle text-xs font-black uppercase text-secondary-foreground"
-                    >
-                      {header.isPlaceholder
-                        ? null
-                        : flexRender(
-                            header.column.columnDef.header,
-                            header.getContext(),
-                          )}
-                    </th>
-                  ))}
-                </tr>
-              ))}
-            </thead>
-            <tbody className="divide-y divide-border">
-              {table.getRowModel().rows.map((row) => {
-                const isSelected = selectedIds.has(row.original.id);
+        {installmentGroups.length > 0 && (
+          <div className="sticky top-0 z-20 border-b-2 border-foreground/20 bg-card">
+            <div className="flex items-center justify-between gap-3 bg-amber-50 px-4 py-2 text-xs font-black uppercase text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+              <span>Sticky Installments</span>
+              <span>{installmentExpenses.length} pinned</span>
+            </div>
+            <div className="overflow-x-auto">
+              {renderGroupedTable(
+                installmentTable,
+                installmentGroups,
+                "No installment expenses",
+              )}
+            </div>
+          </div>
+        )}
 
-                return (
-                  <tr
-                    key={row.id}
-                    className={`transition-colors hover:bg-secondary/70 ${
-                      isSelected ? "bg-primary/5" : ""
-                    }`}
-                  >
-                    {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-4 py-3 align-middle">
-                        {flexRender(
-                          cell.column.columnDef.cell,
-                          cell.getContext(),
-                        )}
-                      </td>
-                    ))}
-                  </tr>
-                );
-              })}
-            </tbody>
-          </table>
+        <div className="max-h-[62vh] overflow-auto">
+          <div className="min-w-full overflow-x-auto">
+            {renderGroupedTable(
+              normalTable,
+              normalGroups,
+              "No non-installment expenses",
+            )}
+          </div>
         </div>
       </div>
     </div>

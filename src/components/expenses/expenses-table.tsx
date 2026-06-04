@@ -66,9 +66,9 @@ function groupByPaymentMethod(expenses: Expense[]): ExpenseGroup[] {
       };
     })
     .sort((a, b) => {
-      const paymentDiff = a.paymentMethod.localeCompare(b.paymentMethod);
-      if (paymentDiff !== 0) return paymentDiff;
-      return a.earliestDate - b.earliestDate;
+      const dateDiff = a.earliestDate - b.earliestDate;
+      if (dateDiff !== 0) return dateDiff;
+      return a.paymentMethod.localeCompare(b.paymentMethod);
     });
 }
 

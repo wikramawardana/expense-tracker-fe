@@ -1,0 +1,41 @@
+name: Diagnose Expense Routing
+
+on:
+  workflow_dispatch:
+
+jobs:
+  diagnose:
+    name: Inspect VPS routing
+    runs-on: ubuntu-latest
+    environment: production
+
+    steps:
+      - name: Inspect routing via SSH
+        uses: appleboy/ssh-action@v1
+        with:
+          host: ${{ secrets.VPS_HOST }}
+          username: ${{ secrets.VPS_USER }}
+          key: ${{ secrets.VPS_SSH_KEY }}
+          port: ${{ secrets.VPS_PORT }}
+          script: |
+            set -e
+            echo "== host =="
+            hostname
+            whoami
+
+            echo "== docker expense containers =="
+            docker ps --format '{{.Names}}\t{{.Image}}\t{{.Ports}}' | grep -E 'expense|nginx|traefik|caddy' || true
+
+            echo "== docker compose config expense =="
+            cd /home/wikra/production-projects 2>/dev/null && docker compose ps expense-tracker-fe || true
+
+            echo "== nginx route snippets =="
+            sudo nginx -T 2>/dev/null | grep -n -A12 -B6 'oops\.wikra\.my\.id\|expense-tracker-fe\|expense' || true
+
+            echo "== kubectl app state =="
+            if command -v kubectl >/dev/null 2>&1; then
+              kubectl -n wikra-apps get deploy,rs,pod,svc -l app=expense-tracker-fe -o wide || true
+              kubectl -n wikra-apps get ingress,httproute 2>/dev/null | grep -E 'expense|oops' || true
+            else
+              echo "kubectl not found"
+            fi

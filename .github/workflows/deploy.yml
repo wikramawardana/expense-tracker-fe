@@ -132,4 +132,4 @@ jobs:
         run: sleep 60
 
       - name: Check app health
-        run: curl -fsSIL https://expensetracker.wikra.cloud
+        run: curl -fsSIL https://oops.wikra.my.id

@@ -92,8 +92,9 @@ The app starts at `http://localhost:3002` with Turbopack for fast refresh.
 
 ## Production Deployment
 
-Production image tags use the short git SHA. After you push to `main`, GitHub
-Actions builds and pushes `ghcr.io/wikramawardana/expense-tracker-fe:<short-sha>`.
+Production image tags use immutable version-build tags. After you push to
+`main`, GitHub Actions builds and pushes a tag such as
+`ghcr.io/wikramawardana/expense-tracker-fe:v0.1.0-build.123`.
 If the build succeeds and `GITOPS_TOKEN` is configured, the workflow updates
 GitOps automatically:
 

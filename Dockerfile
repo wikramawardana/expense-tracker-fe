@@ -46,7 +46,7 @@ ENV NEXT_TELEMETRY_DISABLED=1
 RUN mkdir -p public
 
 # Build with dummy server-side env vars (real values provided at runtime)
-RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/dummy" \
+RUN DATABASE_URL="postgresql://dummy:dummy@localhost:5432/expense_tracker_auth" \
     BETTER_AUTH_SECRET="dummy-secret-for-build-only" \
     AUTH_CLIENT_ID="dummy" \
     AUTH_CLIENT_SECRET="dummy" \

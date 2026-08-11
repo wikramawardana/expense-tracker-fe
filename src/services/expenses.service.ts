@@ -2,9 +2,8 @@ import {
   API_BASE_URL,
   ApiError,
   apiFetch,
+  authenticatedFetch,
   buildQueryString,
-  clearAuthTokenCache,
-  getAuthToken,
 } from "@/lib/api.config";
 import type {
   BulkCreateExpensesResponse,
@@ -71,20 +70,16 @@ export async function createExpensesBulk(
 export async function importExpensesCsv(
   file: File,
 ): Promise<ImportExpensesCsvResponse> {
-  const token = await getAuthToken();
   const formData = new FormData();
   formData.append("file", file);
 
-  const headers: HeadersInit = {};
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
-  const response = await fetch(`${API_BASE_URL}/expenses/import-csv`, {
-    method: "POST",
-    headers,
-    body: formData,
-  });
+  const response = await authenticatedFetch(
+    `${API_BASE_URL}/expenses/import-csv`,
+    {
+      method: "POST",
+      body: formData,
+    },
+  );
 
   if (!response.ok) {
     let errorData: unknown;
@@ -92,10 +87,6 @@ export async function importExpensesCsv(
       errorData = await response.json();
     } catch {
       errorData = null;
-    }
-
-    if (response.status === 401) {
-      clearAuthTokenCache();
     }
 
     const errorMessage =
@@ -111,15 +102,9 @@ export async function importExpensesCsv(
  * Download the CSV import template
  */
 export async function downloadExpenseImportTemplate(): Promise<void> {
-  const token = await getAuthToken();
-  const headers: HeadersInit = {};
-  if (token) {
-    headers.Authorization = `Bearer ${token}`;
-  }
-
-  const response = await fetch(`${API_BASE_URL}/expenses/import-template.csv`, {
-    headers,
-  });
+  const response = await authenticatedFetch(
+    `${API_BASE_URL}/expenses/import-template.csv`,
+  );
 
   if (!response.ok) {
     let errorData: unknown;
@@ -127,10 +112,6 @@ export async function downloadExpenseImportTemplate(): Promise<void> {
       errorData = await response.json();
     } catch {
       errorData = null;
-    }
-
-    if (response.status === 401) {
-      clearAuthTokenCache();
     }
 
     const errorMessage =

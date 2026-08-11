@@ -1,6 +1,6 @@
 "use client";
 
-import { getSession } from "@/lib/auth-client";
+import { getSession, signOut } from "@/lib/auth-client";
 
 /**
  * API Configuration
@@ -32,6 +32,7 @@ export function getUploadUrl(path: string): string {
 let tokenPromise: Promise<string | null> | null = null;
 let tokenExpiry = 0;
 const TOKEN_CACHE_DURATION = 5000; // Cache token for 5 seconds
+let isSigningOut = false;
 
 /**
  * Clear the token cache (call this on logout or auth errors)
@@ -64,6 +65,54 @@ export async function getAuthToken(): Promise<string | null> {
 
   tokenExpiry = now + TOKEN_CACHE_DURATION;
   return tokenPromise;
+}
+
+async function forceSignOutAndRedirect(): Promise<void> {
+  if (isSigningOut || typeof window === "undefined") return;
+  isSigningOut = true;
+  clearAuthTokenCache();
+
+  const callbackUrl = encodeURIComponent(window.location.pathname);
+  try {
+    await signOut();
+  } catch {
+    document.cookie = "expense-tracker.session_token=; Max-Age=0; path=/";
+    document.cookie = "expense-tracker.session_data=; Max-Age=0; path=/";
+  }
+
+  window.location.href = `/login?callbackUrl=${callbackUrl}`;
+}
+
+export async function authenticatedFetch(
+  url: string,
+  options: RequestInit = {},
+): Promise<Response> {
+  let token = await getAuthToken();
+  if (!token) {
+    await forceSignOutAndRedirect();
+    throw new ApiError("No authentication token available", 401);
+  }
+
+  const request = (authToken: string) => {
+    const headers = new Headers(options.headers);
+    headers.set("Authorization", `Bearer ${authToken}`);
+    return fetch(url, { ...options, headers });
+  };
+
+  let response = await request(token);
+  if (response.status === 401) {
+    clearAuthTokenCache();
+    token = await getAuthToken();
+    if (token) {
+      response = await request(token);
+    }
+  }
+
+  if (response.status === 401) {
+    await forceSignOutAndRedirect();
+  }
+
+  return response;
 }
 
 /**
@@ -105,21 +154,13 @@ export async function apiFetch<T>(
 ): Promise<T> {
   const url = `${API_BASE_URL}${endpoint}`;
 
-  // Get auth token
-  const token = await getAuthToken();
-
   const headers: HeadersInit = {
     "Content-Type": "application/json",
     ...options.headers,
   };
 
-  // Add authorization header if token exists
-  if (token) {
-    (headers as Record<string, string>).Authorization = `Bearer ${token}`;
-  }
-
   try {
-    const response = await fetch(url, {
+    const response = await authenticatedFetch(url, {
       ...options,
       headers,
     });
@@ -131,11 +172,6 @@ export async function apiFetch<T>(
         errorData = await response.json();
       } catch {
         errorData = null;
-      }
-
-      // Clear token cache on auth errors
-      if (response.status === 401) {
-        clearAuthTokenCache();
       }
 
       const errorMessage =

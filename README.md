@@ -64,23 +64,17 @@ pnpm install
 
 ### Environment Variables
 
-Create a `.env` file:
+Copy `.env.example` to `.env`, then set only your device's Vault connection:
 
 ```env
-# App
-NEXT_PUBLIC_APP_URL=http://localhost:3002
-
-# BetterAuth
-BETTER_AUTH_SECRET=your-secret-here
-
-# Database (PostgreSQL)
-DATABASE_URL=postgresql://user:password@localhost:5432/expense-tracker
-
-# Auth service (OIDC provider)
-NEXT_PUBLIC_AUTH_URL=http://localhost:3001
-AUTH_CLIENT_ID=expense-tracker
-AUTH_CLIENT_SECRET=your-client-secret-from-auth-dashboard
+VAULT_ADDR=https://vault.example.com
+VAULT_TOKEN=your-local-vault-token
+VAULT_SECRET_PATH=secret/expense-tracker-fe-local
 ```
+
+`pnpm dev` loads the remaining local settings directly from Vault. Vault is
+authoritative, so stale fallback values in `.env` cannot switch the app to
+another application's auth database.
 
 ### Development
 
@@ -88,7 +82,7 @@ AUTH_CLIENT_SECRET=your-client-secret-from-auth-dashboard
 pnpm dev
 ```
 
-The app starts at `http://localhost:3002` with Turbopack for fast refresh.
+The app starts at `http://localhost:3202` with Turbopack for fast refresh.
 
 ## Production Deployment
 

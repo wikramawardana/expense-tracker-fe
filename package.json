@@ -3,7 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
-    "dev": "next dev --turbopack -p 3002",
+    "dev": "node scripts/vault-dev.mjs next dev --turbopack -p 3202",
     "build": "next build",
     "start": "next start -p 3002",
     "lint": "biome check",

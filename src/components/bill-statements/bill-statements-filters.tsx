@@ -100,7 +100,7 @@ export function BillStatementsFilters({
     search !== "" || status !== "all" || dateRange !== undefined;
 
   return (
-    <div className="rounded-lg border bg-card p-3 sm:p-4 space-y-3">
+    <div className="space-y-3 border-2 border-foreground bg-secondary p-3 shadow-[4px_4px_0_var(--foreground)] sm:p-4">
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
         {/* Search */}
         <div className="relative">

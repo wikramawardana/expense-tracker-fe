@@ -1,3 +1,5 @@
+import { AlertCircle, CheckCircle2, Clock } from "lucide-react";
+import type { ComponentType } from "react";
 import { cn } from "@/lib/utils";
 import type { Category } from "@/types/category.types";
 import type { ExpenseStatus } from "@/types/expense.types";
@@ -7,24 +9,47 @@ interface StatusBadgeProps {
   className?: string;
 }
 
-const statusVariants: Record<ExpenseStatus, string> = {
-  pending:
-    "bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-900",
-  paid: "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-900",
-  unpaid:
-    "bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:ring-rose-900",
+const statusConfig: Record<
+  ExpenseStatus,
+  {
+    icon: ComponentType<{ className?: string }>;
+    className: string;
+    label: string;
+  }
+> = {
+  pending: {
+    icon: Clock,
+    className:
+      "bg-amber-50 text-amber-700 ring-amber-200 dark:bg-amber-950/40 dark:text-amber-300 dark:ring-amber-900",
+    label: "Pending",
+  },
+  paid: {
+    icon: CheckCircle2,
+    className:
+      "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-900",
+    label: "Paid",
+  },
+  unpaid: {
+    icon: AlertCircle,
+    className:
+      "bg-rose-50 text-rose-700 ring-rose-200 dark:bg-rose-950/40 dark:text-rose-300 dark:ring-rose-900",
+    label: "Unpaid",
+  },
 };
 
 export function StatusBadge({ status, className }: StatusBadgeProps) {
+  const config = statusConfig[status];
+  const Icon = config.icon;
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium capitalize ring-1 ring-inset",
-        statusVariants[status],
+        "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset",
+        config.className,
         className,
       )}
     >
-      {status}
+      <Icon className="h-3 w-3 shrink-0" />
+      {config.label}
     </span>
   );
 }

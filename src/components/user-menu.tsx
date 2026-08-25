@@ -53,7 +53,9 @@ export function UserMenu() {
   };
 
   if (isPending) {
-    return <div className="h-8 w-8 rounded-full bg-muted animate-pulse" />;
+    return (
+      <div className="h-9 w-9 animate-pulse border-2 border-foreground bg-muted" />
+    );
   }
 
   return (
@@ -61,15 +63,15 @@ export function UserMenu() {
       <DropdownMenuTrigger asChild>
         <button
           type="button"
-          className="relative inline-flex h-8 w-8 items-center justify-center rounded-full p-0 outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
+          className="relative inline-flex h-9 w-9 items-center justify-center border-2 border-foreground bg-secondary p-0 shadow-[3px_3px_0_var(--foreground)] outline-none transition-all hover:translate-x-[1px] hover:translate-y-[1px] hover:shadow-[2px_2px_0_var(--foreground)] focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-2 focus-visible:ring-offset-background"
         >
-          <Avatar className="h-8 w-8">
+          <Avatar className="h-full w-full rounded-none">
             <AvatarImage
               src={session?.user?.image || undefined}
               alt={session?.user?.name || "User"}
               referrerPolicy="no-referrer"
             />
-            <AvatarFallback className="bg-primary/10 text-primary text-xs font-medium">
+            <AvatarFallback className="rounded-none bg-primary text-xs font-black text-primary-foreground">
               {getInitials(session?.user?.name, session?.user?.email || "")}
             </AvatarFallback>
           </Avatar>
@@ -86,7 +88,7 @@ export function UserMenu() {
             </p>
             <Badge
               className={cn(
-                "rounded-full border-0 px-2 py-0.5 text-xs font-medium capitalize w-fit",
+                "w-fit rounded-none border-2 border-foreground px-2 py-0.5 text-xs font-black uppercase",
                 getRoleBadgeClasses(session?.user?.role),
               )}
             >

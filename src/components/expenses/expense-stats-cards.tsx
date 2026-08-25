@@ -12,21 +12,21 @@ interface ExpenseStatsCardsProps {
 }
 
 const neoSurfaceClass =
-  "rounded-sm border-2 border-foreground/20 bg-card shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] dark:border-foreground/15 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.08)]";
+  "rounded-[2px] border-2 border-foreground bg-card shadow-[5px_5px_0_var(--foreground)]";
 const neoItemClass =
-  "border-2 border-foreground/20 shadow-[3px_3px_0px_0px_rgba(0,0,0,0.08)] dark:border-foreground/15 dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,0.06)]";
+  "border-2 border-foreground shadow-[3px_3px_0_var(--foreground)]";
 const neoChipClass =
-  "inline-flex items-center border-2 border-foreground/20 shadow-[2px_2px_0px_0px_rgba(0,0,0,0.06)] dark:border-foreground/15 dark:shadow-[2px_2px_0px_0px_rgba(255,255,255,0.05)]";
+  "inline-flex items-center border-2 border-foreground shadow-[2px_2px_0_var(--foreground)]";
 
 // Colored neo-brutalist status boxes — colored border + matching hard shadow
 const neoTotalClass =
-  "border-2 border-foreground/25 bg-background shadow-[3px_3px_0px_0px_rgba(0,0,0,0.12)] dark:shadow-[3px_3px_0px_0px_rgba(255,255,255,0.08)]";
+  "border-2 border-foreground bg-secondary shadow-[3px_3px_0_var(--foreground)]";
 const neoPaidClass =
-  "border-2 border-emerald-500/70 bg-emerald-500/10 shadow-[3px_3px_0px_0px_rgba(16,185,129,0.35)]";
+  "border-2 border-foreground bg-success shadow-[3px_3px_0_var(--foreground)]";
 const neoPendingClass =
-  "border-2 border-amber-500/70 bg-amber-500/10 shadow-[3px_3px_0px_0px_rgba(245,158,11,0.35)]";
+  "border-2 border-foreground bg-warning shadow-[3px_3px_0_var(--foreground)]";
 const neoUnpaidClass =
-  "border-2 border-rose-500/70 bg-rose-500/10 shadow-[4px_4px_0px_0px_rgba(244,63,94,0.4)]";
+  "border-2 border-foreground bg-destructive shadow-[3px_3px_0_var(--foreground)]";
 
 function formatDateRange(dateFrom?: string, dateTo?: string): string | null {
   if (!dateFrom && !dateTo) return null;
@@ -101,7 +101,7 @@ export function ExpenseStatsCards({
           className={`${neoChipClass} gap-1.5 bg-primary px-2 py-1 font-black uppercase text-primary-foreground`}
         >
           <Filter className="h-3.5 w-3.5" />
-          By payment method
+          Spending Summary
         </span>
         {dateRange ? (
           <span
@@ -137,34 +137,46 @@ export function ExpenseStatsCards({
       <div className="mb-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
         <div className={`${neoTotalClass} p-3`}>
           <p className="text-[10px] font-black uppercase text-muted-foreground">
-            Total spent
+            Total Expenses
           </p>
           <p className="mt-1 truncate text-lg font-black text-foreground">
             {formatCurrency(totalSpent)}
           </p>
+          <p className="mt-0.5 text-[10px] text-muted-foreground">
+            {totalCount} transaction{totalCount === 1 ? "" : "s"}
+          </p>
         </div>
         <div className={`${neoPaidClass} p-3`}>
           <p className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400">
-            Paid
+            ✓ Already Paid
           </p>
           <p className="mt-1 truncate text-lg font-black text-foreground">
             {formatCurrency(totalPaid)}
           </p>
+          <p className="mt-0.5 text-[10px] text-emerald-600/70 dark:text-emerald-400/70">
+            Payment confirmed
+          </p>
         </div>
         <div className={`${neoPendingClass} p-3`}>
           <p className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">
-            Pending
+            ⏳ Waiting to Pay
           </p>
           <p className="mt-1 truncate text-lg font-black text-foreground">
             {formatCurrency(totalPending)}
           </p>
+          <p className="mt-0.5 text-[10px] text-amber-600/70 dark:text-amber-400/70">
+            Scheduled, not yet due
+          </p>
         </div>
         <div className={`${neoUnpaidClass} p-3`}>
           <p className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400">
-            Total unpaid
+            ⚠ Still Owed
           </p>
           <p className="mt-1 truncate text-lg font-black text-foreground">
             {formatCurrency(totalUnpaid)}
+          </p>
+          <p className="mt-0.5 text-[10px] text-rose-600/70 dark:text-rose-400/70">
+            Overdue or not paid
           </p>
         </div>
       </div>

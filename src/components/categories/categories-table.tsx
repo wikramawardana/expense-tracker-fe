@@ -25,7 +25,7 @@ export function ActiveBadge({ active }: { active: boolean }) {
   return (
     <span
       className={cn(
-        "inline-flex items-center rounded-full px-2.5 py-0.5 text-xs font-medium ring-1 ring-inset",
+        "inline-flex items-center border-2 border-foreground px-2.5 py-0.5 text-[10px] font-black uppercase shadow-[2px_2px_0_var(--foreground)]",
         active
           ? "bg-emerald-50 text-emerald-700 ring-emerald-200 dark:bg-emerald-950/40 dark:text-emerald-300 dark:ring-emerald-900"
           : "bg-muted text-muted-foreground ring-border",
@@ -37,7 +37,6 @@ export function ActiveBadge({ active }: { active: boolean }) {
 }
 
 interface DataTableShellProps {
-  // biome-ignore lint/suspicious/noExplicitAny: generic table type
   table: ReturnType<typeof useReactTable<any>>;
   isLoading?: boolean;
   emptyTitle: string;
@@ -54,7 +53,7 @@ export function DataTableShell({
 }: DataTableShellProps) {
   if (isLoading) {
     return (
-      <div className="rounded-lg border border-border bg-card shadow-sm">
+      <div className="border-2 border-foreground bg-card shadow-[4px_4px_0_var(--foreground)]">
         <div className="p-12 text-center">
           <div className="inline-block h-8 w-8 animate-spin rounded-full border-2 border-muted border-t-primary" />
           <p className="mt-3 text-sm text-muted-foreground">{loadingLabel}</p>
@@ -65,7 +64,7 @@ export function DataTableShell({
 
   if (table.getRowModel().rows.length === 0) {
     return (
-      <div className="rounded-lg border border-border bg-card shadow-sm">
+      <div className="border-2 border-foreground bg-card shadow-[4px_4px_0_var(--foreground)]">
         <div className="p-12 text-center">
           <p className="text-base font-semibold text-foreground">
             {emptyTitle}
@@ -79,10 +78,10 @@ export function DataTableShell({
   }
 
   return (
-    <div className="overflow-hidden rounded-lg border border-border bg-card shadow-sm">
+    <div className="overflow-hidden border-2 border-foreground bg-card shadow-[4px_4px_0_var(--foreground)]">
       <div className="overflow-x-auto">
         <table className="w-full text-sm">
-          <thead className="bg-muted/50 border-b border-border">
+          <thead className="border-b-2 border-foreground bg-secondary font-mono text-xs font-black uppercase">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (

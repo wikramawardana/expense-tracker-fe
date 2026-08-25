@@ -204,12 +204,33 @@ export function ExpensesTable({
       },
       {
         accessorKey: "title",
-        header: () => <div className="text-left">Title</div>,
-        cell: ({ row }) => (
-          <div className="font-medium text-foreground">
-            {row.getValue("title")}
-          </div>
-        ),
+        header: () => <div className="text-left">Expense</div>,
+        cell: ({ row }) => {
+          const expense = row.original;
+          const hasInstallment =
+            expense.recurrence_type?.trim().toLowerCase() === "installment" &&
+            expense.recurrence_current &&
+            expense.recurrence_count;
+          return (
+            <div className="min-w-0">
+              <div className="flex items-center gap-1.5 flex-wrap">
+                <span className="font-medium text-foreground leading-tight">
+                  {expense.title}
+                </span>
+                {hasInstallment && (
+                  <span className="inline-flex shrink-0 items-center rounded px-1.5 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700">
+                    {expense.recurrence_current}/{expense.recurrence_count}
+                  </span>
+                )}
+              </div>
+              {expense.description && (
+                <div className="mt-0.5 max-w-[200px] truncate text-[11px] text-muted-foreground">
+                  {expense.description}
+                </div>
+              )}
+            </div>
+          );
+        },
       },
       {
         accessorKey: "expense_date",
@@ -234,15 +255,6 @@ export function ExpensesTable({
         },
       },
       {
-        accessorKey: "description",
-        header: () => <div className="text-left">Description</div>,
-        cell: ({ row }) => (
-          <div className="text-muted-foreground max-w-[220px] truncate">
-            {row.getValue("description") || "—"}
-          </div>
-        ),
-      },
-      {
         accessorKey: "payment_method",
         header: () => <div className="text-left">Payment</div>,
         cell: ({ row }) => (
@@ -251,7 +263,7 @@ export function ExpensesTable({
       },
       {
         accessorKey: "paid_by",
-        header: () => <div className="text-left">Paid By</div>,
+        header: () => <div className="text-left">Who Paid</div>,
         cell: ({ row }) => (
           <div className="text-muted-foreground">
             {row.getValue("paid_by") || "—"}
@@ -334,7 +346,7 @@ export function ExpensesTable({
 
     return (
       <table className="w-full text-sm">
-        <thead className="sticky top-0 z-10 border-b-2 border-foreground/20 bg-secondary">
+        <thead className="sticky top-0 z-10 border-b-2 border-foreground bg-secondary font-mono text-xs font-black uppercase">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
@@ -408,7 +420,7 @@ export function ExpensesTable({
 
   if (isLoading) {
     return (
-      <div className="rounded-sm border-2 border-foreground/20 bg-card shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] dark:border-foreground/15 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.08)]">
+      <div className="border-2 border-foreground bg-card shadow-[4px_4px_0_var(--foreground)]">
         <div className="p-12 text-center">
           <div className="inline-block h-8 w-8 animate-spin border-4 border-solid border-foreground border-r-transparent" />
           <p className="mt-3 text-sm font-black uppercase text-muted-foreground">
@@ -421,7 +433,7 @@ export function ExpensesTable({
 
   if (expenses.length === 0) {
     return (
-      <div className="rounded-sm border-2 border-foreground/20 bg-card shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] dark:border-foreground/15 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.08)]">
+      <div className="border-2 border-foreground bg-card shadow-[4px_4px_0_var(--foreground)]">
         <div className="p-12 text-center">
           <p className="text-base font-black uppercase text-foreground">
             No expenses found
@@ -442,18 +454,21 @@ export function ExpensesTable({
         onBulkActionComplete={onExpenseUpdated}
       />
 
-      <div className="overflow-hidden rounded-sm border-2 border-foreground/20 bg-card shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] dark:border-foreground/15 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.08)]">
+      <div className="overflow-hidden border-2 border-foreground bg-card shadow-[4px_4px_0_var(--foreground)]">
         {installmentGroups.length > 0 && (
           <div className="sticky top-0 z-20 border-b-2 border-foreground/20 bg-card">
             <div className="flex items-center justify-between gap-3 bg-amber-50 px-4 py-2 text-xs font-black uppercase text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-              <span>Sticky Installments</span>
-              <span>{installmentExpenses.length} pinned</span>
+              <span>📅 Monthly Installments</span>
+              <span>
+                {installmentExpenses.length} active plan
+                {installmentExpenses.length === 1 ? "" : "s"}
+              </span>
             </div>
             <div className="overflow-x-auto">
               {renderGroupedTable(
                 installmentTable,
                 installmentGroups,
-                "No installment expenses",
+                "No installment plans",
               )}
             </div>
           </div>
@@ -464,7 +479,7 @@ export function ExpensesTable({
             {renderGroupedTable(
               normalTable,
               normalGroups,
-              "No non-installment expenses",
+              "No regular expenses found",
             )}
           </div>
         </div>

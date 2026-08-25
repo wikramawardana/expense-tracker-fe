@@ -312,8 +312,8 @@ export default function ExpensesPage() {
   }
 
   return (
-    <div className="flex flex-1 flex-col gap-4 p-2 sm:p-4">
-      <Card className="rounded-lg">
+    <div className="app-page">
+      <Card>
         <CardHeader className="flex flex-col gap-4 pb-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">

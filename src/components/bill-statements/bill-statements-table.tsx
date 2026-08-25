@@ -223,7 +223,7 @@ export function BillStatementsTable({
 
   if (isLoading) {
     return (
-      <div className="rounded-sm border-2 border-foreground/20 bg-card shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] dark:border-foreground/15 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.08)]">
+      <div className="border-2 border-foreground bg-card shadow-[4px_4px_0_var(--foreground)]">
         <div className="p-12 text-center">
           <div className="inline-block h-8 w-8 animate-spin border-4 border-solid border-foreground border-r-transparent" />
           <p className="mt-3 text-sm font-black uppercase text-muted-foreground">
@@ -236,7 +236,7 @@ export function BillStatementsTable({
 
   if (billStatements.length === 0) {
     return (
-      <div className="rounded-sm border-2 border-foreground/20 bg-card shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] dark:border-foreground/15 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.08)]">
+      <div className="border-2 border-foreground bg-card shadow-[4px_4px_0_var(--foreground)]">
         <div className="p-12 text-center">
           <p className="text-base font-black uppercase text-foreground">
             No bill statements found
@@ -257,10 +257,10 @@ export function BillStatementsTable({
         onBulkActionComplete={handleBulkActionComplete}
       />
 
-      <div className="overflow-hidden rounded-sm border-2 border-foreground/20 bg-card shadow-[4px_4px_0px_0px_rgba(0,0,0,0.1)] dark:border-foreground/15 dark:shadow-[4px_4px_0px_0px_rgba(255,255,255,0.08)]">
+      <div className="overflow-hidden border-2 border-foreground bg-card shadow-[4px_4px_0_var(--foreground)]">
         <div className="overflow-x-auto">
           <table className="w-full text-sm">
-            <thead className="border-b-2 border-foreground/20 bg-secondary">
+            <thead className="border-b-2 border-foreground bg-secondary font-mono text-xs font-black uppercase">
               {table.getHeaderGroups().map((headerGroup) => (
                 <tr key={headerGroup.id}>
                   {headerGroup.headers.map((header) => (

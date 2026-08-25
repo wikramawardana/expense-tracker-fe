@@ -72,13 +72,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     pathname === "/expenses",
   );
   const [monthsExpanded, setMonthsExpanded] = useState(
-    !!searchParams.get("bill_statement_id") &&
-      !searchParams.get("payment_method_id") &&
-      !searchParams.get("payment_method"),
+    !!searchParams.get("bill_statement_id"),
   );
-  const [methodsExpanded, setMethodsExpanded] = useState(
-    !!searchParams.get("payment_method_id") ||
-      !!searchParams.get("payment_method"),
+  const [expandedMonth, setExpandedMonth] = useState<string | null>(
+    searchParams.get("bill_statement_id"),
   );
   const [showAllMonths, setShowAllMonths] = useState(false);
   const [expenseNavigation, setExpenseNavigation] = useState<
@@ -96,19 +93,25 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   useEffect(() => {
     if (pathname === "/expenses") setExpensesExpanded(true);
-    const selectedMethod =
-      searchParams.get("payment_method_id") ||
-      searchParams.get("payment_method");
     const selectedStatement = searchParams.get("bill_statement_id");
-    if (selectedMethod) setMethodsExpanded(true);
-    if (selectedStatement && !selectedMethod) setMonthsExpanded(true);
+    if (selectedStatement) {
+      setMonthsExpanded(true);
+      setExpandedMonth(selectedStatement);
+    }
   }, [pathname, searchParams]);
 
   const expenseMonths = useMemo(() => {
-    const months = new Map<string, ExpenseNavigationMethod["months"][number]>();
+    const months = new Map<
+      string,
+      ExpenseNavigationMethod["months"][number] & { total_count: number }
+    >();
     for (const method of expenseNavigation) {
       for (const month of method.months) {
-        months.set(month.bill_statement_id, month);
+        const existing = months.get(month.bill_statement_id);
+        months.set(month.bill_statement_id, {
+          ...month,
+          total_count: (existing?.total_count ?? 0) + month.totals.total_count,
+        });
       }
     }
     return Array.from(months.values()).sort((a, b) =>
@@ -151,8 +154,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   function Navigation({ sheet = false }: { sheet?: boolean }) {
     const compact = collapsed && !sheet;
 
-    function expenseHref(method: ExpenseNavigationMethod) {
+    function expenseHref(method: ExpenseNavigationMethod, statementId: string) {
       const params = new URLSearchParams();
+      params.set("bill_statement_id", statementId);
       if (method.payment_method_id) {
         params.set("payment_method_id", method.payment_method_id);
       }
@@ -265,7 +269,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                       onClick={() => setMonthsExpanded((current) => !current)}
                       className={cn(
                         "flex w-full items-center gap-2 border-2 border-transparent px-2 py-2.5 text-left text-sm font-black uppercase text-white hover:bg-blue-950/30",
-                        selectedStatement && !selectedMethod && "text-accent",
+                        selectedStatement && "text-accent",
                       )}
                     >
                       {monthsExpanded ? (
@@ -284,23 +288,123 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                       <div className="ml-3 space-y-1 border-l-2 border-cyan-200/50 pl-2">
                         {expenseMonths
                           .slice(0, showAllMonths ? undefined : 8)
-                          .map((month) => (
-                            <Link
-                              key={month.bill_statement_id}
-                              href={`/expenses?bill_statement_id=${encodeURIComponent(month.bill_statement_id)}`}
-                              prefetch={false}
-                              onClick={() => sheet && setMobileOpen(false)}
-                              className={cn(
-                                "block truncate border-2 border-transparent px-2 py-2 text-sm font-bold text-blue-50 hover:bg-blue-950/30",
-                                !selectedMethod &&
-                                  selectedStatement ===
-                                    month.bill_statement_id &&
-                                  "border-sidebar-border bg-sidebar-accent text-sidebar-accent-foreground",
-                              )}
-                            >
-                              {month.name}
-                            </Link>
-                          ))}
+                          .map((month) => {
+                            const monthOpen =
+                              expandedMonth === month.bill_statement_id;
+                            const monthMethods = expenseNavigation.map(
+                              (method) => ({
+                                method,
+                                count:
+                                  method.months.find(
+                                    (entry) =>
+                                      entry.bill_statement_id ===
+                                      month.bill_statement_id,
+                                  )?.totals.total_count ?? 0,
+                              }),
+                            );
+
+                            return (
+                              <div key={month.bill_statement_id}>
+                                <div
+                                  className={cn(
+                                    "flex items-stretch border-2 border-transparent text-sm font-bold text-blue-50 hover:bg-blue-950/30",
+                                    selectedStatement ===
+                                      month.bill_statement_id &&
+                                      "border-sidebar-border bg-sidebar-accent text-sidebar-accent-foreground",
+                                  )}
+                                >
+                                  <button
+                                    type="button"
+                                    onClick={() =>
+                                      setExpandedMonth(
+                                        monthOpen
+                                          ? null
+                                          : month.bill_statement_id,
+                                      )
+                                    }
+                                    className="grid w-8 shrink-0 place-items-center"
+                                    aria-label={`${monthOpen ? "Collapse" : "Expand"} ${month.name}`}
+                                  >
+                                    {monthOpen ? (
+                                      <ChevronDown className="size-3.5" />
+                                    ) : (
+                                      <ChevronRight className="size-3.5" />
+                                    )}
+                                  </button>
+                                  <Link
+                                    href={`/expenses?bill_statement_id=${encodeURIComponent(month.bill_statement_id)}`}
+                                    prefetch={false}
+                                    onClick={() => {
+                                      setExpandedMonth(month.bill_statement_id);
+                                      if (sheet) setMobileOpen(false);
+                                    }}
+                                    className="flex min-w-0 flex-1 items-center gap-2 px-1 py-2"
+                                  >
+                                    <span className="min-w-0 flex-1 truncate">
+                                      {month.name}
+                                    </span>
+                                    <span className="font-mono text-[10px] opacity-80">
+                                      {month.total_count}
+                                    </span>
+                                  </Link>
+                                </div>
+
+                                {monthOpen && (
+                                  <div className="ml-4 space-y-1 border-l-2 border-cyan-200/50 py-1 pl-2">
+                                    <Link
+                                      href={`/expenses?bill_statement_id=${encodeURIComponent(month.bill_statement_id)}`}
+                                      prefetch={false}
+                                      onClick={() =>
+                                        sheet && setMobileOpen(false)
+                                      }
+                                      className={cn(
+                                        "flex items-center gap-2 border-2 border-transparent px-2 py-2 text-xs font-black uppercase text-blue-50 hover:bg-blue-950/30",
+                                        selectedStatement ===
+                                          month.bill_statement_id &&
+                                          !selectedMethod &&
+                                          "border-sidebar-border bg-sidebar-primary text-sidebar-primary-foreground",
+                                      )}
+                                    >
+                                      <CreditCard className="size-3.5" />
+                                      All payment methods
+                                    </Link>
+
+                                    {monthMethods.map(({ method, count }) => {
+                                      const methodKey =
+                                        method.payment_method_id || method.name;
+                                      return (
+                                        <Link
+                                          key={methodKey}
+                                          href={expenseHref(
+                                            method,
+                                            month.bill_statement_id,
+                                          )}
+                                          prefetch={false}
+                                          onClick={() =>
+                                            sheet && setMobileOpen(false)
+                                          }
+                                          className={cn(
+                                            "flex items-center gap-2 border-2 border-transparent px-2 py-2 text-sm font-bold text-blue-50 hover:bg-blue-950/30",
+                                            selectedStatement ===
+                                              month.bill_statement_id &&
+                                              selectedMethod === methodKey &&
+                                              "border-sidebar-border bg-sidebar-accent text-sidebar-accent-foreground",
+                                          )}
+                                        >
+                                          <span className="min-w-0 flex-1 truncate">
+                                            {method.name}
+                                          </span>
+                                          <span className="font-mono text-[10px] opacity-80">
+                                            {count}
+                                          </span>
+                                        </Link>
+                                      );
+                                    })}
+                                  </div>
+                                )}
+                              </div>
+                            );
+                          })}
                         {expenseMonths.length > 8 && (
                           <button
                             type="button"
@@ -314,55 +418,6 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                               : `View ${expenseMonths.length - 8} older months`}
                           </button>
                         )}
-                      </div>
-                    )}
-
-                    <button
-                      type="button"
-                      onClick={() => setMethodsExpanded((current) => !current)}
-                      className={cn(
-                        "flex w-full items-center gap-2 border-2 border-transparent px-2 py-2.5 text-left text-sm font-black uppercase text-white hover:bg-blue-950/30",
-                        selectedMethod && "text-accent",
-                      )}
-                    >
-                      {methodsExpanded ? (
-                        <ChevronDown className="size-4 shrink-0" />
-                      ) : (
-                        <ChevronRight className="size-4 shrink-0" />
-                      )}
-                      <CreditCard className="size-4 shrink-0" />
-                      <span className="flex-1">Payment methods</span>
-                      <span className="font-mono text-[10px] text-cyan-100">
-                        {expenseNavigation.length}
-                      </span>
-                    </button>
-
-                    {methodsExpanded && (
-                      <div className="ml-3 space-y-1 border-l-2 border-cyan-200/50 pl-2">
-                        {expenseNavigation.map((method) => {
-                          const methodKey =
-                            method.payment_method_id || method.name;
-                          return (
-                            <Link
-                              key={methodKey}
-                              href={expenseHref(method)}
-                              prefetch={false}
-                              onClick={() => sheet && setMobileOpen(false)}
-                              className={cn(
-                                "flex items-center gap-2 border-2 border-transparent px-2 py-2 text-sm font-bold text-blue-50 hover:bg-blue-950/30",
-                                selectedMethod === methodKey &&
-                                  "border-sidebar-border bg-sidebar-accent text-sidebar-accent-foreground",
-                              )}
-                            >
-                              <span className="min-w-0 flex-1 truncate">
-                                {method.name}
-                              </span>
-                              <span className="font-mono text-[10px] opacity-80">
-                                {method.totals.total_count}
-                              </span>
-                            </Link>
-                          );
-                        })}
                       </div>
                     )}
                   </div>

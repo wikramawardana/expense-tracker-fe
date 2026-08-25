@@ -218,7 +218,7 @@ export function ExpensesFilters({
     sortOrder !== (filters.sort_order || "desc");
 
   return (
-    <div className="space-y-3 border-2 border-foreground bg-secondary p-3 shadow-[4px_4px_0_var(--foreground)] sm:p-4">
+    <div className="space-y-3 border-2 border-foreground bg-secondary p-3 shadow-[4px_4px_0_var(--foreground)]">
       {/* Primary Filters Row */}
       <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
         {/* Search */}

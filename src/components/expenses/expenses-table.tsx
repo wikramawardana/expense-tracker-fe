@@ -214,7 +214,7 @@ export function ExpensesTable({
           return (
             <div className="min-w-0">
               <div className="flex items-center gap-1.5 flex-wrap">
-                <span className="font-medium text-foreground leading-tight">
+                <span className="font-bold text-foreground leading-tight">
                   {expense.title}
                 </span>
                 {hasInstallment && (
@@ -236,7 +236,7 @@ export function ExpensesTable({
         accessorKey: "expense_date",
         header: () => <div className="text-left">Date</div>,
         cell: ({ row }) => (
-          <div className="text-muted-foreground tabular-nums">
+          <div className="font-semibold text-muted-foreground tabular-nums">
             {formatDate(row.getValue("expense_date"))}
           </div>
         ),
@@ -265,7 +265,7 @@ export function ExpensesTable({
         accessorKey: "paid_by",
         header: () => <div className="text-left">Who Paid</div>,
         cell: ({ row }) => (
-          <div className="text-muted-foreground">
+          <div className="font-semibold text-muted-foreground">
             {row.getValue("paid_by") || "—"}
           </div>
         ),
@@ -345,14 +345,14 @@ export function ExpensesTable({
     }
 
     return (
-      <table className="w-full text-[15px]">
-        <thead className="sticky top-0 z-10 border-b-2 border-foreground bg-secondary font-mono text-[12px] font-black uppercase">
+      <table className="w-full text-base">
+        <thead className="sticky top-0 z-10 border-b-2 border-foreground bg-secondary font-mono text-[13px] font-black uppercase">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
                 <th
                   key={header.id}
-                  className="h-12 px-4 text-left align-middle text-[12px] font-black uppercase text-secondary-foreground"
+                  className="h-12 px-4 text-left align-middle text-[13px] font-black uppercase text-secondary-foreground"
                 >
                   {header.isPlaceholder
                     ? null
@@ -373,12 +373,12 @@ export function ExpensesTable({
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-2">
                       <PaymentMethodBadge paymentMethod={group.paymentMethod} />
-                      <span className="text-[13px] font-bold text-muted-foreground">
+                      <span className="text-sm font-bold text-muted-foreground">
                         {group.expenses.length} expense
                         {group.expenses.length === 1 ? "" : "s"}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 text-[13px] font-bold text-muted-foreground">
+                    <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
                       <span>
                         Earliest {formatDate(group.expenses[0].expense_date)}
                       </span>

@@ -1,6 +1,5 @@
 "use client";
 
-import { format } from "date-fns";
 import { useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
@@ -113,7 +112,7 @@ export default function ExpensesPage() {
     [],
   );
 
-  // Resolve URL context, defaulting the all-expenses view to the current month.
+  // Resolve the optional payment-method and month context from the URL.
   React.useEffect(() => {
     if (!isAuthenticated) return;
     let cancelled = false;
@@ -134,11 +133,7 @@ export default function ExpensesPage() {
         if (cancelled) return;
         const match = statementId
           ? response.data.find((bs) => bs.id === statementId)
-          : !paymentMethodId && !paymentMethod
-            ? response.data.find(
-                (bs) => bs.name === format(new Date(), "MMMM yyyy"),
-              )
-            : undefined;
+          : undefined;
         if (match) {
           baseFilters.bill_statement_id = match.id;
           setContextStatementName(match.name);
@@ -309,7 +304,7 @@ export default function ExpensesPage() {
             </div>
           </div>
         </CardHeader>
-        <CardContent className="space-y-4 px-3 sm:space-y-5 sm:px-6">
+        <CardContent className="space-y-3 px-3 sm:px-5">
           <ExpenseStatsCards
             stats={stats}
             filters={filters}

@@ -151,11 +151,60 @@ export interface ExpenseFilters {
   page_size?: number;
   category?: ExpenseCategory | "";
   status?: ExpenseStatus | "";
+  payment_method?: string;
+  payment_method_id?: string;
   bill_statement_id?: string;
   expense_date_from?: string;
   expense_date_to?: string;
   sort_by?: string;
   sort_order?: "asc" | "desc";
+}
+
+export interface ExpenseTotals {
+  total_count: number;
+  total_amount: number;
+  paid_amount: number;
+  pending_amount: number;
+  unpaid_amount: number;
+  outstanding_amount: number;
+  completion_rate: number;
+}
+
+export interface ExpenseMethodSummary {
+  payment_method_id: string | null;
+  name: string;
+  method_type: string | null;
+  totals: ExpenseTotals;
+}
+
+export interface ExpenseMonthSummary {
+  bill_statement_id: string;
+  name: string;
+  statement_date: string | null;
+  due_date: string | null;
+  totals: ExpenseTotals;
+}
+
+export interface ExpenseSummaryResponse {
+  status: string;
+  message: string;
+  data: {
+    totals: ExpenseTotals;
+    payment_methods: ExpenseMethodSummary[];
+    months: ExpenseMonthSummary[];
+  };
+}
+
+export interface ExpenseNavigationMethod extends ExpenseMethodSummary {
+  months: ExpenseMonthSummary[];
+}
+
+export interface ExpenseNavigationResponse {
+  status: string;
+  message: string;
+  data: {
+    methods: ExpenseNavigationMethod[];
+  };
 }
 
 export interface PaymentMethodBreakdown {

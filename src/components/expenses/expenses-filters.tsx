@@ -185,9 +185,11 @@ export function ExpensesFilters({
     setSortOrder("desc");
     onFiltersChange({
       page: 1,
-      page_size: 20,
+      page_size: filters.page_size || 50,
       sort_by: "date",
       sort_order: "desc",
+      payment_method: filters.payment_method,
+      payment_method_id: filters.payment_method_id,
     });
   };
 

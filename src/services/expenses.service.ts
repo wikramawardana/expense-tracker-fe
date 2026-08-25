@@ -14,6 +14,8 @@ import type {
   ExpenseCategoryBreakdownResponse,
   ExpenseCountResponse,
   ExpenseFilters,
+  ExpenseNavigationResponse,
+  ExpenseSummaryResponse,
   ExpenseSumResponse,
   ExpensesResponse,
   ImportExpensesCsvResponse,
@@ -29,6 +31,17 @@ export async function getExpenses(
 ): Promise<ExpensesResponse> {
   const queryString = buildQueryString(filters);
   return apiFetch<ExpensesResponse>(`/expenses${queryString}`);
+}
+
+export async function getExpenseSummary(
+  filters: ExpenseFilters = {},
+): Promise<ExpenseSummaryResponse> {
+  const queryString = buildQueryString(filters);
+  return apiFetch<ExpenseSummaryResponse>(`/expenses/summary${queryString}`);
+}
+
+export async function getExpenseNavigation(): Promise<ExpenseNavigationResponse> {
+  return apiFetch<ExpenseNavigationResponse>("/expenses/navigation");
 }
 
 /**

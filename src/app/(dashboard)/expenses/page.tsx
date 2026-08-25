@@ -1,7 +1,7 @@
 "use client";
 
 import { format } from "date-fns";
-import { useRouter } from "next/navigation";
+import { useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 import {
@@ -21,17 +21,15 @@ import {
 import { useSession } from "@/lib/auth-client";
 import { getBillStatements } from "@/services/bill-statements.service";
 import { getCategories } from "@/services/categories.service";
-import { getExpenses } from "@/services/expenses.service";
+import { getExpenseSummary, getExpenses } from "@/services/expenses.service";
 import type { Category } from "@/types/category.types";
 import type {
   Expense,
   ExpenseFilters,
   ExpenseStats,
-  PaymentMethodBreakdown,
 } from "@/types/expense.types";
 
 const PAGE_SIZE = 50;
-const STATS_PAGE_SIZE = 10_000;
 const emptyCategoryBreakdown: ExpenseStats["category_breakdown"] = {
   food: 0,
   transport: 0,
@@ -43,67 +41,9 @@ const emptyCategoryBreakdown: ExpenseStats["category_breakdown"] = {
   other: 0,
 };
 
-function buildPaymentMethodBreakdown(
-  expenses: Expense[],
-): ExpenseStats["payment_method_breakdown"] {
-  const map = new Map<string, PaymentMethodBreakdown>();
-
-  for (const expense of expenses) {
-    const key = expense.payment_method?.trim() || "Unknown";
-    const entry = map.get(key) ?? {
-      payment_method: key,
-      count: 0,
-      total: 0,
-      paid: 0,
-      pending: 0,
-      unpaid: 0,
-    };
-
-    entry.count += 1;
-    entry.total += expense.amount;
-    if (expense.status === "paid") entry.paid += expense.amount;
-    else if (expense.status === "pending") entry.pending += expense.amount;
-    else if (expense.status === "unpaid") entry.unpaid += expense.amount;
-
-    map.set(key, entry);
-  }
-
-  // Sort by total spending descending
-  return Array.from(map.values()).sort((a, b) => b.total - a.total);
-}
-
-function buildExpenseStats(
-  expenses: Expense[],
-  totalCount: number,
-): ExpenseStats {
-  return {
-    total_count: totalCount,
-    total_amount: expenses.reduce(
-      (total, expense) => total + expense.amount,
-      0,
-    ),
-    approved_amount: expenses.reduce(
-      (total, expense) =>
-        expense.status === "paid" ? total + expense.amount : total,
-      0,
-    ),
-    pending_amount: expenses.reduce(
-      (total, expense) =>
-        expense.status === "pending" ? total + expense.amount : total,
-      0,
-    ),
-    rejected_amount: expenses.reduce(
-      (total, expense) =>
-        expense.status === "unpaid" ? total + expense.amount : total,
-      0,
-    ),
-    category_breakdown: emptyCategoryBreakdown,
-    payment_method_breakdown: buildPaymentMethodBreakdown(expenses),
-  };
-}
-
 export default function ExpensesPage() {
   const router = useRouter();
+  const searchParams = useSearchParams();
   const { data: session, isPending: isSessionLoading } = useSession();
 
   const [expenses, setExpenses] = React.useState<Expense[]>([]);
@@ -116,6 +56,9 @@ export default function ExpensesPage() {
   const [totalItems, setTotalItems] = React.useState(0);
   const [stats, setStats] = React.useState<ExpenseStats | null>(null);
   const [isStatsLoading, setIsStatsLoading] = React.useState(true);
+  const [contextStatementName, setContextStatementName] = React.useState<
+    string | null
+  >(null);
 
   const sentinelRef = React.useRef<HTMLDivElement>(null);
   const isAuthenticated = !!session?.user;
@@ -141,17 +84,24 @@ export default function ExpensesPage() {
     async (activeFilters: ExpenseFilters) => {
       setIsStatsLoading(true);
       try {
-        const response = await getExpenses({
-          ...activeFilters,
-          page: 1,
-          page_size: STATS_PAGE_SIZE,
+        const response = await getExpenseSummary(activeFilters);
+        const summary = response.data;
+        setStats({
+          total_count: summary.totals.total_count,
+          total_amount: summary.totals.total_amount,
+          approved_amount: summary.totals.paid_amount,
+          pending_amount: summary.totals.pending_amount,
+          rejected_amount: summary.totals.unpaid_amount,
+          category_breakdown: emptyCategoryBreakdown,
+          payment_method_breakdown: summary.payment_methods.map((method) => ({
+            payment_method: method.name,
+            count: method.totals.total_count,
+            total: method.totals.total_amount,
+            paid: method.totals.paid_amount,
+            pending: method.totals.pending_amount,
+            unpaid: method.totals.unpaid_amount,
+          })),
         });
-        setStats(
-          buildExpenseStats(
-            response.data.data,
-            response.data.pagination.total_items,
-          ),
-        );
       } catch (error) {
         if (error instanceof Error && error.message.includes("401")) return;
         console.error("Failed to fetch expense stats:", error);
@@ -163,24 +113,37 @@ export default function ExpensesPage() {
     [],
   );
 
-  // Resolve default filters (current month bill statement)
+  // Resolve URL context, defaulting the all-expenses view to the current month.
   React.useEffect(() => {
-    if (!isAuthenticated || filters !== null) return;
+    if (!isAuthenticated) return;
     let cancelled = false;
     (async () => {
+      const paymentMethodId = searchParams.get("payment_method_id") || "";
+      const paymentMethod = searchParams.get("payment_method") || "";
+      const statementId = searchParams.get("bill_statement_id") || "";
       const baseFilters: ExpenseFilters = {
         page: 1,
         page_size: PAGE_SIZE,
         sort_by: "date",
         sort_order: "desc",
+        payment_method_id: paymentMethodId,
+        payment_method: paymentMethod,
       };
       try {
         const response = await getBillStatements();
         if (cancelled) return;
-        const currentMonthName = format(new Date(), "MMMM yyyy");
-        const match = response.data.find((bs) => bs.name === currentMonthName);
+        const match = statementId
+          ? response.data.find((bs) => bs.id === statementId)
+          : !paymentMethodId && !paymentMethod
+            ? response.data.find(
+                (bs) => bs.name === format(new Date(), "MMMM yyyy"),
+              )
+            : undefined;
         if (match) {
           baseFilters.bill_statement_id = match.id;
+          setContextStatementName(match.name);
+        } else {
+          setContextStatementName(null);
         }
       } catch (error) {
         console.error("Failed to load bill statements for default:", error);
@@ -192,7 +155,7 @@ export default function ExpensesPage() {
     return () => {
       cancelled = true;
     };
-  }, [isAuthenticated, filters]);
+  }, [isAuthenticated, searchParams]);
 
   // Initial fetch + reset when filters change
   React.useEffect(() => {
@@ -278,6 +241,15 @@ export default function ExpensesPage() {
 
   const handleFiltersChange = (newFilters: ExpenseFilters) => {
     setFilters(newFilters);
+    const params = new URLSearchParams(searchParams.toString());
+    if (newFilters.bill_statement_id) {
+      params.set("bill_statement_id", newFilters.bill_statement_id);
+    } else {
+      params.delete("bill_statement_id");
+    }
+    router.replace(`/expenses${params.size ? `?${params.toString()}` : ""}`, {
+      scroll: false,
+    });
   };
 
   // Refresh helper (after create/update/delete)
@@ -318,10 +290,12 @@ export default function ExpensesPage() {
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
               <CardTitle className="text-2xl sm:text-3xl">
-                Expense Tracker
+                {searchParams.get("payment_method") || "All Expenses"}
               </CardTitle>
               <CardDescription className="text-sm sm:text-base">
-                Track and manage all your expenses
+                {contextStatementName
+                  ? `Expenses / ${searchParams.get("payment_method") || "All methods"} / ${contextStatementName}`
+                  : `Expenses / ${searchParams.get("payment_method") || "All payment methods"} / All months`}
                 {totalItems > 0 && (
                   <span className="ml-2 text-foreground font-bold">
                     ({expenses.length} of {totalItems})

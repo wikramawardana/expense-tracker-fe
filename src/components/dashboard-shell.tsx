@@ -1,6 +1,9 @@
 "use client";
 
 import {
+  CalendarDays,
+  ChevronDown,
+  ChevronRight,
   CreditCard,
   FileText,
   LayoutDashboard,
@@ -14,8 +17,8 @@ import {
   Zap,
 } from "lucide-react";
 import Link from "next/link";
-import { usePathname } from "next/navigation";
-import { useState } from "react";
+import { usePathname, useSearchParams } from "next/navigation";
+import { useEffect, useState } from "react";
 import { Button } from "@/components/ui/button";
 import { ScrollArea } from "@/components/ui/scroll-area";
 import {
@@ -34,6 +37,8 @@ import {
 import { UserMenu } from "@/components/user-menu";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
+import { getExpenseNavigation } from "@/services/expenses.service";
+import type { ExpenseNavigationMethod } from "@/types/expense.types";
 
 const navItems = [
   { title: "Overview", href: "/dashboard", icon: LayoutDashboard, code: "01" },
@@ -59,10 +64,37 @@ function getPageTitle(pathname: string) {
 
 export function DashboardShell({ children }: { children: React.ReactNode }) {
   const pathname = usePathname();
+  const searchParams = useSearchParams();
   const isMobile = useIsMobile();
   const [collapsed, setCollapsed] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
+  const [expensesExpanded, setExpensesExpanded] = useState(
+    pathname === "/expenses",
+  );
+  const [expandedMethod, setExpandedMethod] = useState<string | null>(
+    searchParams.get("payment_method_id") || searchParams.get("payment_method"),
+  );
+  const [showAllMonthsFor, setShowAllMonthsFor] = useState<string | null>(null);
+  const [expenseNavigation, setExpenseNavigation] = useState<
+    ExpenseNavigationMethod[]
+  >([]);
   const pageTitle = getPageTitle(pathname);
+
+  useEffect(() => {
+    getExpenseNavigation()
+      .then((response) => setExpenseNavigation(response.data.methods))
+      .catch((error) =>
+        console.error("Failed to load expense navigation", error),
+      );
+  }, []);
+
+  useEffect(() => {
+    if (pathname === "/expenses") setExpensesExpanded(true);
+    const selectedMethod =
+      searchParams.get("payment_method_id") ||
+      searchParams.get("payment_method");
+    if (selectedMethod) setExpandedMethod(selectedMethod);
+  }, [pathname, searchParams]);
 
   function isActive(href: string) {
     return pathname === href || pathname.startsWith(`${href}/`);
@@ -98,6 +130,20 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   function Navigation({ sheet = false }: { sheet?: boolean }) {
     const compact = collapsed && !sheet;
+
+    function expenseHref(
+      method: ExpenseNavigationMethod,
+      statementId?: string,
+    ) {
+      const params = new URLSearchParams();
+      if (method.payment_method_id) {
+        params.set("payment_method_id", method.payment_method_id);
+      }
+      params.set("payment_method", method.name);
+      if (statementId) params.set("bill_statement_id", statementId);
+      return `/expenses?${params.toString()}`;
+    }
+
     return (
       <ScrollArea className="h-full">
         <div
@@ -117,7 +163,10 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   key={item.href}
                   href={item.href}
                   prefetch={false}
-                  onClick={() => sheet && setMobileOpen(false)}
+                  onClick={() => {
+                    if (item.href === "/expenses") setExpensesExpanded(true);
+                    if (sheet) setMobileOpen(false);
+                  }}
                   className={cn(
                     "group relative flex min-h-13 items-center gap-3 border-2 px-3 py-2.5 text-[15px] font-black uppercase transition-all",
                     active
@@ -133,14 +182,22 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   {!compact && (
                     <>
                       <span>{item.title}</span>
-                      <span
-                        className={cn(
-                          "ml-auto font-mono text-[10px]",
-                          active ? "text-primary" : "text-blue-200",
-                        )}
-                      >
-                        {item.code}
-                      </span>
+                      {item.href === "/expenses" ? (
+                        expensesExpanded ? (
+                          <ChevronDown className="ml-auto size-4" />
+                        ) : (
+                          <ChevronRight className="ml-auto size-4" />
+                        )
+                      ) : (
+                        <span
+                          className={cn(
+                            "ml-auto font-mono text-[10px]",
+                            active ? "text-primary" : "text-blue-200",
+                          )}
+                        >
+                          {item.code}
+                        </span>
+                      )}
                     </>
                   )}
                   {active && (
@@ -149,13 +206,141 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 </Link>
               );
 
-              return compact ? (
-                <Tooltip key={item.href}>
-                  <TooltipTrigger asChild>{link}</TooltipTrigger>
-                  <TooltipContent side="right">{item.title}</TooltipContent>
-                </Tooltip>
-              ) : (
-                link
+              if (compact) {
+                return (
+                  <Tooltip key={item.href}>
+                    <TooltipTrigger asChild>{link}</TooltipTrigger>
+                    <TooltipContent side="right">{item.title}</TooltipContent>
+                  </Tooltip>
+                );
+              }
+
+              if (item.href !== "/expenses" || !expensesExpanded) {
+                return link;
+              }
+
+              const selectedMethod =
+                searchParams.get("payment_method_id") ||
+                searchParams.get("payment_method");
+              const selectedStatement = searchParams.get("bill_statement_id");
+
+              return (
+                <div key={item.href} className="space-y-2">
+                  {link}
+                  <div className="ml-4 space-y-1 border-l-2 border-blue-100/50 pl-3">
+                    <Link
+                      href="/expenses"
+                      prefetch={false}
+                      onClick={() => sheet && setMobileOpen(false)}
+                      className={cn(
+                        "flex items-center gap-2 border-2 border-transparent px-2 py-2 text-xs font-black uppercase text-blue-100 hover:bg-blue-950/20",
+                        pathname === "/expenses" &&
+                          !selectedMethod &&
+                          "border-sidebar-border bg-sidebar-primary text-sidebar-primary-foreground",
+                      )}
+                    >
+                      <Receipt className="size-4" />
+                      All expenses
+                    </Link>
+
+                    {expenseNavigation.map((method) => {
+                      const methodKey = method.payment_method_id || method.name;
+                      const methodOpen = expandedMethod === methodKey;
+                      const methodActive = selectedMethod === methodKey;
+                      return (
+                        <div key={methodKey}>
+                          <button
+                            type="button"
+                            onClick={() =>
+                              setExpandedMethod(methodOpen ? null : methodKey)
+                            }
+                            className={cn(
+                              "flex w-full items-center gap-2 border-2 border-transparent px-2 py-2 text-left text-xs font-black uppercase text-blue-50 hover:bg-blue-950/20",
+                              methodActive && "text-accent",
+                            )}
+                          >
+                            {methodOpen ? (
+                              <ChevronDown className="size-3.5 shrink-0" />
+                            ) : (
+                              <ChevronRight className="size-3.5 shrink-0" />
+                            )}
+                            <span className="min-w-0 flex-1 truncate">
+                              {method.name}
+                            </span>
+                            <span className="font-mono text-[9px] opacity-70">
+                              {method.totals.total_count}
+                            </span>
+                          </button>
+
+                          {methodOpen && (
+                            <div className="ml-3 space-y-1 border-l-2 border-blue-100/30 pl-2">
+                              <Link
+                                href={expenseHref(method)}
+                                prefetch={false}
+                                onClick={() => sheet && setMobileOpen(false)}
+                                className={cn(
+                                  "flex items-center gap-2 px-2 py-1.5 text-xs font-bold text-blue-100 hover:bg-blue-950/20",
+                                  methodActive &&
+                                    !selectedStatement &&
+                                    "bg-sidebar-accent text-sidebar-accent-foreground",
+                                )}
+                              >
+                                <CalendarDays className="size-3.5" />
+                                All months
+                              </Link>
+                              {method.months
+                                .slice(
+                                  0,
+                                  showAllMonthsFor === methodKey
+                                    ? undefined
+                                    : 6,
+                                )
+                                .map((month) => (
+                                  <Link
+                                    key={month.bill_statement_id}
+                                    href={expenseHref(
+                                      method,
+                                      month.bill_statement_id,
+                                    )}
+                                    prefetch={false}
+                                    onClick={() =>
+                                      sheet && setMobileOpen(false)
+                                    }
+                                    className={cn(
+                                      "block truncate px-2 py-1.5 text-xs font-bold text-blue-100 hover:bg-blue-950/20",
+                                      methodActive &&
+                                        selectedStatement ===
+                                          month.bill_statement_id &&
+                                        "bg-sidebar-accent text-sidebar-accent-foreground",
+                                    )}
+                                  >
+                                    {month.name}
+                                  </Link>
+                                ))}
+                              {method.months.length > 6 && (
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setShowAllMonthsFor(
+                                      showAllMonthsFor === methodKey
+                                        ? null
+                                        : methodKey,
+                                    )
+                                  }
+                                  className="block w-full px-2 py-1.5 text-left text-[10px] font-black uppercase text-accent hover:bg-blue-950/20"
+                                >
+                                  {showAllMonthsFor === methodKey
+                                    ? "Show recent months"
+                                    : `View ${method.months.length - 6} older months`}
+                                </button>
+                              )}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    })}
+                  </div>
+                </div>
               );
             })}
           </nav>

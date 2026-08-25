@@ -37,7 +37,7 @@ function SelectTrigger({
       data-slot="select-trigger"
       data-size={size}
       className={cn(
-        "flex w-fit items-center justify-between gap-2 rounded-[2px] border-2 border-foreground bg-background px-3 py-1 text-sm font-bold whitespace-nowrap shadow-[2px_2px_0px_0px_var(--foreground)] transition-all",
+        "flex w-fit items-center justify-between gap-2 rounded-[2px] border-2 border-foreground bg-background px-3 py-1 text-[15px] font-bold whitespace-nowrap shadow-[2px_2px_0px_0px_var(--foreground)] transition-all",
         "data-[placeholder]:text-muted-foreground [&_svg:not([class*='text-'])]:text-muted-foreground",
         "focus-visible:outline-none focus-visible:ring-2 focus-visible:ring-ring focus-visible:ring-offset-1 focus-visible:ring-offset-background focus-visible:border-ring",
         "disabled:cursor-not-allowed disabled:opacity-50",
@@ -117,7 +117,7 @@ function SelectItem({
     <SelectPrimitive.Item
       data-slot="select-item"
       className={cn(
-        "relative flex w-full cursor-default items-center gap-2 rounded-sm py-1.5 pr-8 pl-2 text-sm outline-hidden select-none",
+        "relative flex w-full cursor-default items-center gap-2 rounded-sm py-2 pr-8 pl-2 text-[15px] font-semibold outline-hidden select-none",
         "focus:bg-accent focus:text-accent-foreground hover:bg-accent hover:text-accent-foreground",
         "[&_svg:not([class*='text-'])]:text-muted-foreground",
         "data-[disabled]:pointer-events-none data-[disabled]:opacity-50",

@@ -87,7 +87,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <span className="block text-lg font-black uppercase leading-none tracking-[-0.06em]">
               SpendCTRL
             </span>
-            <span className="mt-1 block font-mono text-[8px] font-black uppercase tracking-[0.2em] text-blue-100">
+            <span className="mt-1 block font-mono text-[10px] font-black uppercase tracking-[0.16em] text-blue-100">
               Finance workspace
             </span>
           </span>
@@ -104,7 +104,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
           className={cn("flex h-full flex-col px-2 py-4", !compact && "px-3")}
         >
           {!compact && (
-            <div className="mb-3 flex items-center gap-2 px-2 font-mono text-[9px] font-black uppercase tracking-[0.22em] text-blue-100">
+            <div className="mb-4 flex items-center gap-2 px-2 font-mono text-[10px] font-black uppercase tracking-[0.18em] text-blue-100">
               <span className="h-0.5 flex-1 bg-blue-200/50" />
               Command center
             </div>
@@ -119,7 +119,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                   prefetch={false}
                   onClick={() => sheet && setMobileOpen(false)}
                   className={cn(
-                    "group relative flex min-h-12 items-center gap-3 border-2 px-3 py-2 text-sm font-black uppercase transition-all",
+                    "group relative flex min-h-13 items-center gap-3 border-2 px-3 py-2.5 text-[15px] font-black uppercase transition-all",
                     active
                       ? "translate-x-[-2px] translate-y-[-2px] border-sidebar-border bg-sidebar-accent text-sidebar-accent-foreground shadow-[4px_4px_0_var(--sidebar-border)]"
                       : "border-transparent text-blue-50 hover:border-sidebar-border hover:bg-sidebar-primary hover:text-sidebar-primary-foreground hover:shadow-[3px_3px_0_var(--sidebar-border)]",
@@ -135,7 +135,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                       <span>{item.title}</span>
                       <span
                         className={cn(
-                          "ml-auto font-mono text-[9px]",
+                          "ml-auto font-mono text-[10px]",
                           active ? "text-primary" : "text-blue-200",
                         )}
                       >
@@ -164,9 +164,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             <div className="mt-6 border-2 border-sidebar-border bg-blue-950/25 p-3 text-sidebar-foreground shadow-[3px_3px_0_var(--sidebar-border)]">
               <div className="mb-2 flex items-center gap-2">
                 <Zap className="size-4 fill-accent text-accent" />
-                <p className="text-xs font-black uppercase">Quick tip</p>
+                <p className="text-sm font-black uppercase">Quick tip</p>
               </div>
-              <p className="font-mono text-[10px] leading-relaxed text-blue-100">
+              <p className="font-mono text-xs font-bold leading-relaxed text-blue-100">
                 Keep every transaction categorized for a cleaner monthly view.
               </p>
             </div>
@@ -190,15 +190,15 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         {mobile ? <Menu /> : collapsed ? <PanelLeftOpen /> : <PanelLeftClose />}
       </Button>
       <div>
-        <p className="font-mono text-[8px] font-black uppercase tracking-[0.22em] text-primary">
+        <p className="font-mono text-[10px] font-black uppercase tracking-[0.18em] text-primary">
           Workspace / Live
         </p>
-        <h1 className="text-lg font-black uppercase leading-none tracking-[-0.04em] sm:text-xl">
+        <h1 className="text-xl font-black uppercase leading-none tracking-[-0.04em] sm:text-2xl">
           {pageTitle}
         </h1>
       </div>
       <div className="ml-auto flex items-center gap-3">
-        <div className="hidden items-center gap-2 border-2 border-foreground bg-success px-2.5 py-1 font-mono text-[9px] font-black uppercase shadow-[2px_2px_0_var(--foreground)] sm:flex">
+        <div className="hidden items-center gap-2 border-2 border-foreground bg-success px-2.5 py-1 font-mono text-[10px] font-black uppercase shadow-[2px_2px_0_var(--foreground)] sm:flex">
           <span className="size-2 animate-pulse bg-foreground" />
           Synced
         </div>
@@ -241,7 +241,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
       <div
         className={cn(
           "grid h-dvh grid-rows-[5rem_1fr] bg-background transition-[grid-template-columns] duration-200",
-          collapsed ? "grid-cols-[76px_1fr]" : "grid-cols-[270px_1fr]",
+          collapsed ? "grid-cols-[76px_1fr]" : "grid-cols-[290px_1fr]",
         )}
       >
         <div className="flex items-center border-b-3 border-r-3 border-sidebar-border bg-sidebar px-4">

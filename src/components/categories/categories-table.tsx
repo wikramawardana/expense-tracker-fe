@@ -80,14 +80,14 @@ export function DataTableShell({
   return (
     <div className="overflow-hidden border-2 border-foreground bg-card shadow-[4px_4px_0_var(--foreground)]">
       <div className="overflow-x-auto">
-        <table className="w-full text-sm">
-          <thead className="border-b-2 border-foreground bg-secondary font-mono text-xs font-black uppercase">
+        <table className="w-full text-[15px]">
+          <thead className="border-b-2 border-foreground bg-secondary font-mono text-[12px] font-black uppercase">
             {table.getHeaderGroups().map((headerGroup) => (
               <tr key={headerGroup.id}>
                 {headerGroup.headers.map((header) => (
                   <th
                     key={header.id}
-                    className="h-11 px-4 text-left align-middle text-xs font-medium text-muted-foreground"
+                    className="h-12 px-4 text-left align-middle text-[12px] font-black text-foreground"
                   >
                     {header.isPlaceholder
                       ? null

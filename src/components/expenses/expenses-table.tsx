@@ -224,7 +224,7 @@ export function ExpensesTable({
                 )}
               </div>
               {expense.description && (
-                <div className="mt-0.5 max-w-[200px] truncate text-[11px] text-muted-foreground">
+                <div className="mt-1 max-w-[240px] truncate text-[13px] font-medium text-muted-foreground">
                   {expense.description}
                 </div>
               )}
@@ -345,14 +345,14 @@ export function ExpensesTable({
     }
 
     return (
-      <table className="w-full text-sm">
-        <thead className="sticky top-0 z-10 border-b-2 border-foreground bg-secondary font-mono text-xs font-black uppercase">
+      <table className="w-full text-[15px]">
+        <thead className="sticky top-0 z-10 border-b-2 border-foreground bg-secondary font-mono text-[12px] font-black uppercase">
           {table.getHeaderGroups().map((headerGroup) => (
             <tr key={headerGroup.id}>
               {headerGroup.headers.map((header) => (
                 <th
                   key={header.id}
-                  className="h-11 px-4 text-left align-middle text-xs font-black uppercase text-secondary-foreground"
+                  className="h-12 px-4 text-left align-middle text-[12px] font-black uppercase text-secondary-foreground"
                 >
                   {header.isPlaceholder
                     ? null
@@ -373,12 +373,12 @@ export function ExpensesTable({
                   <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
                     <div className="flex items-center gap-2">
                       <PaymentMethodBadge paymentMethod={group.paymentMethod} />
-                      <span className="text-xs font-bold text-muted-foreground">
+                      <span className="text-[13px] font-bold text-muted-foreground">
                         {group.expenses.length} expense
                         {group.expenses.length === 1 ? "" : "s"}
                       </span>
                     </div>
-                    <div className="flex items-center gap-3 text-xs font-semibold text-muted-foreground">
+                    <div className="flex items-center gap-3 text-[13px] font-bold text-muted-foreground">
                       <span>
                         Earliest {formatDate(group.expenses[0].expense_date)}
                       </span>
@@ -401,7 +401,7 @@ export function ExpensesTable({
                     }`}
                   >
                     {row.getVisibleCells().map((cell) => (
-                      <td key={cell.id} className="px-4 py-3 align-middle">
+                      <td key={cell.id} className="px-4 py-3.5 align-middle">
                         {flexRender(
                           cell.column.columnDef.cell,
                           cell.getContext(),

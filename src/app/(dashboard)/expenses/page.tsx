@@ -317,10 +317,10 @@ export default function ExpensesPage() {
         <CardHeader className="flex flex-col gap-4 pb-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
-              <CardTitle className="text-xl sm:text-2xl">
+              <CardTitle className="text-2xl sm:text-3xl">
                 Expense Tracker
               </CardTitle>
-              <CardDescription className="text-xs sm:text-sm">
+              <CardDescription className="text-sm sm:text-base">
                 Track and manage all your expenses
                 {totalItems > 0 && (
                   <span className="ml-2 text-foreground font-bold">

@@ -139,10 +139,10 @@ export default function BillStatementsPage() {
         <CardHeader className="flex flex-col gap-4 pb-4">
           <div className="flex flex-col gap-4 sm:flex-row sm:items-center sm:justify-between">
             <div className="space-y-1">
-              <CardTitle className="text-xl sm:text-2xl">
+              <CardTitle className="text-2xl sm:text-3xl">
                 Bill Statements
               </CardTitle>
-              <CardDescription className="text-xs sm:text-sm">
+              <CardDescription className="text-sm sm:text-base">
                 Manage your bill statements and due dates
               </CardDescription>
             </div>

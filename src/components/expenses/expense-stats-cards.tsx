@@ -96,33 +96,33 @@ export function ExpenseStatsCards({
   return (
     <section className={`${neoSurfaceClass} p-3`}>
       {/* Header chips */}
-      <div className="mb-3 flex flex-wrap items-center gap-2 text-xs font-bold text-foreground">
+      <div className="mb-4 flex flex-wrap items-center gap-2 text-sm font-bold text-foreground">
         <span
-          className={`${neoChipClass} gap-1.5 bg-primary px-2 py-1 font-black uppercase text-primary-foreground`}
+          className={`${neoChipClass} gap-1.5 bg-primary px-2.5 py-1.5 font-black uppercase text-primary-foreground`}
         >
           <Filter className="h-3.5 w-3.5" />
           Spending Summary
         </span>
         {dateRange ? (
           <span
-            className={`${neoChipClass} bg-secondary px-2 py-1 font-bold text-secondary-foreground`}
+            className={`${neoChipClass} bg-secondary px-2.5 py-1.5 font-bold text-secondary-foreground`}
           >
             {dateRange}
           </span>
         ) : (
           <span
-            className={`${neoChipClass} bg-secondary px-2 py-1 font-bold text-secondary-foreground`}
+            className={`${neoChipClass} bg-secondary px-2.5 py-1.5 font-bold text-secondary-foreground`}
           >
             All dates
           </span>
         )}
         <span
-          className={`${neoChipClass} bg-secondary px-2 py-1 font-bold text-secondary-foreground`}
+          className={`${neoChipClass} bg-secondary px-2.5 py-1.5 font-bold text-secondary-foreground`}
         >
           {totalCount.toLocaleString()} transactions
         </span>
         <span
-          className={`${neoChipClass} bg-foreground px-2 py-1 font-black text-background`}
+          className={`${neoChipClass} bg-foreground px-2.5 py-1.5 font-black text-background`}
         >
           Total {formatCurrency(totalSpent)}
         </span>
@@ -135,47 +135,47 @@ export function ExpenseStatsCards({
 
       {/* Overall totals row */}
       <div className="mb-3 grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <div className={`${neoTotalClass} p-3`}>
-          <p className="text-[10px] font-black uppercase text-muted-foreground">
+        <div className={`${neoTotalClass} p-4`}>
+          <p className="text-xs font-black uppercase text-foreground/75">
             Total Expenses
           </p>
-          <p className="mt-1 truncate text-lg font-black text-foreground">
+          <p className="mt-1 truncate text-2xl font-black text-foreground">
             {formatCurrency(totalSpent)}
           </p>
-          <p className="mt-0.5 text-[10px] text-muted-foreground">
+          <p className="mt-1 text-xs font-semibold text-foreground/65">
             {totalCount} transaction{totalCount === 1 ? "" : "s"}
           </p>
         </div>
-        <div className={`${neoPaidClass} p-3`}>
-          <p className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400">
+        <div className={`${neoPaidClass} p-4`}>
+          <p className="text-xs font-black uppercase text-foreground/75">
             ✓ Already Paid
           </p>
-          <p className="mt-1 truncate text-lg font-black text-foreground">
+          <p className="mt-1 truncate text-2xl font-black text-foreground">
             {formatCurrency(totalPaid)}
           </p>
-          <p className="mt-0.5 text-[10px] text-emerald-600/70 dark:text-emerald-400/70">
+          <p className="mt-1 text-xs font-semibold text-foreground/65">
             Payment confirmed
           </p>
         </div>
-        <div className={`${neoPendingClass} p-3`}>
-          <p className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">
+        <div className={`${neoPendingClass} p-4`}>
+          <p className="text-xs font-black uppercase text-foreground/75">
             ⏳ Waiting to Pay
           </p>
-          <p className="mt-1 truncate text-lg font-black text-foreground">
+          <p className="mt-1 truncate text-2xl font-black text-foreground">
             {formatCurrency(totalPending)}
           </p>
-          <p className="mt-0.5 text-[10px] text-amber-600/70 dark:text-amber-400/70">
+          <p className="mt-1 text-xs font-semibold text-foreground/65">
             Scheduled, not yet due
           </p>
         </div>
-        <div className={`${neoUnpaidClass} p-3`}>
-          <p className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400">
+        <div className={`${neoUnpaidClass} p-4`}>
+          <p className="text-xs font-black uppercase text-foreground/75">
             ⚠ Still Owed
           </p>
-          <p className="mt-1 truncate text-lg font-black text-foreground">
+          <p className="mt-1 truncate text-2xl font-black text-foreground">
             {formatCurrency(totalUnpaid)}
           </p>
-          <p className="mt-0.5 text-[10px] text-rose-600/70 dark:text-rose-400/70">
+          <p className="mt-1 text-xs font-semibold text-foreground/65">
             Overdue or not paid
           </p>
         </div>
@@ -193,18 +193,18 @@ export function ExpenseStatsCards({
           {breakdown.map((method) => (
             <div
               key={method.payment_method}
-              className={`${neoItemClass} bg-background p-3`}
+              className={`${neoItemClass} bg-background p-4`}
             >
               {/* Method name + total */}
               <div className="mb-3 flex items-start justify-between gap-3 border-b-2 border-foreground/15 pb-2">
                 <div className="min-w-0">
-                  <p className="truncate text-sm font-black uppercase text-foreground">
+                  <p className="truncate text-base font-black uppercase text-foreground">
                     {method.payment_method}
                   </p>
-                  <p className="mt-1 truncate text-xl font-black text-foreground">
+                  <p className="mt-1 truncate text-2xl font-black text-foreground">
                     {formatCurrency(method.total)}
                   </p>
-                  <p className="text-xs font-bold text-muted-foreground">
+                  <p className="text-sm font-bold text-muted-foreground">
                     {method.count} transaction{method.count === 1 ? "" : "s"}
                   </p>
                 </div>
@@ -218,26 +218,26 @@ export function ExpenseStatsCards({
               {/* Status breakdown */}
               <div className="grid grid-cols-3 gap-2">
                 <div className="border-2 border-emerald-500/50 bg-emerald-500/10 px-2 py-1.5 text-center">
-                  <p className="text-[10px] font-black uppercase text-emerald-600 dark:text-emerald-400">
+                  <p className="text-[11px] font-black uppercase text-emerald-700 dark:text-emerald-300">
                     Paid
                   </p>
-                  <p className="truncate text-xs font-black text-foreground">
+                  <p className="truncate text-sm font-black text-foreground">
                     {formatCurrency(method.paid)}
                   </p>
                 </div>
                 <div className="border-2 border-amber-500/50 bg-amber-500/10 px-2 py-1.5 text-center">
-                  <p className="text-[10px] font-black uppercase text-amber-600 dark:text-amber-400">
+                  <p className="text-[11px] font-black uppercase text-amber-700 dark:text-amber-300">
                     Pending
                   </p>
-                  <p className="truncate text-xs font-black text-foreground">
+                  <p className="truncate text-sm font-black text-foreground">
                     {formatCurrency(method.pending)}
                   </p>
                 </div>
                 <div className="border-2 border-rose-500/50 bg-rose-500/10 px-2 py-1.5 text-center">
-                  <p className="text-[10px] font-black uppercase text-rose-600 dark:text-rose-400">
+                  <p className="text-[11px] font-black uppercase text-rose-700 dark:text-rose-300">
                     Unpaid
                   </p>
-                  <p className="truncate text-xs font-black text-foreground">
+                  <p className="truncate text-sm font-black text-foreground">
                     {formatCurrency(method.unpaid)}
                   </p>
                 </div>

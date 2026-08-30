@@ -2,6 +2,7 @@
 
 import {
   CalendarClock,
+  CalendarDays,
   ChevronDown,
   ChevronRight,
   CreditCard,
@@ -39,9 +40,48 @@ import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 import { getExpenseNavigation } from "@/services/expenses.service";
 import type {
+  ExpenseMonthSummary,
   ExpenseNavigationMethod,
   ExpenseType,
 } from "@/types/expense.types";
+
+interface StatementNavigationGroup extends ExpenseMonthSummary {
+  methods: Array<{
+    method: ExpenseNavigationMethod;
+    count: number;
+  }>;
+}
+
+function buildStatementGroups(
+  workspaceMethods: ExpenseNavigationMethod[],
+): StatementNavigationGroup[] {
+  const statements = new Map<string, StatementNavigationGroup>();
+
+  for (const method of workspaceMethods) {
+    for (const month of method.months) {
+      const existing = statements.get(month.bill_statement_id);
+      if (existing) {
+        existing.totals.total_count += month.totals.total_count;
+        existing.totals.total_amount += month.totals.total_amount;
+        existing.totals.paid_amount += month.totals.paid_amount;
+        existing.totals.pending_amount += month.totals.pending_amount;
+        existing.totals.unpaid_amount += month.totals.unpaid_amount;
+        existing.totals.outstanding_amount += month.totals.outstanding_amount;
+        existing.methods.push({ method, count: month.totals.total_count });
+      } else {
+        statements.set(month.bill_statement_id, {
+          ...month,
+          totals: { ...month.totals },
+          methods: [{ method, count: month.totals.total_count }],
+        });
+      }
+    }
+  }
+
+  return Array.from(statements.values()).sort((a, b) =>
+    (b.statement_date ?? b.name).localeCompare(a.statement_date ?? a.name),
+  );
+}
 
 const workspaces = [
   {
@@ -104,6 +144,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   const [methods, setMethods] = React.useState<
     Record<ExpenseType, ExpenseNavigationMethod[]>
   >({ transaction: [], installment: [], subscription: [] });
+  const [expandedStatements, setExpandedStatements] = React.useState<
+    Record<string, boolean>
+  >({});
 
   React.useEffect(() => {
     Promise.all(
@@ -121,6 +164,14 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
             next[item.type] = item.response.data.methods;
           return next;
         });
+        setExpandedStatements((current) => {
+          const next = { ...current };
+          for (const item of responses) {
+            const latest = buildStatementGroups(item.response.data.methods)[0];
+            if (latest) next[`${item.type}:${latest.bill_statement_id}`] = true;
+          }
+          return next;
+        });
       })
       .catch((error) => console.error("Failed to load navigation", error));
   }, []);
@@ -134,6 +185,17 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
 
   const selectedMethod =
     searchParams.get("payment_method_id") || searchParams.get("payment_method");
+  const selectedStatement = searchParams.get("bill_statement_id");
+
+  React.useEffect(() => {
+    if (!selectedStatement) return;
+    const active = workspaces.find((workspace) => pathname === workspace.href);
+    if (!active) return;
+    setExpandedStatements((current) => ({
+      ...current,
+      [`${active.expenseType}:${selectedStatement}`]: true,
+    }));
+  }, [pathname, selectedStatement]);
 
   const closeMobile = () => setMobileOpen(false);
   const isActive = (href: string) =>
@@ -225,6 +287,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                 const active = isActive(workspace.href);
                 const isExpanded = expanded[workspace.href];
                 const workspaceMethods = methods[workspace.expenseType];
+                const statementGroups = buildStatementGroups(workspaceMethods);
 
                 if (compact) {
                   return (
@@ -290,41 +353,131 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
                             "block rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
                             pathname === workspace.href &&
                               !selectedMethod &&
+                              !selectedStatement &&
                               "bg-muted font-medium text-foreground",
                           )}
                         >
                           {workspace.allLabel}
                         </Link>
-                        {workspaceMethods.map((method) => {
-                          const methodKey =
-                            method.payment_method_id || method.name;
-                          const params = new URLSearchParams();
-                          if (method.payment_method_id) {
-                            params.set(
-                              "payment_method_id",
-                              method.payment_method_id,
-                            );
-                          }
-                          params.set("payment_method", method.name);
+                        {statementGroups.map((statement) => {
+                          const statementKey = `${workspace.expenseType}:${statement.bill_statement_id}`;
+                          const statementOpen =
+                            expandedStatements[statementKey];
+                          const statementParams = new URLSearchParams({
+                            bill_statement_id: statement.bill_statement_id,
+                          });
 
                           return (
-                            <Link
-                              key={methodKey}
-                              href={`${workspace.href}?${params.toString()}`}
-                              prefetch={false}
-                              onClick={closeMobile}
-                              className={cn(
-                                "flex items-center justify-between gap-2 rounded-md px-3 py-2 text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
-                                pathname === workspace.href &&
-                                  selectedMethod === methodKey &&
-                                  "bg-muted font-medium text-foreground",
+                            <div key={statement.bill_statement_id}>
+                              <div
+                                className={cn(
+                                  "flex items-center rounded-md text-sm text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+                                  pathname === workspace.href &&
+                                    selectedStatement ===
+                                      statement.bill_statement_id &&
+                                    "bg-muted text-foreground",
+                                )}
+                              >
+                                <button
+                                  type="button"
+                                  onClick={() =>
+                                    setExpandedStatements((current) => ({
+                                      ...current,
+                                      [statementKey]: !current[statementKey],
+                                    }))
+                                  }
+                                  className="grid size-9 shrink-0 place-items-center"
+                                  aria-label={`${statementOpen ? "Collapse" : "Expand"} ${statement.name}`}
+                                >
+                                  {statementOpen ? (
+                                    <ChevronDown className="size-3.5" />
+                                  ) : (
+                                    <ChevronRight className="size-3.5" />
+                                  )}
+                                </button>
+                                <Link
+                                  href={`${workspace.href}?${statementParams.toString()}`}
+                                  prefetch={false}
+                                  onClick={() => {
+                                    setExpandedStatements((current) => ({
+                                      ...current,
+                                      [statementKey]: true,
+                                    }));
+                                    closeMobile();
+                                  }}
+                                  className="flex min-w-0 flex-1 items-center gap-2 py-2 pr-3"
+                                >
+                                  <CalendarDays className="size-3.5 shrink-0" />
+                                  <span className="min-w-0 flex-1 truncate font-medium">
+                                    {statement.name}
+                                  </span>
+                                  <span className="text-[10px] tabular-nums">
+                                    {statement.totals.total_count}
+                                  </span>
+                                </Link>
+                              </div>
+
+                              {statementOpen && (
+                                <div className="ml-4 space-y-1 border-l border-border py-1 pl-3">
+                                  <Link
+                                    href={`${workspace.href}?${statementParams.toString()}`}
+                                    prefetch={false}
+                                    onClick={closeMobile}
+                                    className={cn(
+                                      "block rounded-md px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+                                      pathname === workspace.href &&
+                                        selectedStatement ===
+                                          statement.bill_statement_id &&
+                                        !selectedMethod &&
+                                        "bg-muted font-medium text-foreground",
+                                    )}
+                                  >
+                                    All payment methods
+                                  </Link>
+                                  {statement.methods.map(
+                                    ({ method, count }) => {
+                                      const methodKey =
+                                        method.payment_method_id || method.name;
+                                      const params = new URLSearchParams({
+                                        bill_statement_id:
+                                          statement.bill_statement_id,
+                                        payment_method: method.name,
+                                      });
+                                      if (method.payment_method_id) {
+                                        params.set(
+                                          "payment_method_id",
+                                          method.payment_method_id,
+                                        );
+                                      }
+
+                                      return (
+                                        <Link
+                                          key={methodKey}
+                                          href={`${workspace.href}?${params.toString()}`}
+                                          prefetch={false}
+                                          onClick={closeMobile}
+                                          className={cn(
+                                            "flex items-center justify-between gap-2 rounded-md px-3 py-1.5 text-xs text-muted-foreground transition-colors hover:bg-muted hover:text-foreground",
+                                            pathname === workspace.href &&
+                                              selectedStatement ===
+                                                statement.bill_statement_id &&
+                                              selectedMethod === methodKey &&
+                                              "bg-muted font-medium text-foreground",
+                                          )}
+                                        >
+                                          <span className="truncate">
+                                            {method.name}
+                                          </span>
+                                          <span className="text-[10px] tabular-nums">
+                                            {count}
+                                          </span>
+                                        </Link>
+                                      );
+                                    },
+                                  )}
+                                </div>
                               )}
-                            >
-                              <span className="truncate">{method.name}</span>
-                              <span className="text-[10px] tabular-nums">
-                                {method.totals.total_count}
-                              </span>
-                            </Link>
+                            </div>
                           );
                         })}
                       </div>

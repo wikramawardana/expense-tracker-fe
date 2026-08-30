@@ -9,13 +9,14 @@ import {
 import * as React from "react";
 import { formatCurrency, formatDate } from "@/lib/format";
 import type { Category } from "@/types/category.types";
-import type { Expense } from "@/types/expense.types";
+import type { Expense, ExpenseType } from "@/types/expense.types";
 import { ExpenseActionDialog } from "./expense-action-dialog";
 import { ExpenseBulkActions } from "./expense-bulk-actions";
 import { CategoryBadge, PaymentMethodBadge, StatusBadge } from "./status-badge";
 
 interface ExpensesTableProps {
   expenses: Expense[];
+  expenseType?: ExpenseType;
   categories?: Category[];
   isLoading?: boolean;
   onExpenseUpdated?: () => void;
@@ -78,6 +79,7 @@ function flattenGroups(groups: ExpenseGroup[]) {
 
 export function ExpensesTable({
   expenses,
+  expenseType,
   categories = [],
   isLoading,
   onExpenseUpdated,
@@ -220,6 +222,12 @@ export function ExpensesTable({
                 {hasInstallment && (
                   <span className="inline-flex shrink-0 items-center rounded px-1.5 py-0.5 text-[10px] font-bold bg-amber-100 text-amber-700 border border-amber-300 dark:bg-amber-950/60 dark:text-amber-300 dark:border-amber-700">
                     {expense.recurrence_current}/{expense.recurrence_count}
+                  </span>
+                )}
+                {expense.recurrence_type?.trim().toLowerCase() ===
+                  "subscription" && (
+                  <span className="inline-flex shrink-0 rounded-full bg-primary/10 px-2 py-0.5 text-[10px] font-medium text-primary">
+                    Recurring
                   </span>
                 )}
               </div>
@@ -455,7 +463,7 @@ export function ExpensesTable({
       />
 
       <div className="overflow-hidden border-2 border-foreground bg-card shadow-[4px_4px_0_var(--foreground)]">
-        {installmentGroups.length > 0 && (
+        {expenseType === "installment" && installmentGroups.length > 0 && (
           <div className="sticky top-0 z-20 border-b-2 border-foreground/20 bg-card">
             <div className="flex items-center justify-between gap-3 bg-amber-50 px-4 py-2 text-xs font-black uppercase text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
               <span>📅 Monthly Installments</span>
@@ -474,15 +482,19 @@ export function ExpensesTable({
           </div>
         )}
 
-        <div className="max-h-[62vh] overflow-auto">
-          <div className="min-w-full overflow-x-auto">
-            {renderGroupedTable(
-              normalTable,
-              normalGroups,
-              "No regular expenses found",
-            )}
+        {expenseType !== "installment" && (
+          <div className="max-h-[62vh] overflow-auto">
+            <div className="min-w-full overflow-x-auto">
+              {renderGroupedTable(
+                normalTable,
+                normalGroups,
+                expenseType === "subscription"
+                  ? "No subscriptions found"
+                  : "No transactions found",
+              )}
+            </div>
           </div>
-        </div>
+        )}
       </div>
     </div>
   );

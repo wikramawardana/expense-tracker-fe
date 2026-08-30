@@ -131,40 +131,40 @@ export default function PaymentMethodsPage() {
           <div className="grid grid-cols-1 sm:grid-cols-4 gap-4">
             <Card>
               <CardContent className="p-4">
-                <div className="text-sm font-bold text-muted-foreground uppercase">
+                <div className="text-sm font-medium text-muted-foreground">
                   Total Methods
                 </div>
-                <div className="text-2xl font-semibold">
+                <div className="mt-1 text-2xl font-semibold">
                   {isLoading ? "-" : paymentMethods.length}
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
-                <div className="text-sm font-bold text-muted-foreground uppercase">
+                <div className="text-sm font-medium text-muted-foreground">
                   Credit Cards
                 </div>
-                <div className="text-2xl font-semibold text-blue-600">
+                <div className="mt-1 text-2xl font-semibold">
                   {isLoading ? "-" : creditCardCount}
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
-                <div className="text-sm font-bold text-muted-foreground uppercase">
+                <div className="text-sm font-medium text-muted-foreground">
                   Cash
                 </div>
-                <div className="text-2xl font-semibold text-green-600">
+                <div className="mt-1 text-2xl font-semibold">
                   {isLoading ? "-" : cashCount}
                 </div>
               </CardContent>
             </Card>
             <Card>
               <CardContent className="p-4">
-                <div className="text-sm font-bold text-muted-foreground uppercase">
+                <div className="text-sm font-medium text-muted-foreground">
                   Others
                 </div>
-                <div className="text-2xl font-semibold text-purple-600">
+                <div className="mt-1 text-2xl font-semibold">
                   {isLoading ? "-" : otherCount}
                 </div>
               </CardContent>

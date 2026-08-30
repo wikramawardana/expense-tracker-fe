@@ -190,6 +190,7 @@ export function ExpensesFilters({
       sort_order: "desc",
       payment_method: filters.payment_method,
       payment_method_id: filters.payment_method_id,
+      expense_type: filters.expense_type,
     });
   };
 

@@ -16,7 +16,9 @@ export type ExpenseStatus = "pending" | "paid" | "unpaid";
 export type PaymentMethod = string;
 
 // Schedule type
-export type ScheduleType = "none" | "installment";
+export type ScheduleType = "none" | "installment" | "subscription";
+
+export type ExpenseType = "transaction" | "installment" | "subscription";
 
 // Single expense item
 export interface Expense {
@@ -154,6 +156,7 @@ export interface ExpenseFilters {
   payment_method?: string;
   payment_method_id?: string;
   bill_statement_id?: string;
+  expense_type?: ExpenseType;
   expense_date_from?: string;
   expense_date_to?: string;
   sort_by?: string;

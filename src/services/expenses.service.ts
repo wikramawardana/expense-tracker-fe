@@ -40,8 +40,13 @@ export async function getExpenseSummary(
   return apiFetch<ExpenseSummaryResponse>(`/expenses/summary${queryString}`);
 }
 
-export async function getExpenseNavigation(): Promise<ExpenseNavigationResponse> {
-  return apiFetch<ExpenseNavigationResponse>("/expenses/navigation");
+export async function getExpenseNavigation(
+  filters: Pick<ExpenseFilters, "expense_type"> = {},
+): Promise<ExpenseNavigationResponse> {
+  const queryString = buildQueryString(filters);
+  return apiFetch<ExpenseNavigationResponse>(
+    `/expenses/navigation${queryString}`,
+  );
 }
 
 /**

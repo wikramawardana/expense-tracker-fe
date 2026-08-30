@@ -41,12 +41,15 @@ import { getPaidByList } from "@/services/paid-by.service";
 import { getPaymentMethods } from "@/services/payment-methods.service";
 import type { BillStatement } from "@/types/bill-statement.types";
 import type { Category } from "@/types/category.types";
-import type { CreateExpensePayload } from "@/types/expense.types";
+import type { CreateExpensePayload, ScheduleType } from "@/types/expense.types";
 import type { PaidBy } from "@/types/paid-by.types";
 import type { PaymentMethod as PaymentMethodRecord } from "@/types/payment-method.types";
 
 interface CreateExpenseDialogProps {
   onExpenseCreated?: () => void;
+  defaultScheduleType?: ScheduleType;
+  fixedScheduleType?: ScheduleType;
+  entityLabel?: string;
 }
 
 interface ExpenseRow {
@@ -63,7 +66,10 @@ interface ExpenseRow {
   description: string;
 }
 
-function newRow(paymentMethodId = ""): ExpenseRow {
+function newRow(
+  paymentMethodId = "",
+  scheduleType: ScheduleType = "none",
+): ExpenseRow {
   return {
     rowId:
       typeof crypto !== "undefined" && "randomUUID" in crypto
@@ -75,7 +81,7 @@ function newRow(paymentMethodId = ""): ExpenseRow {
     billStatementId: "",
     paymentMethodId,
     paidBy: "",
-    scheduleType: "none",
+    scheduleType,
     recurrenceCount: "",
     recurrenceCurrent: "",
     description: "",
@@ -93,6 +99,9 @@ function getDefaultPaymentMethodId(paymentMethods: PaymentMethodRecord[]) {
 
 export function CreateExpenseDialog({
   onExpenseCreated,
+  defaultScheduleType = "none",
+  fixedScheduleType,
+  entityLabel = "Expense",
 }: CreateExpenseDialogProps) {
   const [isOpen, setIsOpen] = React.useState(false);
   const [isLoading, setIsLoading] = React.useState(false);
@@ -112,7 +121,9 @@ export function CreateExpenseDialog({
   const [isPaidByLoading, setIsPaidByLoading] = React.useState(false);
 
   // Per-row state
-  const [rows, setRows] = React.useState<ExpenseRow[]>([newRow()]);
+  const [rows, setRows] = React.useState<ExpenseRow[]>([
+    newRow("", defaultScheduleType),
+  ]);
 
   // Shared date across all rows
   const [expenseDate, setExpenseDate] = React.useState(
@@ -256,7 +267,9 @@ export function CreateExpenseDialog({
   ]);
 
   const resetForm = () => {
-    setRows([newRow(getDefaultPaymentMethodId(paymentMethods))]);
+    setRows([
+      newRow(getDefaultPaymentMethodId(paymentMethods), defaultScheduleType),
+    ]);
     setExpenseDate(new Date().toISOString().split("T")[0]);
   };
 
@@ -268,7 +281,7 @@ export function CreateExpenseDialog({
 
   const addRow = () => {
     setRows((prev) => [
-      newRow(getDefaultPaymentMethodId(paymentMethods)),
+      newRow(getDefaultPaymentMethodId(paymentMethods), defaultScheduleType),
       ...prev,
     ]);
     // Scroll dialog to top so the new row is visible
@@ -319,6 +332,8 @@ export function CreateExpenseDialog({
       if (row.recurrenceCurrent) {
         payload.recurrence_current = Number(row.recurrenceCurrent);
       }
+    } else if (row.scheduleType === "subscription") {
+      payload.recurrence_type = "subscription";
     }
 
     return payload;
@@ -423,13 +438,15 @@ export function CreateExpenseDialog({
       <DialogTrigger asChild>
         <Button>
           <Plus className="mr-2 h-4 w-4" />
-          Add Expense
+          Add {entityLabel}
         </Button>
       </DialogTrigger>
       <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
         <DialogHeader className="space-y-2 pb-4 border-b">
           <DialogTitle className="text-xl font-bold">
-            {rows.length > 1 ? "Add New Expenses" : "Add New Expense"}
+            {rows.length > 1
+              ? `Add New ${entityLabel}s`
+              : `Add New ${entityLabel}`}
           </DialogTitle>
           <DialogDescription>
             Create expense entries that share a date. Each row can use its own
@@ -688,6 +705,7 @@ export function CreateExpenseDialog({
                           <Label>Schedule Type</Label>
                           <Select
                             value={row.scheduleType}
+                            disabled={Boolean(fixedScheduleType)}
                             onValueChange={(value) =>
                               updateRow(row.rowId, {
                                 scheduleType: value,
@@ -800,8 +818,8 @@ export function CreateExpenseDialog({
             {isLoading
               ? "Creating..."
               : rows.length > 1
-                ? `Create ${rows.length} Expenses`
-                : "Create Expense"}
+                ? `Create ${rows.length} ${entityLabel}s`
+                : `Create ${entityLabel}`}
           </Button>
         </DialogFooter>
       </DialogContent>

@@ -86,6 +86,10 @@ function getScheduleType(expense: Expense) {
     return "installment";
   }
 
+  if (expense.recurrence_type?.trim().toLowerCase() === "subscription") {
+    return "subscription";
+  }
+
   return "none";
 }
 
@@ -393,6 +397,10 @@ export function ExpenseActionDialog({
       } else if (scheduleType === "installment") {
         updatePayload.recurrence_type = "installment";
         updatePayload.recurrence_count = Number(recurrenceCount);
+        updatePayload.recurrence_end_date = null;
+      } else if (scheduleType === "subscription") {
+        updatePayload.recurrence_type = "subscription";
+        updatePayload.recurrence_count = null;
         updatePayload.recurrence_end_date = null;
       }
 

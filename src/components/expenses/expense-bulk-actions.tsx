@@ -1,6 +1,13 @@
 "use client";
 
-import { ArrowRightLeft, CheckCircle2, Loader2, Trash2, X } from "lucide-react";
+import {
+  ArrowRight,
+  ArrowRightLeft,
+  CheckCircle2,
+  Loader2,
+  Trash2,
+  X,
+} from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
@@ -27,6 +34,7 @@ import type { BillStatement } from "@/types/bill-statement.types";
 import type { BulkExpenseActionPayload, Expense } from "@/types/expense.types";
 
 type BulkActionValue =
+  | "move_next_bill_statement"
   | "move_bill_statement"
   | "mark_paid"
   | "mark_unpaid"
@@ -63,7 +71,7 @@ export function ExpenseBulkActions({
   onBulkActionComplete,
 }: ExpenseBulkActionsProps) {
   const [action, setAction] = React.useState<BulkActionValue>(
-    "move_bill_statement",
+    "move_next_bill_statement",
   );
   const [billStatements, setBillStatements] = React.useState<BillStatement[]>(
     [],
@@ -137,17 +145,21 @@ export function ExpenseBulkActions({
       ) || sortedBillStatements[0];
 
     setBillStatementId(
-      nextBillStatement?.id || fallbackBillStatement?.id || "",
+      action === "move_next_bill_statement"
+        ? nextBillStatement?.id || ""
+        : nextBillStatement?.id || fallbackBillStatement?.id || "",
     );
-  }, [selectedExpenses, selectedCount, sortedBillStatements]);
+  }, [action, selectedExpenses, selectedCount, sortedBillStatements]);
 
   const runBulkAction = async (payload: BulkExpenseActionPayload) => {
     setIsSubmitting(true);
     try {
       const response = await applyBulkExpenseAction(payload);
       toast.success(`${response.data.count} expense(s) updated`);
+      setBillStatements([]);
       onClearSelection();
       await onBulkActionComplete?.();
+      window.dispatchEvent(new Event("expense-navigation-updated"));
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to update expenses",
@@ -176,6 +188,14 @@ export function ExpenseBulkActions({
         expense_ids: selectedIds,
         action: "move_bill_statement",
         bill_statement_id: billStatementId,
+      });
+      return;
+    }
+
+    if (action === "move_next_bill_statement") {
+      await runBulkAction({
+        expense_ids: selectedIds,
+        action: "move_next_bill_statement",
       });
       return;
     }
@@ -216,8 +236,11 @@ export function ExpenseBulkActions({
                   <SelectValue />
                 </SelectTrigger>
                 <SelectContent className={neoPopoverClass}>
+                  <SelectItem value="move_next_bill_statement">
+                    Move to next bill
+                  </SelectItem>
                   <SelectItem value="move_bill_statement">
-                    Move to bill statement
+                    Move to a specific bill
                   </SelectItem>
                   <SelectItem value="mark_paid">Mark as paid</SelectItem>
                   <SelectItem value="mark_unpaid">Mark as unpaid</SelectItem>
@@ -244,7 +267,9 @@ export function ExpenseBulkActions({
                     placeholder={
                       isLoadingBillStatements
                         ? "Loading bill statements..."
-                        : "Select bill statement"
+                        : action === "move_next_bill_statement"
+                          ? "Next monthly bill will be created"
+                          : "Select bill statement"
                     }
                   />
                 </SelectTrigger>
@@ -270,10 +295,12 @@ export function ExpenseBulkActions({
                 <Trash2 className="h-4 w-4" />
               ) : action === "move_bill_statement" ? (
                 <ArrowRightLeft className="h-4 w-4" />
+              ) : action === "move_next_bill_statement" ? (
+                <ArrowRight className="h-4 w-4" />
               ) : (
                 <CheckCircle2 className="h-4 w-4" />
               )}
-              Apply
+              {action === "move_next_bill_statement" ? "Move next" : "Apply"}
             </Button>
 
             <Button

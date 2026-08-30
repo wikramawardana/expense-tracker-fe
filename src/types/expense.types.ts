@@ -108,7 +108,11 @@ export interface ImportExpensesCsvResponse {
   };
 }
 
-export type BulkExpenseAction = "move_bill_statement" | "set_status" | "delete";
+export type BulkExpenseAction =
+  | "move_bill_statement"
+  | "move_next_bill_statement"
+  | "set_status"
+  | "delete";
 
 export interface BulkExpenseActionPayload {
   expense_ids: string[];

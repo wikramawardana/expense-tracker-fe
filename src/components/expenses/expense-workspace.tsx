@@ -76,7 +76,8 @@ export function ExpenseWorkspace({
   const selectedMethod =
     searchParams.get("payment_method_id") || searchParams.get("payment_method");
   const selectedMethodName = searchParams.get("payment_method");
-  const isDetail = Boolean(selectedMethod);
+  const selectedStatementId = searchParams.get("bill_statement_id");
+  const isDetail = Boolean(selectedMethod || selectedStatementId);
   const isAuthenticated = Boolean(session?.user);
 
   React.useEffect(() => {
@@ -263,11 +264,13 @@ export function ExpenseWorkspace({
               </Button>
             )}
             <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-              {selectedMethodName || title}
+              {selectedMethodName || statementName || title}
             </h1>
             <p className="mt-1 text-sm text-muted-foreground">
               {isDetail
-                ? `${title} paid with ${selectedMethodName || "this payment method"}${statementName ? ` · ${statementName}` : ""}`
+                ? selectedMethodName
+                  ? `${title} paid with ${selectedMethodName}${statementName ? ` · ${statementName}` : ""}`
+                  : `All ${title.toLowerCase()}${statementName ? ` · ${statementName}` : ""}`
                 : description}
               {isDetail && totalItems > 0 ? ` · ${totalItems} entries` : ""}
             </p>

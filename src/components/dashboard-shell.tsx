@@ -149,31 +149,41 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   >({});
 
   React.useEffect(() => {
-    Promise.all(
-      workspaces.map(async (workspace) => ({
-        type: workspace.expenseType,
-        response: await getExpenseNavigation({
-          expense_type: workspace.expenseType,
-        }),
-      })),
-    )
-      .then((responses) => {
-        setMethods((current) => {
-          const next = { ...current };
-          for (const item of responses)
-            next[item.type] = item.response.data.methods;
-          return next;
-        });
-        setExpandedStatements((current) => {
-          const next = { ...current };
-          for (const item of responses) {
-            const latest = buildStatementGroups(item.response.data.methods)[0];
-            if (latest) next[`${item.type}:${latest.bill_statement_id}`] = true;
-          }
-          return next;
-        });
-      })
-      .catch((error) => console.error("Failed to load navigation", error));
+    const loadNavigation = () => {
+      Promise.all(
+        workspaces.map(async (workspace) => ({
+          type: workspace.expenseType,
+          response: await getExpenseNavigation({
+            expense_type: workspace.expenseType,
+          }),
+        })),
+      )
+        .then((responses) => {
+          setMethods((current) => {
+            const next = { ...current };
+            for (const item of responses)
+              next[item.type] = item.response.data.methods;
+            return next;
+          });
+          setExpandedStatements((current) => {
+            const next = { ...current };
+            for (const item of responses) {
+              const latest = buildStatementGroups(
+                item.response.data.methods,
+              )[0];
+              if (latest)
+                next[`${item.type}:${latest.bill_statement_id}`] = true;
+            }
+            return next;
+          });
+        })
+        .catch((error) => console.error("Failed to load navigation", error));
+    };
+
+    loadNavigation();
+    window.addEventListener("expense-navigation-updated", loadNavigation);
+    return () =>
+      window.removeEventListener("expense-navigation-updated", loadNavigation);
   }, []);
 
   React.useEffect(() => {

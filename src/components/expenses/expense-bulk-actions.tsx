@@ -159,7 +159,6 @@ export function ExpenseBulkActions({
       setBillStatements([]);
       onClearSelection();
       await onBulkActionComplete?.();
-      window.dispatchEvent(new Event("expense-navigation-updated"));
     } catch (error) {
       toast.error(
         error instanceof Error ? error.message : "Failed to update expenses",

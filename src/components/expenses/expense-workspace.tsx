@@ -241,6 +241,7 @@ export function ExpenseWorkspace({
   const refresh = React.useCallback(async () => {
     if (!filters) return;
     await Promise.all([fetchSummary(filters), fetchFirstPage(filters)]);
+    window.dispatchEvent(new Event("expense-navigation-updated"));
   }, [fetchFirstPage, fetchSummary, filters]);
 
   if (isSessionLoading || !session?.user || !filters) {

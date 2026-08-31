@@ -30,7 +30,6 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
-import { Textarea } from "@/components/ui/textarea";
 import { SCHEDULE_TYPES } from "@/lib/constants";
 import { formatAmountInput, parseAmountInput } from "@/lib/format";
 import { cn } from "@/lib/utils";
@@ -94,6 +93,13 @@ function getDefaultPaymentMethodId(paymentMethods: PaymentMethodRecord[]) {
       ?.id ??
     paymentMethods[0]?.id ??
     ""
+  );
+}
+
+function getDefaultPaidBy(paidByList: PaidBy[]) {
+  return (
+    paidByList.find((item) => item.name.trim().toLowerCase() === "wikra")
+      ?.name ?? ""
   );
 }
 
@@ -215,7 +221,14 @@ export function CreateExpenseDialog({
       setIsPaidByLoading(true);
       getPaidByList()
         .then((response) => {
-          setPaidByList(response.data.filter((pb) => pb.is_active));
+          const activePaidBy = response.data.filter((pb) => pb.is_active);
+          const defaultPaidBy = getDefaultPaidBy(activePaidBy);
+          setPaidByList(activePaidBy);
+          setRows((prev) =>
+            prev.map((row) =>
+              row.paidBy ? row : { ...row, paidBy: defaultPaidBy },
+            ),
+          );
         })
         .catch((error) => {
           toast.error("Failed to load paid-by list");
@@ -247,13 +260,23 @@ export function CreateExpenseDialog({
 
     setRows((prev) =>
       prev.map((row) => {
+        const filteredBillStatements = getFilteredBillStatements(
+          row.paymentMethodId,
+        );
         if (
-          !row.billStatementId ||
-          getFilteredBillStatements(row.paymentMethodId).some(
+          row.billStatementId &&
+          filteredBillStatements.some(
             (billStatement) => billStatement.id === row.billStatementId,
           )
         ) {
           return row;
+        }
+
+        if (filteredBillStatements.length === 1) {
+          return {
+            ...row,
+            billStatementId: filteredBillStatements[0].id,
+          };
         }
 
         return { ...row, billStatementId: "" };
@@ -267,9 +290,12 @@ export function CreateExpenseDialog({
   ]);
 
   const resetForm = () => {
-    setRows([
-      newRow(getDefaultPaymentMethodId(paymentMethods), defaultScheduleType),
-    ]);
+    const row = newRow(
+      getDefaultPaymentMethodId(paymentMethods),
+      defaultScheduleType,
+    );
+    row.paidBy = getDefaultPaidBy(paidByList);
+    setRows([row]);
     setExpenseDate(new Date().toISOString().split("T")[0]);
   };
 
@@ -280,16 +306,20 @@ export function CreateExpenseDialog({
   };
 
   const addRow = () => {
-    setRows((prev) => [
-      newRow(getDefaultPaymentMethodId(paymentMethods), defaultScheduleType),
-      ...prev,
-    ]);
-    // Scroll dialog to top so the new row is visible
+    const previousRow = rows[rows.length - 1];
+    const row = newRow(
+      previousRow?.paymentMethodId || getDefaultPaymentMethodId(paymentMethods),
+      (previousRow?.scheduleType as ScheduleType) || defaultScheduleType,
+    );
+    row.categoryId = previousRow?.categoryId || "";
+    row.billStatementId = previousRow?.billStatementId || "";
+    row.paidBy = previousRow?.paidBy || getDefaultPaidBy(paidByList);
+
+    setRows((prev) => [...prev, row]);
     requestAnimationFrame(() => {
-      const dialog = document.querySelector(
-        '[data-slot="dialog-content"]',
-      ) as HTMLElement | null;
-      if (dialog) dialog.scrollTop = 0;
+      const titleInput = document.getElementById(`title-${row.rowId}`);
+      titleInput?.focus();
+      titleInput?.scrollIntoView({ block: "nearest", behavior: "smooth" });
     });
   };
 
@@ -441,386 +471,433 @@ export function CreateExpenseDialog({
           Add {entityLabel}
         </Button>
       </DialogTrigger>
-      <DialogContent className="max-h-[90vh] overflow-y-auto sm:max-w-4xl">
-        <DialogHeader className="space-y-2 pb-4 border-b">
-          <DialogTitle className="text-xl font-bold">
+      <DialogContent
+        className="grid max-h-[92vh] grid-rows-[auto_minmax(0,1fr)_auto] gap-0 overflow-hidden p-0 sm:max-w-5xl"
+        onKeyDown={(event) => {
+          if (
+            event.key === "Enter" &&
+            (event.metaKey || event.ctrlKey) &&
+            !isLoading &&
+            !hasIncompleteRow
+          ) {
+            event.preventDefault();
+            handleSubmit();
+          }
+        }}
+      >
+        <DialogHeader className="border-b px-5 py-4 pr-12 sm:px-6">
+          <DialogTitle className="text-xl font-semibold">
             {rows.length > 1
               ? `Add New ${entityLabel}s`
               : `Add New ${entityLabel}`}
           </DialogTitle>
           <DialogDescription>
-            Create expense entries that share a date. Each row can use its own
-            payment details and schedule.
+            Enter one or several items for the same date. New rows keep the
+            previous payment details so you can move quickly.
           </DialogDescription>
         </DialogHeader>
 
-        <div className="space-y-6 py-4">
-          {/* Shared date */}
-          <div className="space-y-4">
-            <div className="flex items-center gap-2 pb-2 border-b">
-              <h3 className="text-sm font-semibold text-muted-foreground">
-                Shared Date
-              </h3>
+        <div className="min-h-0 overflow-y-auto px-4 py-4 sm:px-6 sm:py-5">
+          <div className="mb-4 flex flex-col gap-3 rounded-xl border bg-muted/35 p-3 sm:flex-row sm:items-end sm:justify-between">
+            <div className="w-full space-y-1.5 sm:max-w-xs">
+              <Label htmlFor="expenseDate">
+                Transaction date <span className="text-red-500">*</span>
+              </Label>
+              <Popover>
+                <PopoverTrigger asChild>
+                  <Button
+                    id="expenseDate"
+                    variant="outline"
+                    className={cn(
+                      "h-10 w-full justify-start bg-card text-left font-normal",
+                      !expenseDate && "text-muted-foreground",
+                    )}
+                  >
+                    <CalendarIcon className="mr-2 h-4 w-4" />
+                    {expenseDate
+                      ? format(new Date(expenseDate), "MMMM d, yyyy")
+                      : "Pick a date"}
+                  </Button>
+                </PopoverTrigger>
+                <PopoverContent className="w-auto p-0" align="start">
+                  <Calendar
+                    mode="single"
+                    selected={expenseDate ? new Date(expenseDate) : undefined}
+                    onSelect={(date) =>
+                      setExpenseDate(date ? format(date, "yyyy-MM-dd") : "")
+                    }
+                    initialFocus
+                  />
+                </PopoverContent>
+              </Popover>
             </div>
-            <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-              <div className="space-y-2">
-                <Label htmlFor="expenseDate">
-                  Date <span className="text-red-500">*</span>
-                </Label>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button
-                      variant="outline"
-                      className={cn(
-                        "h-11 w-full justify-start text-left font-normal",
-                        !expenseDate && "text-muted-foreground",
-                      )}
-                    >
-                      <CalendarIcon className="mr-2 h-4 w-4" />
-                      {expenseDate
-                        ? format(new Date(expenseDate), "MMMM d, yyyy")
-                        : "Pick a date"}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-auto p-0" align="start">
-                    <Calendar
-                      mode="single"
-                      selected={expenseDate ? new Date(expenseDate) : undefined}
-                      onSelect={(date) =>
-                        setExpenseDate(date ? format(date, "yyyy-MM-dd") : "")
-                      }
-                      initialFocus
-                    />
-                  </PopoverContent>
-                </Popover>
-              </div>
-            </div>
-          </div>
-
-          {/* Expense rows */}
-          <div className="space-y-4">
-            <div className="flex items-center justify-between gap-2 pb-2 border-b">
-              <h3 className="text-sm font-semibold text-muted-foreground">
-                Expenses ({rows.length})
-              </h3>
+            <div className="flex items-center justify-between gap-3 sm:justify-end">
+              <span className="text-sm text-muted-foreground">
+                {rows.length} {rows.length === 1 ? "entry" : "entries"}
+              </span>
               <Button
                 type="button"
                 variant="outline"
                 size="sm"
                 onClick={addRow}
+                className="bg-card"
               >
-                <Plus className="mr-2 h-4 w-4" />
-                Add another
+                <Plus className="mr-1.5 h-4 w-4" />
+                Add row
               </Button>
             </div>
+          </div>
 
-            <div className="space-y-4">
-              {rows.map((row, index) => {
-                const rowFilteredBillStatements = getFilteredBillStatements(
-                  row.paymentMethodId,
-                );
-                const rowSelectedScheduleType = SCHEDULE_TYPES.find(
-                  (type) => type.value === row.scheduleType,
-                );
+          <div className="space-y-3">
+            {rows.map((row, index) => {
+              const rowFilteredBillStatements = getFilteredBillStatements(
+                row.paymentMethodId,
+              );
+              const isInstallment = row.scheduleType === "installment";
 
-                return (
-                  <div
-                    key={row.rowId}
-                    className="space-y-4 rounded-lg border p-4"
-                  >
-                    <div className="flex items-center justify-between">
-                      <span className="text-xs font-medium text-muted-foreground">
-                        Expense #{rows.length - index}
+              return (
+                <div
+                  key={row.rowId}
+                  className="space-y-4 rounded-xl border bg-card p-4 shadow-sm"
+                >
+                  <div className="flex items-center justify-between gap-3">
+                    <div className="flex items-center gap-2">
+                      <span className="grid size-6 place-items-center rounded-full bg-primary/10 text-xs font-semibold text-primary">
+                        {index + 1}
                       </span>
-                      {rows.length > 1 && (
-                        <Button
-                          type="button"
-                          variant="ghost"
-                          size="sm"
-                          onClick={() => removeRow(row.rowId)}
-                          aria-label={`Remove expense #${rows.length - index}`}
-                        >
-                          <Trash2 className="h-4 w-4" />
-                        </Button>
-                      )}
+                      <span className="text-sm font-medium">
+                        {entityLabel} details
+                      </span>
                     </div>
+                    {rows.length > 1 && (
+                      <Button
+                        type="button"
+                        variant="ghost"
+                        size="icon-sm"
+                        onClick={() => removeRow(row.rowId)}
+                        aria-label={`Remove ${entityLabel.toLowerCase()} ${index + 1}`}
+                      >
+                        <Trash2 className="h-4 w-4" />
+                      </Button>
+                    )}
+                  </div>
 
-                    <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor={`title-${row.rowId}`}>
-                          Title <span className="text-red-500">*</span>
-                        </Label>
-                        <Input
-                          id={`title-${row.rowId}`}
-                          value={row.title}
-                          onChange={(e) =>
-                            updateRow(row.rowId, { title: e.target.value })
-                          }
-                          placeholder="e.g., Lunch at restaurant"
-                          className="h-11"
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label>
-                          Category <span className="text-red-500">*</span>
-                        </Label>
-                        <Select
-                          value={row.categoryId}
-                          onValueChange={(v) =>
-                            updateRow(row.rowId, { categoryId: v })
-                          }
-                          disabled={isCategoriesLoading}
-                        >
-                          <SelectTrigger className="h-11">
-                            <SelectValue
-                              placeholder={
-                                isCategoriesLoading
-                                  ? "Loading..."
-                                  : "Select category"
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {categories.map((category) => (
-                              <SelectItem key={category.id} value={category.id}>
-                                {category.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label htmlFor={`amount-${row.rowId}`}>
-                          Amount <span className="text-red-500">*</span>
-                        </Label>
-                        <div className="relative">
-                          <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-bold text-muted-foreground">
-                            Rp
-                          </span>
-                          <Input
-                            id={`amount-${row.rowId}`}
-                            inputMode="numeric"
-                            value={formatAmountInput(row.amount)}
-                            onChange={(e) =>
-                              updateRow(row.rowId, {
-                                amount: parseAmountInput(e.target.value),
-                              })
-                            }
-                            placeholder="0"
-                            className="h-11 pl-9"
-                          />
-                        </div>
-                      </div>
-                      <div className="space-y-2">
-                        <Label>
-                          Payment Method <span className="text-red-500">*</span>
-                        </Label>
-                        <Select
-                          value={row.paymentMethodId}
-                          onValueChange={(value) =>
-                            updateRow(row.rowId, {
-                              paymentMethodId: value,
-                              billStatementId: "",
-                            })
-                          }
-                          disabled={isPaymentMethodsLoading}
-                        >
-                          <SelectTrigger className="h-11">
-                            <SelectValue
-                              placeholder={
-                                isPaymentMethodsLoading
-                                  ? "Loading..."
-                                  : "Select payment method"
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            {paymentMethods.map((method) => (
-                              <SelectItem key={method.id} value={method.id}>
-                                {method.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                      <div className="space-y-2">
-                        <Label>
-                          Bill Statement <span className="text-red-500">*</span>
-                        </Label>
-                        <MonthYearPicker
-                          billStatements={rowFilteredBillStatements}
-                          value={row.billStatementId}
-                          onValueChange={(value) =>
-                            updateRow(row.rowId, { billStatementId: value })
-                          }
-                          disabled={
-                            isBillStatementsLoading ||
-                            !row.paymentMethodId ||
-                            rowFilteredBillStatements.length === 0
-                          }
-                          showAllOption={false}
-                        />
-                      </div>
-                      <div className="space-y-2">
-                        <Label htmlFor={`paidBy-${row.rowId}`}>Paid By</Label>
-                        <Select
-                          value={row.paidBy || "__none__"}
-                          onValueChange={(v) =>
-                            updateRow(row.rowId, {
-                              paidBy: v === "__none__" ? "" : v,
-                            })
-                          }
-                          disabled={isPaidByLoading}
-                        >
-                          <SelectTrigger className="h-11">
-                            <SelectValue
-                              placeholder={
-                                isPaidByLoading
-                                  ? "Loading..."
-                                  : "Select who paid"
-                              }
-                            />
-                          </SelectTrigger>
-                          <SelectContent>
-                            <SelectItem value="__none__">None</SelectItem>
-                            {paidByList.map((pb) => (
-                              <SelectItem key={pb.id} value={pb.name}>
-                                {pb.name}
-                              </SelectItem>
-                            ))}
-                          </SelectContent>
-                        </Select>
-                      </div>
-                    </div>
-
-                    <div className="space-y-4 border-t pt-4">
-                      <div className="grid gap-4 grid-cols-1 md:grid-cols-2">
-                        <div className="space-y-2">
-                          <Label>Schedule Type</Label>
-                          <Select
-                            value={row.scheduleType}
-                            disabled={Boolean(fixedScheduleType)}
-                            onValueChange={(value) =>
-                              updateRow(row.rowId, {
-                                scheduleType: value,
-                                recurrenceCount:
-                                  value === "installment"
-                                    ? row.recurrenceCount
-                                    : "",
-                                recurrenceCurrent:
-                                  value === "installment"
-                                    ? row.recurrenceCurrent
-                                    : "",
-                              })
-                            }
-                          >
-                            <SelectTrigger className="h-11">
-                              <SelectValue placeholder="Select schedule type" />
-                            </SelectTrigger>
-                            <SelectContent>
-                              {SCHEDULE_TYPES.map((type) => (
-                                <SelectItem key={type.value} value={type.value}>
-                                  {type.label}
-                                </SelectItem>
-                              ))}
-                            </SelectContent>
-                          </Select>
-                        </div>
-                      </div>
-
-                      {rowSelectedScheduleType?.value === "installment" && (
-                        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                          <div className="space-y-2">
-                            <Label htmlFor={`recurrenceCurrent-${row.rowId}`}>
-                              Current Payment #
-                            </Label>
-                            <Input
-                              id={`recurrenceCurrent-${row.rowId}`}
-                              type="number"
-                              min={1}
-                              value={row.recurrenceCurrent}
-                              onChange={(e) =>
-                                updateRow(row.rowId, {
-                                  recurrenceCurrent: e.target.value,
-                                })
-                              }
-                              placeholder="e.g., 3"
-                              className="h-11"
-                            />
-                          </div>
-                          <div className="space-y-2">
-                            <Label htmlFor={`recurrenceCount-${row.rowId}`}>
-                              Number of Payments{" "}
-                              <span className="text-red-500">*</span>
-                            </Label>
-                            <Input
-                              id={`recurrenceCount-${row.rowId}`}
-                              type="number"
-                              min={1}
-                              value={row.recurrenceCount}
-                              onChange={(e) =>
-                                updateRow(row.rowId, {
-                                  recurrenceCount: e.target.value,
-                                })
-                              }
-                              placeholder="e.g., 12"
-                              className="h-11"
-                            />
-                          </div>
-                        </div>
-                      )}
-                    </div>
-
-                    <div className="space-y-2">
-                      <Label htmlFor={`description-${row.rowId}`}>
-                        Description
+                  <div className="grid grid-cols-1 gap-3 md:grid-cols-12">
+                    <div className="space-y-1.5 md:col-span-6">
+                      <Label htmlFor={`title-${row.rowId}`}>
+                        Title <span className="text-red-500">*</span>
                       </Label>
-                      <Textarea
-                        id={`description-${row.rowId}`}
-                        value={row.description}
-                        onChange={(e) =>
+                      <Input
+                        id={`title-${row.rowId}`}
+                        value={row.title}
+                        onChange={(event) =>
+                          updateRow(row.rowId, { title: event.target.value })
+                        }
+                        placeholder="What did you spend on?"
+                        autoFocus={index === 0}
+                      />
+                    </div>
+                    <div className="space-y-1.5 md:col-span-3">
+                      <Label htmlFor={`amount-${row.rowId}`}>
+                        Amount <span className="text-red-500">*</span>
+                      </Label>
+                      <div className="relative">
+                        <span className="pointer-events-none absolute left-3 top-1/2 -translate-y-1/2 text-sm font-medium text-muted-foreground">
+                          Rp
+                        </span>
+                        <Input
+                          id={`amount-${row.rowId}`}
+                          inputMode="numeric"
+                          value={formatAmountInput(row.amount)}
+                          onChange={(event) =>
+                            updateRow(row.rowId, {
+                              amount: parseAmountInput(event.target.value),
+                            })
+                          }
+                          placeholder="0"
+                          className="pl-9"
+                        />
+                      </div>
+                    </div>
+                    <div className="space-y-1.5 md:col-span-3">
+                      <Label>
+                        Category <span className="text-red-500">*</span>
+                      </Label>
+                      <Select
+                        value={row.categoryId}
+                        onValueChange={(value) =>
+                          updateRow(row.rowId, { categoryId: value })
+                        }
+                        disabled={isCategoriesLoading}
+                      >
+                        <SelectTrigger className="h-10 w-full">
+                          <SelectValue
+                            placeholder={
+                              isCategoriesLoading
+                                ? "Loading..."
+                                : "Select category"
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {categories.map((category) => (
+                            <SelectItem key={category.id} value={category.id}>
+                              {category.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+
+                    <div className="space-y-1.5 md:col-span-4">
+                      <Label>
+                        Payment method <span className="text-red-500">*</span>
+                      </Label>
+                      <Select
+                        value={row.paymentMethodId}
+                        onValueChange={(value) => {
+                          const compatibleStatements =
+                            getFilteredBillStatements(value);
                           updateRow(row.rowId, {
-                            description: e.target.value,
+                            paymentMethodId: value,
+                            billStatementId:
+                              compatibleStatements.length === 1
+                                ? compatibleStatements[0].id
+                                : "",
+                          });
+                        }}
+                        disabled={isPaymentMethodsLoading}
+                      >
+                        <SelectTrigger className="h-10 w-full">
+                          <SelectValue
+                            placeholder={
+                              isPaymentMethodsLoading
+                                ? "Loading..."
+                                : "Select payment method"
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          {paymentMethods.map((method) => (
+                            <SelectItem key={method.id} value={method.id}>
+                              {method.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                    <div className="space-y-1.5 md:col-span-5">
+                      <Label>
+                        Bill statement <span className="text-red-500">*</span>
+                      </Label>
+                      <MonthYearPicker
+                        billStatements={rowFilteredBillStatements}
+                        value={row.billStatementId}
+                        onValueChange={(value) =>
+                          updateRow(row.rowId, { billStatementId: value })
+                        }
+                        disabled={
+                          isBillStatementsLoading ||
+                          !row.paymentMethodId ||
+                          rowFilteredBillStatements.length === 0
+                        }
+                        showAllOption={false}
+                        triggerClassName="h-10 bg-card"
+                      />
+                    </div>
+                    <div className="space-y-1.5 md:col-span-3">
+                      <Label>Paid by</Label>
+                      <Select
+                        value={row.paidBy || "__none__"}
+                        onValueChange={(value) =>
+                          updateRow(row.rowId, {
+                            paidBy: value === "__none__" ? "" : value,
                           })
                         }
-                        placeholder="Optional notes..."
-                        rows={2}
-                        className="resize-none"
+                        disabled={isPaidByLoading}
+                      >
+                        <SelectTrigger className="h-10 w-full">
+                          <SelectValue
+                            placeholder={
+                              isPaidByLoading ? "Loading..." : "Select payer"
+                            }
+                          />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="__none__">None</SelectItem>
+                          {paidByList.map((paidBy) => (
+                            <SelectItem key={paidBy.id} value={paidBy.name}>
+                              {paidBy.name}
+                            </SelectItem>
+                          ))}
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+
+                  <div className="grid grid-cols-1 gap-3 border-t pt-4 md:grid-cols-12">
+                    {!fixedScheduleType && (
+                      <div className="space-y-1.5 md:col-span-3">
+                        <Label>Schedule</Label>
+                        <Select
+                          value={row.scheduleType}
+                          onValueChange={(value) =>
+                            updateRow(row.rowId, {
+                              scheduleType: value,
+                              recurrenceCount:
+                                value === "installment"
+                                  ? row.recurrenceCount
+                                  : "",
+                              recurrenceCurrent:
+                                value === "installment"
+                                  ? row.recurrenceCurrent
+                                  : "",
+                            })
+                          }
+                        >
+                          <SelectTrigger className="h-10 w-full">
+                            <SelectValue placeholder="Select schedule" />
+                          </SelectTrigger>
+                          <SelectContent>
+                            {SCHEDULE_TYPES.map((type) => (
+                              <SelectItem key={type.value} value={type.value}>
+                                {type.label}
+                              </SelectItem>
+                            ))}
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    )}
+
+                    {isInstallment && (
+                      <>
+                        <div className="space-y-1.5 md:col-span-3">
+                          <Label htmlFor={`recurrenceCurrent-${row.rowId}`}>
+                            Current payment
+                          </Label>
+                          <Input
+                            id={`recurrenceCurrent-${row.rowId}`}
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={row.recurrenceCurrent}
+                            onChange={(event) =>
+                              updateRow(row.rowId, {
+                                recurrenceCurrent: event.target.value.replace(
+                                  /\D/g,
+                                  "",
+                                ),
+                              })
+                            }
+                            placeholder="1"
+                          />
+                        </div>
+                        <div className="space-y-1.5 md:col-span-3">
+                          <Label htmlFor={`recurrenceCount-${row.rowId}`}>
+                            Total payments{" "}
+                            <span className="text-red-500">*</span>
+                          </Label>
+                          <Input
+                            id={`recurrenceCount-${row.rowId}`}
+                            inputMode="numeric"
+                            pattern="[0-9]*"
+                            value={row.recurrenceCount}
+                            onChange={(event) =>
+                              updateRow(row.rowId, {
+                                recurrenceCount: event.target.value.replace(
+                                  /\D/g,
+                                  "",
+                                ),
+                              })
+                            }
+                            placeholder="12"
+                          />
+                        </div>
+                      </>
+                    )}
+
+                    <div
+                      className={cn(
+                        "space-y-1.5",
+                        isInstallment
+                          ? fixedScheduleType
+                            ? "md:col-span-6"
+                            : "md:col-span-3"
+                          : fixedScheduleType
+                            ? "md:col-span-12"
+                            : "md:col-span-9",
+                      )}
+                    >
+                      <Label htmlFor={`description-${row.rowId}`}>
+                        Note{" "}
+                        <span className="text-muted-foreground">
+                          (optional)
+                        </span>
+                      </Label>
+                      <Input
+                        id={`description-${row.rowId}`}
+                        value={row.description}
+                        onChange={(event) =>
+                          updateRow(row.rowId, {
+                            description: event.target.value,
+                          })
+                        }
+                        onKeyDown={(event) => {
+                          if (
+                            event.key !== "Enter" ||
+                            event.metaKey ||
+                            event.ctrlKey
+                          ) {
+                            return;
+                          }
+
+                          event.preventDefault();
+                          const nextRow = rows[index + 1];
+                          if (nextRow) {
+                            document
+                              .getElementById(`title-${nextRow.rowId}`)
+                              ?.focus();
+                          } else {
+                            addRow();
+                          }
+                        }}
+                        placeholder="Optional · Enter adds a row"
                       />
                     </div>
                   </div>
-                );
-              })}
-            </div>
+                </div>
+              );
+            })}
           </div>
         </div>
 
-        <DialogFooter className="border-t pt-4 flex flex-row gap-3 sm:gap-3">
-          <Button
-            variant="outline"
-            onClick={() => {
-              setIsOpen(false);
-              resetForm();
-            }}
-          >
-            Cancel
-          </Button>
-          <Button
-            onClick={handleSubmit}
-            disabled={isLoading || hasIncompleteRow}
-          >
-            {isLoading
-              ? "Creating..."
-              : rows.length > 1
-                ? `Create ${rows.length} ${entityLabel}s`
-                : `Create ${entityLabel}`}
-          </Button>
+        <DialogFooter className="flex-row items-center justify-between border-t bg-background px-5 py-4 sm:px-6">
+          <p className="hidden text-sm text-muted-foreground sm:block">
+            {hasIncompleteRow
+              ? "Complete the required fields to continue"
+              : `${rows.length} ${rows.length === 1 ? "entry" : "entries"} ready`}
+          </p>
+          <div className="ml-auto flex gap-2">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setIsOpen(false);
+                resetForm();
+              }}
+            >
+              Cancel
+            </Button>
+            <Button
+              onClick={handleSubmit}
+              disabled={isLoading || hasIncompleteRow}
+              title="Create (Command/Ctrl + Enter)"
+            >
+              {isLoading
+                ? "Creating..."
+                : rows.length > 1
+                  ? `Create ${rows.length} ${entityLabel}s`
+                  : `Create ${entityLabel}`}
+            </Button>
+          </div>
         </DialogFooter>
       </DialogContent>
     </Dialog>

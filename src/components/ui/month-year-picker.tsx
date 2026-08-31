@@ -9,6 +9,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { cn } from "@/lib/utils";
 import type { BillStatement } from "@/types/bill-statement.types";
 
 interface MonthYearPickerProps {
@@ -18,6 +19,7 @@ interface MonthYearPickerProps {
   disabled?: boolean;
   placeholder?: string;
   showAllOption?: boolean;
+  triggerClassName?: string;
 }
 
 const MONTH_NAMES = [
@@ -50,6 +52,7 @@ export function MonthYearPicker({
   disabled = false,
   placeholder: _placeholder,
   showAllOption = false,
+  triggerClassName,
 }: MonthYearPickerProps) {
   // Extract unique years and months from bill statements
   const { years, monthsByYear, statementMap } = React.useMemo(() => {
@@ -197,7 +200,7 @@ export function MonthYearPicker({
           }}
           disabled={disabled}
         >
-          <SelectTrigger className="w-full">
+          <SelectTrigger className={cn("w-full", triggerClassName)}>
             <SelectValue placeholder="All bill statements" />
           </SelectTrigger>
           <SelectContent>
@@ -220,7 +223,7 @@ export function MonthYearPicker({
         onValueChange={handleMonthChange}
         disabled={disabled}
       >
-        <SelectTrigger className="w-1/2">
+        <SelectTrigger className={cn("w-1/2", triggerClassName)}>
           <SelectValue placeholder="Month" />
         </SelectTrigger>
         <SelectContent>
@@ -239,7 +242,7 @@ export function MonthYearPicker({
         onValueChange={handleYearChange}
         disabled={disabled}
       >
-        <SelectTrigger className="w-1/2">
+        <SelectTrigger className={cn("w-1/2", triggerClassName)}>
           <SelectValue placeholder="Year" />
         </SelectTrigger>
         <SelectContent>

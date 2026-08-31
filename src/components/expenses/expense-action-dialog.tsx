@@ -1,9 +1,17 @@
 "use client";
 
-import { Eye, MoreHorizontal, Pencil, Trash2 } from "lucide-react";
+import { format } from "date-fns";
+import {
+  CalendarIcon,
+  Eye,
+  MoreHorizontal,
+  Pencil,
+  Trash2,
+} from "lucide-react";
 import * as React from "react";
 import { toast } from "sonner";
 import { Button } from "@/components/ui/button";
+import { Calendar } from "@/components/ui/calendar";
 import {
   Dialog,
   DialogContent,
@@ -22,6 +30,11 @@ import {
 import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from "@/components/ui/popover";
+import {
   Select,
   SelectContent,
   SelectItem,
@@ -36,6 +49,7 @@ import {
   formatDate,
   parseAmountInput,
 } from "@/lib/format";
+import { cn } from "@/lib/utils";
 import { getBillStatements } from "@/services/bill-statements.service";
 import { getCategories } from "@/services/categories.service";
 import {
@@ -353,6 +367,7 @@ export function ExpenseActionDialog({
       !amount ||
       !categoryId ||
       !billStatementId ||
+      !expenseDate ||
       !paymentMethodId
     ) {
       toast.error("Please fill in all required fields");
@@ -783,13 +798,35 @@ export function ExpenseActionDialog({
                   <Label htmlFor="edit-date">
                     Date <span className="text-red-500">*</span>
                   </Label>
-                  <Input
-                    id="edit-date"
-                    type="date"
-                    value={expenseDate}
-                    onChange={(e) => setExpenseDate(e.target.value)}
-                    className="h-11"
-                  />
+                  <Popover>
+                    <PopoverTrigger asChild>
+                      <Button
+                        id="edit-date"
+                        variant="outline"
+                        className={cn(
+                          "h-11 w-full justify-start text-left font-normal",
+                          !expenseDate && "text-muted-foreground",
+                        )}
+                      >
+                        <CalendarIcon className="mr-2 h-4 w-4" />
+                        {expenseDate
+                          ? format(new Date(expenseDate), "MMMM d, yyyy")
+                          : "Pick a date"}
+                      </Button>
+                    </PopoverTrigger>
+                    <PopoverContent className="w-auto p-0" align="start">
+                      <Calendar
+                        mode="single"
+                        selected={
+                          expenseDate ? new Date(expenseDate) : undefined
+                        }
+                        onSelect={(date) =>
+                          setExpenseDate(date ? format(date, "yyyy-MM-dd") : "")
+                        }
+                        initialFocus
+                      />
+                    </PopoverContent>
+                  </Popover>
                 </div>
                 <div className="space-y-2">
                   <Label>

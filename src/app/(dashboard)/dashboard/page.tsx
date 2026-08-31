@@ -11,6 +11,7 @@ import {
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
+import { ExpensesTable } from "@/components/expenses/expenses-table";
 import {
   Select,
   SelectContent,
@@ -21,13 +22,18 @@ import {
 import { useSession } from "@/lib/auth-client";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { getBillStatements } from "@/services/bill-statements.service";
+import { getCategories } from "@/services/categories.service";
 import { getExpenseSummary, getExpenses } from "@/services/expenses.service";
 import type { BillStatement } from "@/types/bill-statement.types";
+import type { Category } from "@/types/category.types";
 import type {
   Expense,
+  ExpenseFilters,
   ExpenseMethodSummary,
   ExpenseTotals,
 } from "@/types/expense.types";
+
+const TRANSACTION_PAGE_SIZE = 100;
 
 const emptyTotals: ExpenseTotals = {
   total_count: 0,
@@ -39,11 +45,40 @@ const emptyTotals: ExpenseTotals = {
   completion_rate: 0,
 };
 
+async function getAllTransactions(
+  scope: Pick<ExpenseFilters, "bill_statement_id">,
+) {
+  const filters: ExpenseFilters = {
+    ...scope,
+    expense_type: "transaction",
+    page: 1,
+    page_size: TRANSACTION_PAGE_SIZE,
+    sort_by: "date",
+    sort_order: "desc",
+  };
+  const firstPage = await getExpenses(filters);
+  const { total_pages: totalPages } = firstPage.data.pagination;
+
+  if (totalPages <= 1) return firstPage.data.data;
+
+  const remainingPages = await Promise.all(
+    Array.from({ length: totalPages - 1 }, (_, index) =>
+      getExpenses({ ...filters, page: index + 2 }),
+    ),
+  );
+
+  return [
+    ...firstPage.data.data,
+    ...remainingPages.flatMap((response) => response.data.data),
+  ];
+}
+
 export default function DashboardPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [statements, setStatements] = React.useState<BillStatement[]>([]);
+  const [categories, setCategories] = React.useState<Category[]>([]);
   const [selectedStatement, setSelectedStatement] = React.useState(
     searchParams.get("bill_statement_id") || "all",
   );
@@ -51,16 +86,19 @@ export default function DashboardPage() {
   const [methods, setMethods] = React.useState<ExpenseMethodSummary[]>([]);
   const [recent, setRecent] = React.useState<Expense[]>([]);
   const [attention, setAttention] = React.useState<Expense[]>([]);
+  const [transactions, setTransactions] = React.useState<Expense[]>([]);
   const [loading, setLoading] = React.useState(true);
+  const requestIdRef = React.useRef(0);
   const firstName = session?.user?.name?.split(" ")[0] || "there";
 
   React.useEffect(() => {
-    getBillStatements()
-      .then((response) => {
-        setStatements(response.data);
+    Promise.all([getBillStatements(), getCategories()])
+      .then(([statementResponse, categoryResponse]) => {
+        setStatements(statementResponse.data);
+        setCategories(categoryResponse.data);
         if (!searchParams.get("bill_statement_id")) {
           const currentName = format(new Date(), "MMMM yyyy");
-          const current = response.data.find(
+          const current = statementResponse.data.find(
             (item) => item.name === currentName,
           );
           if (current) setSelectedStatement(current.id);
@@ -69,58 +107,81 @@ export default function DashboardPage() {
       .catch((error) => console.error("Failed to load statements", error));
   }, [searchParams]);
 
-  React.useEffect(() => {
-    let cancelled = false;
+  const loadDashboard = React.useCallback(async () => {
+    const requestId = ++requestIdRef.current;
     const scope =
       selectedStatement === "all"
         ? {}
         : { bill_statement_id: selectedStatement };
     setLoading(true);
 
-    Promise.all([
-      getExpenseSummary(scope),
-      getExpenses({ ...scope, page: 1, page_size: 5, sort_by: "date" }),
-      getExpenses({
-        ...scope,
-        status: "unpaid",
-        page: 1,
-        page_size: 5,
-        sort_by: "date",
-        sort_order: "asc",
-      }),
-      getExpenses({
-        ...scope,
-        status: "pending",
-        page: 1,
-        page_size: 5,
-        sort_by: "date",
-        sort_order: "asc",
-      }),
-    ])
-      .then(([summary, recentResponse, unpaidResponse, pendingResponse]) => {
-        if (cancelled) return;
-        setTotals(summary.data.totals);
-        setMethods(summary.data.payment_methods);
-        setRecent(recentResponse.data.data);
-        setAttention(
-          [...unpaidResponse.data.data, ...pendingResponse.data.data]
-            .sort(
-              (a, b) =>
-                new Date(a.expense_date).getTime() -
-                new Date(b.expense_date).getTime(),
-            )
-            .slice(0, 5),
-        );
-      })
-      .catch((error) => console.error("Failed to load dashboard", error))
-      .finally(() => {
-        if (!cancelled) setLoading(false);
-      });
+    try {
+      const [
+        summary,
+        recentResponse,
+        unpaidResponse,
+        pendingResponse,
+        transactionResponse,
+      ] = await Promise.all([
+        getExpenseSummary(scope),
+        getExpenses({
+          ...scope,
+          page: 1,
+          page_size: 5,
+          sort_by: "date",
+          sort_order: "desc",
+        }),
+        getExpenses({
+          ...scope,
+          status: "unpaid",
+          page: 1,
+          page_size: 5,
+          sort_by: "date",
+          sort_order: "asc",
+        }),
+        getExpenses({
+          ...scope,
+          status: "pending",
+          page: 1,
+          page_size: 5,
+          sort_by: "date",
+          sort_order: "asc",
+        }),
+        getAllTransactions(scope),
+      ]);
 
-    return () => {
-      cancelled = true;
-    };
+      if (requestId !== requestIdRef.current) return;
+      setTotals(summary.data.totals);
+      setMethods(summary.data.payment_methods);
+      setRecent(recentResponse.data.data);
+      setTransactions(transactionResponse);
+      setAttention(
+        [...unpaidResponse.data.data, ...pendingResponse.data.data]
+          .sort(
+            (a, b) =>
+              new Date(a.expense_date).getTime() -
+              new Date(b.expense_date).getTime(),
+          )
+          .slice(0, 5),
+      );
+    } catch (error) {
+      console.error("Failed to load dashboard", error);
+    } finally {
+      if (requestId === requestIdRef.current) setLoading(false);
+    }
   }, [selectedStatement]);
+
+  React.useEffect(() => {
+    loadDashboard();
+    return () => {
+      requestIdRef.current += 1;
+    };
+  }, [loadDashboard]);
+
+  const refreshDashboard = React.useCallback(() => {
+    loadDashboard();
+    window.dispatchEvent(new Event("expense-navigation-updated"));
+  }, [loadDashboard]);
 
   const changeStatement = (value: string) => {
     setSelectedStatement(value);
@@ -263,6 +324,33 @@ export default function DashboardPage() {
         empty="No recent activity."
         horizontal
       />
+
+      <section className="space-y-3">
+        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
+          <div>
+            <h3 className="text-lg font-semibold">Transactions</h3>
+            <p className="mt-1 text-sm text-muted-foreground">
+              {loading
+                ? "Loading all transactions…"
+                : `${transactions.length} transaction${transactions.length === 1 ? "" : "s"} in this view`}
+            </p>
+          </div>
+          <Link
+            href="/expenses"
+            className="text-sm font-medium text-primary hover:underline"
+          >
+            Open transactions
+          </Link>
+        </div>
+        <ExpensesTable
+          expenses={transactions}
+          expenseType="transaction"
+          categories={categories}
+          isLoading={loading}
+          onExpenseUpdated={refreshDashboard}
+          onExpenseDeleted={refreshDashboard}
+        />
+      </section>
     </div>
   );
 }

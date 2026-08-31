@@ -300,7 +300,7 @@ export function ExpensesFilters({
 
           {/* Sort Order */}
           <Select value={sortOrder} onValueChange={handleSortOrderChange}>
-            <SelectTrigger className="w-full sm:w-[120px]">
+            <SelectTrigger className="w-full sm:w-[140px] sm:shrink-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

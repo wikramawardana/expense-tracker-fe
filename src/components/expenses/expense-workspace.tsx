@@ -101,6 +101,7 @@ export function ExpenseWorkspace({
       payment_method: searchParams.get("payment_method") || "",
       category_id: searchParams.get("category_id") || "",
       category: searchParams.get("category") || "",
+      paid_by: searchParams.get("paid_by") || "",
       status: (searchParams.get("status") as ExpenseStatus) || "",
       search: searchParams.get("search") || "",
       bill_statement_id: searchParams.get("bill_statement_id") || "",
@@ -236,6 +237,9 @@ export function ExpenseWorkspace({
       }
       if (nextFilters.category) {
         params.set("category", nextFilters.category);
+      }
+      if (nextFilters.paid_by) {
+        params.set("paid_by", nextFilters.paid_by);
       }
       if (nextFilters.status) {
         params.set("status", nextFilters.status);

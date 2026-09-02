@@ -18,10 +18,12 @@ import {
 import { EXPENSE_STATUSES, SORT_OPTIONS } from "@/lib/constants";
 import { getBillStatements } from "@/services/bill-statements.service";
 import { getCategories } from "@/services/categories.service";
+import { getPaidByList } from "@/services/paid-by.service";
 import { getPaymentMethods } from "@/services/payment-methods.service";
 import type { BillStatement } from "@/types/bill-statement.types";
 import type { Category } from "@/types/category.types";
 import type { ExpenseFilters, ExpenseStatus } from "@/types/expense.types";
+import type { PaidBy } from "@/types/paid-by.types";
 import type { PaymentMethod } from "@/types/payment-method.types";
 
 interface ExpensesFiltersProps {
@@ -42,6 +44,7 @@ export function ExpensesFilters({
   const [paymentMethodId, setPaymentMethodId] = React.useState(
     filters.payment_method_id || filters.payment_method || "all",
   );
+  const [paidBy, setPaidBy] = React.useState(filters.paid_by || "all");
   const [billStatementId, setBillStatementId] = React.useState(
     filters.bill_statement_id || "all",
   );
@@ -52,8 +55,9 @@ export function ExpensesFilters({
   const [paymentMethods, setPaymentMethods] = React.useState<PaymentMethod[]>(
     [],
   );
+  const [paidByList, setPaidByList] = React.useState<PaidBy[]>([]);
 
-  // Fetch bill statements, categories, and payment methods on mount
+  // Fetch bill statements, categories, payment methods, and paid-by on mount
   React.useEffect(() => {
     getBillStatements()
       .then((response) => setBillStatements(response.data))
@@ -68,6 +72,9 @@ export function ExpensesFilters({
       .catch((error) =>
         console.error("Failed to fetch payment methods:", error),
       );
+    getPaidByList()
+      .then((response) => setPaidByList(response.data ?? []))
+      .catch((error) => console.error("Failed to fetch paid-by list:", error));
   }, []);
 
   // Combined date range state
@@ -94,6 +101,7 @@ export function ExpensesFilters({
     setPaymentMethodId(
       filters.payment_method_id || filters.payment_method || "all",
     );
+    setPaidBy(filters.paid_by || "all");
     setBillStatementId(filters.bill_statement_id || "all");
     setSearch(filters.search || "");
     const from = filters.expense_date_from
@@ -123,6 +131,8 @@ export function ExpensesFilters({
         : overrides.payment_method !== undefined
           ? overrides.payment_method
           : paymentMethodId;
+    const nextPaidBy =
+      overrides.paid_by !== undefined ? overrides.paid_by : paidBy;
     const nextStmt =
       overrides.bill_statement_id !== undefined
         ? overrides.bill_statement_id
@@ -165,6 +175,7 @@ export function ExpensesFilters({
       status: nextStatus === "all" ? "" : (nextStatus as ExpenseStatus),
       payment_method_id: selectedPm?.id || (nextPm === "all" ? "" : nextPm),
       payment_method: selectedPm?.name || (nextPm === "all" ? "" : nextPm),
+      paid_by: nextPaidBy === "all" ? "" : nextPaidBy,
       bill_statement_id: nextStmt === "all" ? "" : nextStmt,
       expense_date_from: fromDate,
       expense_date_to: toDate,
@@ -188,6 +199,11 @@ export function ExpensesFilters({
   const handlePaymentMethodChange = (value: string) => {
     setPaymentMethodId(value);
     applyFilters({ payment_method_id: value });
+  };
+
+  const handlePaidByChange = (value: string) => {
+    setPaidBy(value);
+    applyFilters({ paid_by: value });
   };
 
   const handleBillStatementChange = (value: string) => {
@@ -226,6 +242,7 @@ export function ExpensesFilters({
     setCategoryId("all");
     setStatus("all");
     setPaymentMethodId("all");
+    setPaidBy("all");
     setBillStatementId("all");
     setDateRange(undefined);
     setSortBy("date");
@@ -245,6 +262,7 @@ export function ExpensesFilters({
     categoryId !== "all" ||
     status !== "all" ||
     paymentMethodId !== "all" ||
+    paidBy !== "all" ||
     billStatementId !== "all" ||
     Boolean(dateRange?.from) ||
     Boolean(dateRange?.to);
@@ -267,7 +285,7 @@ export function ExpensesFilters({
   return (
     <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-sm">
       {/* Primary Filters Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 lg:grid-cols-6 gap-2 sm:gap-3">
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -323,6 +341,21 @@ export function ExpensesFilters({
             {paymentMethods.map((m) => (
               <SelectItem key={m.id} value={m.id}>
                 {m.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
+        {/* Paid By Filter */}
+        <Select value={paidBy} onValueChange={handlePaidByChange}>
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="All payers" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All payers</SelectItem>
+            {paidByList.map((p) => (
+              <SelectItem key={p.id} value={p.name}>
+                {p.name}
               </SelectItem>
             ))}
           </SelectContent>

@@ -160,6 +160,7 @@ export interface ExpenseFilters {
   status?: ExpenseStatus | "";
   payment_method?: string;
   payment_method_id?: string;
+  paid_by?: string;
   bill_statement_id?: string;
   expense_type?: ExpenseType;
   expense_date_from?: string;

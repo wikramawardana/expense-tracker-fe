@@ -200,6 +200,15 @@ export function ExpenseWorkspace({
       setTotalItems(response.data.pagination.total_items);
       setCurrentPage(nextPage);
       setHasMore(nextPage < response.data.pagination.total_pages);
+    } catch (error) {
+      setHasMore(false);
+      if (!(error instanceof Error && error.message.includes("401"))) {
+        toast.error(
+          error instanceof Error
+            ? error.message
+            : "Failed to load more expenses",
+        );
+      }
     } finally {
       setIsLoadingMore(false);
     }

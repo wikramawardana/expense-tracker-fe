@@ -462,10 +462,10 @@ export function ExpensesTable({
         onBulkActionComplete={onExpenseUpdated}
       />
 
-      <div className="overflow-hidden border-2 border-foreground bg-card shadow-[4px_4px_0_var(--foreground)]">
+      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
         {expenseType === "installment" && installmentGroups.length > 0 && (
-          <div className="sticky top-0 z-20 border-b-2 border-foreground/20 bg-card">
-            <div className="flex items-center justify-between gap-3 bg-amber-50 px-4 py-2 text-xs font-black uppercase text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
+          <div className="border-b border-border bg-card">
+            <div className="flex items-center justify-between gap-3 bg-amber-50 px-4 py-2 text-xs font-bold uppercase text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
               <span>📅 Monthly Installments</span>
               <span>
                 {installmentExpenses.length} active plan
@@ -483,16 +483,14 @@ export function ExpensesTable({
         )}
 
         {expenseType !== "installment" && (
-          <div className="max-h-[62vh] overflow-auto">
-            <div className="min-w-full overflow-x-auto">
-              {renderGroupedTable(
-                normalTable,
-                normalGroups,
-                expenseType === "subscription"
-                  ? "No subscriptions found"
-                  : "No transactions found",
-              )}
-            </div>
+          <div className="overflow-x-auto">
+            {renderGroupedTable(
+              normalTable,
+              normalGroups,
+              expenseType === "subscription"
+                ? "No subscriptions found"
+                : "No transactions found",
+            )}
           </div>
         )}
       </div>

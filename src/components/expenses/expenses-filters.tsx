@@ -18,6 +18,7 @@ import {
 import { EXPENSE_STATUSES, SORT_OPTIONS } from "@/lib/constants";
 import { getBillStatements } from "@/services/bill-statements.service";
 import { getCategories } from "@/services/categories.service";
+import { getPaymentMethods } from "@/services/payment-methods.service";
 import type { BillStatement } from "@/types/bill-statement.types";
 import type { Category } from "@/types/category.types";
 import type {
@@ -25,6 +26,7 @@ import type {
   ExpenseFilters,
   ExpenseStatus,
 } from "@/types/expense.types";
+import type { PaymentMethod } from "@/types/payment-method.types";
 
 interface ExpensesFiltersProps {
   filters: ExpenseFilters;
@@ -37,8 +39,13 @@ export function ExpensesFilters({
 }: ExpensesFiltersProps) {
   // Local state for all filter inputs
   const [search, setSearch] = React.useState(filters.search || "");
-  const [category, setCategory] = React.useState(filters.category || "all");
+  const [categoryId, setCategoryId] = React.useState(
+    filters.category_id || filters.category || "all",
+  );
   const [status, setStatus] = React.useState(filters.status || "all");
+  const [paymentMethodId, setPaymentMethodId] = React.useState(
+    filters.payment_method_id || filters.payment_method || "all",
+  );
   const [billStatementId, setBillStatementId] = React.useState(
     filters.bill_statement_id || "all",
   );
@@ -46,28 +53,27 @@ export function ExpensesFilters({
     [],
   );
   const [categoryList, setCategoryList] = React.useState<Category[]>([]);
+  const [paymentMethods, setPaymentMethods] = React.useState<PaymentMethod[]>(
+    [],
+  );
 
-  // Fetch bill statements and categories on mount
+  // Fetch bill statements, categories, and payment methods on mount
   React.useEffect(() => {
-    const fetchBillStatements = async () => {
-      try {
-        const response = await getBillStatements();
-        setBillStatements(response.data);
-      } catch (error) {
-        console.error("Failed to fetch bill statements:", error);
-      }
-    };
-    const fetchCategories = async () => {
-      try {
-        const response = await getCategories();
-        setCategoryList(response.data ?? []);
-      } catch (error) {
-        console.error("Failed to fetch categories:", error);
-      }
-    };
-    fetchBillStatements();
-    fetchCategories();
+    getBillStatements()
+      .then((response) => setBillStatements(response.data))
+      .catch((error) =>
+        console.error("Failed to fetch bill statements:", error),
+      );
+    getCategories()
+      .then((response) => setCategoryList(response.data ?? []))
+      .catch((error) => console.error("Failed to fetch categories:", error));
+    getPaymentMethods()
+      .then((response) => setPaymentMethods(response.data ?? []))
+      .catch((error) =>
+        console.error("Failed to fetch payment methods:", error),
+      );
   }, []);
+
   // Combined date range state
   const [dateRange, setDateRange] = React.useState<DateRange | undefined>(
     () => {
@@ -86,18 +92,18 @@ export function ExpensesFilters({
   );
 
   // Sync dropdown/sort state from external filter changes.
-  // Intentionally excludes `search` and `dateRange` — those have their own apply flow
-  // and should not be reset when an auto-applied dropdown causes `filters` to update.
   React.useEffect(() => {
-    setCategory(filters.category || "all");
+    setCategoryId(filters.category_id || filters.category || "all");
     setStatus(filters.status || "all");
+    setPaymentMethodId(
+      filters.payment_method_id || filters.payment_method || "all",
+    );
     setBillStatementId(filters.bill_statement_id || "all");
     setSortBy(filters.sort_by || "date");
     setSortOrder(filters.sort_order || "desc");
   }, [filters]);
 
-  // Separately sync search and date range only when the user explicitly clears via the
-  // parent (i.e. when the applied filter value reverts to empty — not on every change).
+  // Sync search when cleared externally
   const prevSearchRef = React.useRef(filters.search || "");
   React.useEffect(() => {
     const appliedSearch = filters.search || "";
@@ -109,36 +115,56 @@ export function ExpensesFilters({
 
   const buildFilters = (
     overrides: Partial<ExpenseFilters> = {},
-  ): ExpenseFilters => ({
-    ...filters,
-    search,
-    category: category === "all" ? "" : (category as ExpenseCategory),
-    status: status === "all" ? "" : (status as ExpenseStatus),
-    bill_statement_id: billStatementId === "all" ? "" : billStatementId,
-    expense_date_from: dateRange?.from
-      ? format(dateRange.from, "yyyy-MM-dd'T'00:00:00'Z'")
-      : "",
-    expense_date_to: dateRange?.to
-      ? format(dateRange.to, "yyyy-MM-dd'T'23:59:59'Z'")
-      : "",
-    sort_by: sortBy,
-    sort_order: sortOrder,
-    page: 1,
-    ...overrides,
-  });
+  ): ExpenseFilters => {
+    const selectedMethod = paymentMethods.find(
+      (m) => m.id === paymentMethodId || m.name === paymentMethodId,
+    );
+    const selectedCat = categoryList.find(
+      (c) => c.id === categoryId || c.name === categoryId,
+    );
+
+    return {
+      ...filters,
+      search: search.trim(),
+      category_id: selectedCat?.id || (categoryId === "all" ? "" : categoryId),
+      category: (selectedCat?.name ||
+        (categoryId === "all" ? "" : categoryId)) as ExpenseCategory,
+      status: status === "all" ? "" : (status as ExpenseStatus),
+      payment_method_id:
+        selectedMethod?.id ||
+        (paymentMethodId === "all" ? "" : paymentMethodId),
+      payment_method:
+        selectedMethod?.name ||
+        (paymentMethodId === "all" ? "" : paymentMethodId),
+      bill_statement_id: billStatementId === "all" ? "" : billStatementId,
+      expense_date_from: dateRange?.from
+        ? format(dateRange.from, "yyyy-MM-dd'T'00:00:00'Z'")
+        : "",
+      expense_date_to: dateRange?.to
+        ? format(dateRange.to, "yyyy-MM-dd'T'23:59:59'Z'")
+        : "",
+      sort_by: sortBy,
+      sort_order: sortOrder,
+      page: 1,
+      ...overrides,
+    };
+  };
 
   const handleApplyFilters = () => {
     onFiltersChange(buildFilters());
   };
 
-  // Auto-apply handlers for dropdowns — changes take effect immediately without clicking Apply.
-  // Use the last-applied `filters` prop as the base so unapplied local search/date changes
-  // don't get accidentally submitted when the user switches a dropdown.
   const handleCategoryChange = (value: string) => {
-    setCategory(value);
+    setCategoryId(value);
+    const selectedCat = categoryList.find(
+      (c) => c.id === value || c.name === value,
+    );
     onFiltersChange({
       ...filters,
-      category: value === "all" ? "" : (value as ExpenseCategory),
+      category_id: value === "all" ? "" : selectedCat?.id || value,
+      category: (value === "all"
+        ? ""
+        : selectedCat?.name || value) as ExpenseCategory,
       page: 1,
     });
   };
@@ -148,6 +174,19 @@ export function ExpensesFilters({
     onFiltersChange({
       ...filters,
       status: value === "all" ? "" : (value as ExpenseStatus),
+      page: 1,
+    });
+  };
+
+  const handlePaymentMethodChange = (value: string) => {
+    setPaymentMethodId(value);
+    const selectedMethod = paymentMethods.find(
+      (m) => m.id === value || m.name === value,
+    );
+    onFiltersChange({
+      ...filters,
+      payment_method_id: value === "all" ? "" : selectedMethod?.id || value,
+      payment_method: value === "all" ? "" : selectedMethod?.name || value,
       page: 1,
     });
   };
@@ -177,8 +216,9 @@ export function ExpensesFilters({
 
   const handleClearFilters = () => {
     setSearch("");
-    setCategory("all");
+    setCategoryId("all");
     setStatus("all");
+    setPaymentMethodId("all");
     setBillStatementId("all");
     setDateRange(undefined);
     setSortBy("date");
@@ -188,8 +228,6 @@ export function ExpensesFilters({
       page_size: filters.page_size || 50,
       sort_by: "date",
       sort_order: "desc",
-      payment_method: filters.payment_method,
-      payment_method_id: filters.payment_method_id,
       expense_type: filters.expense_type,
     });
   };
@@ -197,31 +235,27 @@ export function ExpensesFilters({
   // Check if any filters are active
   const hasActiveFilters =
     search ||
-    category !== "all" ||
+    categoryId !== "all" ||
     status !== "all" ||
+    paymentMethodId !== "all" ||
     billStatementId !== "all" ||
     dateRange?.from ||
     dateRange?.to;
 
   // Check if local state differs from applied filters
   const hasUnappliedChanges =
-    search !== (filters.search || "") ||
-    category !== (filters.category || "all") ||
-    status !== (filters.status || "all") ||
-    billStatementId !== (filters.bill_statement_id || "all") ||
+    search.trim() !== (filters.search || "").trim() ||
     (dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : "") !==
       (filters.expense_date_from
         ? filters.expense_date_from.split("T")[0]
         : "") ||
     (dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : "") !==
-      (filters.expense_date_to ? filters.expense_date_to.split("T")[0] : "") ||
-    sortBy !== (filters.sort_by || "date") ||
-    sortOrder !== (filters.sort_order || "desc");
+      (filters.expense_date_to ? filters.expense_date_to.split("T")[0] : "");
 
   return (
-    <div className="space-y-3 border-2 border-foreground bg-secondary p-3 shadow-[4px_4px_0_var(--foreground)]">
+    <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-sm">
       {/* Primary Filters Row */}
-      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-2 sm:gap-3">
+      <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-5 gap-2 sm:gap-3">
         {/* Search */}
         <div className="relative">
           <Search className="absolute left-3 top-1/2 h-4 w-4 -translate-y-1/2 text-muted-foreground" />
@@ -235,14 +269,14 @@ export function ExpensesFilters({
         </div>
 
         {/* Category Filter */}
-        <Select value={category} onValueChange={handleCategoryChange}>
+        <Select value={categoryId} onValueChange={handleCategoryChange}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
           <SelectContent>
             <SelectItem value="all">All categories</SelectItem>
             {categoryList.map((cat) => (
-              <SelectItem key={cat.id} value={cat.name}>
+              <SelectItem key={cat.id} value={cat.id}>
                 {cat.name}
               </SelectItem>
             ))}
@@ -264,6 +298,24 @@ export function ExpensesFilters({
           </SelectContent>
         </Select>
 
+        {/* Payment Method Filter */}
+        <Select
+          value={paymentMethodId}
+          onValueChange={handlePaymentMethodChange}
+        >
+          <SelectTrigger className="w-full">
+            <SelectValue placeholder="All payment methods" />
+          </SelectTrigger>
+          <SelectContent>
+            <SelectItem value="all">All payment methods</SelectItem>
+            {paymentMethods.map((m) => (
+              <SelectItem key={m.id} value={m.id}>
+                {m.name}
+              </SelectItem>
+            ))}
+          </SelectContent>
+        </Select>
+
         {/* Month / Bill Statement Filter */}
         <MonthYearPicker
           billStatements={billStatements}
@@ -274,13 +326,13 @@ export function ExpensesFilters({
       </div>
 
       {/* Second Row: Date Range + Sort + Actions */}
-      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-center">
+      <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between pt-1">
+        <div className="flex flex-wrap items-center gap-2">
           {/* Date Range Filter */}
           <DateRangePickerWithPresets
             dateRange={dateRange}
             onDateRangeChange={setDateRange}
-            triggerClassName="w-full sm:w-[260px]"
+            triggerClassName="w-full sm:w-[240px]"
             align="start"
           />
 
@@ -300,7 +352,7 @@ export function ExpensesFilters({
 
           {/* Sort Order */}
           <Select value={sortOrder} onValueChange={handleSortOrderChange}>
-            <SelectTrigger className="w-full sm:w-[140px] sm:shrink-0">
+            <SelectTrigger className="w-full sm:w-[130px] sm:shrink-0">
               <SelectValue />
             </SelectTrigger>
             <SelectContent>

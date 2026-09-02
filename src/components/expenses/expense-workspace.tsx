@@ -1,17 +1,23 @@
 "use client";
 
-import { ArrowLeft } from "lucide-react";
+import {
+  AlertCircle,
+  ArrowLeft,
+  CheckCircle2,
+  Clock3,
+  Receipt,
+} from "lucide-react";
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
 import { toast } from "sonner";
 import { CreateExpenseDialog } from "@/components/expenses/create-expense-dialog";
-import { ExpenseMethodOverview } from "@/components/expenses/expense-method-overview";
 import { ExpensesFilters } from "@/components/expenses/expenses-filters";
 import { ExpensesTable } from "@/components/expenses/expenses-table";
 import { ImportExpensesCsvDialog } from "@/components/expenses/import-expenses-csv-dialog";
 import { Button } from "@/components/ui/button";
 import { useSession } from "@/lib/auth-client";
+import { formatCurrency } from "@/lib/format";
 import { getBillStatements } from "@/services/bill-statements.service";
 import { getCategories } from "@/services/categories.service";
 import { getExpenseSummary, getExpenses } from "@/services/expenses.service";
@@ -19,7 +25,7 @@ import type { Category } from "@/types/category.types";
 import type {
   Expense,
   ExpenseFilters,
-  ExpenseMethodSummary,
+  ExpenseStatus,
   ExpenseTotals,
   ExpenseType,
   ScheduleType,
@@ -52,7 +58,7 @@ export function ExpenseWorkspace({
   title,
   singularTitle,
   description,
-  emptyMessage,
+  emptyMessage: _emptyMessage,
   basePath,
   defaultScheduleType,
 }: ExpenseWorkspaceProps) {
@@ -62,7 +68,6 @@ export function ExpenseWorkspace({
   const [expenses, setExpenses] = React.useState<Expense[]>([]);
   const [categories, setCategories] = React.useState<Category[]>([]);
   const [filters, setFilters] = React.useState<ExpenseFilters | null>(null);
-  const [methods, setMethods] = React.useState<ExpenseMethodSummary[]>([]);
   const [totals, setTotals] = React.useState<ExpenseTotals>(emptyTotals);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSummaryLoading, setIsSummaryLoading] = React.useState(true);
@@ -77,7 +82,7 @@ export function ExpenseWorkspace({
     searchParams.get("payment_method_id") || searchParams.get("payment_method");
   const selectedMethodName = searchParams.get("payment_method");
   const selectedStatementId = searchParams.get("bill_statement_id");
-  const isDetail = Boolean(selectedMethod || selectedStatementId);
+  const isFilteredByScope = Boolean(selectedMethod || selectedStatementId);
   const isAuthenticated = Boolean(session?.user);
 
   React.useEffect(() => {
@@ -95,12 +100,19 @@ export function ExpenseWorkspace({
       const baseFilters: ExpenseFilters = {
         page: 1,
         page_size: PAGE_SIZE,
-        sort_by: "date",
-        sort_order: "desc",
+        sort_by: searchParams.get("sort_by") || "date",
+        sort_order:
+          (searchParams.get("sort_order") as "asc" | "desc") || "desc",
         expense_type: expenseType,
         payment_method_id: searchParams.get("payment_method_id") || "",
         payment_method: searchParams.get("payment_method") || "",
+        category_id: searchParams.get("category_id") || "",
+        category: searchParams.get("category") || "",
+        status: (searchParams.get("status") as ExpenseStatus) || "",
+        search: searchParams.get("search") || "",
         bill_statement_id: statementId,
+        expense_date_from: searchParams.get("expense_date_from") || "",
+        expense_date_to: searchParams.get("expense_date_to") || "",
       };
 
       if (statementId) {
@@ -131,13 +143,11 @@ export function ExpenseWorkspace({
       try {
         const response = await getExpenseSummary(activeFilters);
         setTotals(response.data.totals);
-        setMethods(response.data.payment_methods);
       } catch (error) {
         if (!(error instanceof Error && error.message.includes("401"))) {
           console.error("Failed to fetch summary", error);
         }
         setTotals(emptyTotals);
-        setMethods([]);
       } finally {
         setIsSummaryLoading(false);
       }
@@ -147,14 +157,6 @@ export function ExpenseWorkspace({
 
   const fetchFirstPage = React.useCallback(
     async (activeFilters: ExpenseFilters) => {
-      if (!isDetail) {
-        setExpenses([]);
-        setTotalItems(0);
-        setHasMore(false);
-        setIsLoading(false);
-        return;
-      }
-
       setIsLoading(true);
       try {
         const response = await getExpenses({
@@ -177,7 +179,7 @@ export function ExpenseWorkspace({
         setIsLoading(false);
       }
     },
-    [isDetail, title],
+    [title],
   );
 
   React.useEffect(() => {
@@ -190,7 +192,7 @@ export function ExpenseWorkspace({
   }, [fetchFirstPage, fetchSummary, filters, isAuthenticated]);
 
   const loadMore = React.useCallback(async () => {
-    if (!filters || isLoadingMore || !hasMore || !isDetail) return;
+    if (!filters || isLoadingMore || !hasMore) return;
     const nextPage = currentPage + 1;
     setIsLoadingMore(true);
     try {
@@ -206,11 +208,11 @@ export function ExpenseWorkspace({
     } finally {
       setIsLoadingMore(false);
     }
-  }, [currentPage, filters, hasMore, isDetail, isLoadingMore]);
+  }, [currentPage, filters, hasMore, isLoadingMore]);
 
   React.useEffect(() => {
     const sentinel = sentinelRef.current;
-    if (!sentinel || !isDetail) return;
+    if (!sentinel) return;
     const observer = new IntersectionObserver(
       ([entry]) => {
         if (entry.isIntersecting && hasMore && !isLoading && !isLoadingMore) {
@@ -221,18 +223,44 @@ export function ExpenseWorkspace({
     );
     observer.observe(sentinel);
     return () => observer.disconnect();
-  }, [hasMore, isDetail, isLoading, isLoadingMore, loadMore]);
+  }, [hasMore, isLoading, isLoadingMore, loadMore]);
 
   const handleFiltersChange = (nextFilters: ExpenseFilters) => {
     const scopedFilters = { ...nextFilters, expense_type: expenseType };
     setFilters(scopedFilters);
 
-    const params = new URLSearchParams(searchParams.toString());
+    const params = new URLSearchParams();
     if (scopedFilters.bill_statement_id) {
       params.set("bill_statement_id", scopedFilters.bill_statement_id);
-    } else {
-      params.delete("bill_statement_id");
     }
+    if (scopedFilters.payment_method_id) {
+      params.set("payment_method_id", scopedFilters.payment_method_id);
+    }
+    if (scopedFilters.payment_method) {
+      params.set("payment_method", scopedFilters.payment_method);
+    }
+    if (scopedFilters.category_id) {
+      params.set("category_id", scopedFilters.category_id);
+    }
+    if (scopedFilters.status) {
+      params.set("status", scopedFilters.status);
+    }
+    if (scopedFilters.search) {
+      params.set("search", scopedFilters.search);
+    }
+    if (scopedFilters.expense_date_from) {
+      params.set("expense_date_from", scopedFilters.expense_date_from);
+    }
+    if (scopedFilters.expense_date_to) {
+      params.set("expense_date_to", scopedFilters.expense_date_to);
+    }
+    if (scopedFilters.sort_by && scopedFilters.sort_by !== "date") {
+      params.set("sort_by", scopedFilters.sort_by);
+    }
+    if (scopedFilters.sort_order && scopedFilters.sort_order !== "desc") {
+      params.set("sort_order", scopedFilters.sort_order);
+    }
+
     router.replace(`${basePath}${params.size ? `?${params.toString()}` : ""}`, {
       scroll: false,
     });
@@ -252,75 +280,110 @@ export function ExpenseWorkspace({
     );
   }
 
-  return (
-    <div className="app-page">
-      <div className="rounded-2xl border border-border bg-card shadow-sm">
-        <header className="flex flex-col gap-4 border-b border-border px-5 py-5 sm:flex-row sm:items-center sm:justify-between sm:px-7">
-          <div>
-            {isDetail && (
-              <Button asChild variant="ghost" size="sm" className="mb-3 -ml-2">
-                <Link href={basePath}>
-                  <ArrowLeft /> All {title.toLowerCase()}
-                </Link>
-              </Button>
-            )}
-            <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
-              {selectedMethodName || statementName || title}
-            </h1>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {isDetail
-                ? selectedMethodName
-                  ? `${title} paid with ${selectedMethodName}${statementName ? ` · ${statementName}` : ""}`
-                  : `All ${title.toLowerCase()}${statementName ? ` · ${statementName}` : ""}`
-                : description}
-              {isDetail && totalItems > 0 ? ` · ${totalItems} entries` : ""}
-            </p>
-          </div>
-          <div className="flex flex-wrap gap-2">
-            <ImportExpensesCsvDialog onExpensesImported={refresh} />
-            <CreateExpenseDialog
-              defaultScheduleType={defaultScheduleType}
-              fixedScheduleType={defaultScheduleType}
-              entityLabel={singularTitle}
-              onExpenseCreated={refresh}
-            />
-          </div>
-        </header>
+  const statCards = [
+    {
+      label: "Total activity",
+      value: totals.total_amount,
+      detail: `${totals.total_count} entries`,
+      icon: Receipt,
+    },
+    {
+      label: "Paid",
+      value: totals.paid_amount,
+      detail: `${totals.completion_rate.toFixed(0)}% completed`,
+      icon: CheckCircle2,
+    },
+    {
+      label: "Pending",
+      value: totals.pending_amount,
+      detail: "Waiting to settle",
+      icon: Clock3,
+    },
+    {
+      label: "Unpaid",
+      value: totals.unpaid_amount,
+      detail: "Needs attention",
+      icon: AlertCircle,
+    },
+  ];
 
-        <div className="space-y-5 p-4 sm:p-6">
-          {isDetail ? (
-            <>
-              <ExpensesFilters
-                filters={filters}
-                onFiltersChange={handleFiltersChange}
-              />
-              <ExpensesTable
-                expenses={expenses}
-                expenseType={expenseType}
-                categories={categories}
-                isLoading={isLoading}
-                onExpenseUpdated={refresh}
-                onExpenseDeleted={refresh}
-              />
-              <div ref={sentinelRef} className="h-2" />
-              {isLoadingMore && (
-                <p className="py-3 text-center text-sm text-muted-foreground">
-                  Loading more…
-                </p>
-              )}
-            </>
-          ) : (
-            <ExpenseMethodOverview
-              basePath={basePath}
-              methods={methods}
-              totals={totals}
-              isLoading={isSummaryLoading}
-              emptyMessage={emptyMessage}
-              billStatementId={filters.bill_statement_id || undefined}
-            />
+  return (
+    <div className="app-page gap-5">
+      {/* Header */}
+      <section className="flex flex-col gap-4 rounded-2xl border border-border bg-card p-5 shadow-sm sm:flex-row sm:items-center sm:justify-between sm:p-6">
+        <div>
+          {isFilteredByScope && (
+            <Button asChild variant="ghost" size="sm" className="mb-2 -ml-2">
+              <Link href={basePath}>
+                <ArrowLeft /> All {title.toLowerCase()}
+              </Link>
+            </Button>
           )}
+          <h1 className="text-2xl font-semibold tracking-tight sm:text-3xl">
+            {selectedMethodName || statementName || `All ${title}`}
+          </h1>
+          <p className="mt-1 text-sm text-muted-foreground">
+            {isFilteredByScope
+              ? selectedMethodName
+                ? `${title} paid with ${selectedMethodName}${statementName ? ` · ${statementName}` : ""}`
+                : `All ${title.toLowerCase()}${statementName ? ` · ${statementName}` : ""}`
+              : description}
+            {totalItems > 0 ? ` · ${totalItems} entries` : ""}
+          </p>
         </div>
-      </div>
+        <div className="flex flex-wrap gap-2">
+          <ImportExpensesCsvDialog onExpensesImported={refresh} />
+          <CreateExpenseDialog
+            defaultScheduleType={defaultScheduleType}
+            fixedScheduleType={defaultScheduleType}
+            entityLabel={singularTitle}
+            onExpenseCreated={refresh}
+          />
+        </div>
+      </section>
+
+      {/* Summary Stat Cards */}
+      <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
+        {statCards.map((item) => (
+          <div
+            key={item.label}
+            className="rounded-xl border border-border bg-card p-5 shadow-sm"
+          >
+            <div className="flex items-center justify-between text-muted-foreground">
+              <p className="text-sm font-medium">{item.label}</p>
+              <item.icon className="size-4" />
+            </div>
+            <p className="mt-3 text-2xl font-semibold tracking-tight">
+              {isSummaryLoading ? "—" : formatCurrency(item.value)}
+            </p>
+            <p className="mt-1 text-xs text-muted-foreground">{item.detail}</p>
+          </div>
+        ))}
+      </section>
+
+      {/* Filters */}
+      <ExpensesFilters
+        filters={filters}
+        onFiltersChange={handleFiltersChange}
+      />
+
+      {/* Table */}
+      <section className="space-y-4">
+        <ExpensesTable
+          expenses={expenses}
+          expenseType={expenseType}
+          categories={categories}
+          isLoading={isLoading}
+          onExpenseUpdated={refresh}
+          onExpenseDeleted={refresh}
+        />
+        <div ref={sentinelRef} className="h-2" />
+        {isLoadingMore && (
+          <p className="py-3 text-center text-sm text-muted-foreground">
+            Loading more…
+          </p>
+        )}
+      </section>
     </div>
   );
 }

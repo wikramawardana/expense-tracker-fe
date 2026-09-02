@@ -11,7 +11,7 @@ import {
 import Link from "next/link";
 import { useRouter, useSearchParams } from "next/navigation";
 import * as React from "react";
-import { ExpensesTable } from "@/components/expenses/expenses-table";
+import { Button } from "@/components/ui/button";
 import {
   Select,
   SelectContent,
@@ -22,18 +22,13 @@ import {
 import { useSession } from "@/lib/auth-client";
 import { formatCurrency, formatDate } from "@/lib/format";
 import { getBillStatements } from "@/services/bill-statements.service";
-import { getCategories } from "@/services/categories.service";
 import { getExpenseSummary, getExpenses } from "@/services/expenses.service";
 import type { BillStatement } from "@/types/bill-statement.types";
-import type { Category } from "@/types/category.types";
 import type {
   Expense,
-  ExpenseFilters,
   ExpenseMethodSummary,
   ExpenseTotals,
 } from "@/types/expense.types";
-
-const TRANSACTION_PAGE_SIZE = 100;
 
 const emptyTotals: ExpenseTotals = {
   total_count: 0,
@@ -45,40 +40,11 @@ const emptyTotals: ExpenseTotals = {
   completion_rate: 0,
 };
 
-async function getAllTransactions(
-  scope: Pick<ExpenseFilters, "bill_statement_id">,
-) {
-  const filters: ExpenseFilters = {
-    ...scope,
-    expense_type: "transaction",
-    page: 1,
-    page_size: TRANSACTION_PAGE_SIZE,
-    sort_by: "date",
-    sort_order: "desc",
-  };
-  const firstPage = await getExpenses(filters);
-  const { total_pages: totalPages } = firstPage.data.pagination;
-
-  if (totalPages <= 1) return firstPage.data.data;
-
-  const remainingPages = await Promise.all(
-    Array.from({ length: totalPages - 1 }, (_, index) =>
-      getExpenses({ ...filters, page: index + 2 }),
-    ),
-  );
-
-  return [
-    ...firstPage.data.data,
-    ...remainingPages.flatMap((response) => response.data.data),
-  ];
-}
-
 export default function DashboardPage() {
   const { data: session } = useSession();
   const router = useRouter();
   const searchParams = useSearchParams();
   const [statements, setStatements] = React.useState<BillStatement[]>([]);
-  const [categories, setCategories] = React.useState<Category[]>([]);
   const [selectedStatement, setSelectedStatement] = React.useState(
     searchParams.get("bill_statement_id") || "all",
   );
@@ -86,16 +52,14 @@ export default function DashboardPage() {
   const [methods, setMethods] = React.useState<ExpenseMethodSummary[]>([]);
   const [recent, setRecent] = React.useState<Expense[]>([]);
   const [attention, setAttention] = React.useState<Expense[]>([]);
-  const [transactions, setTransactions] = React.useState<Expense[]>([]);
   const [loading, setLoading] = React.useState(true);
   const requestIdRef = React.useRef(0);
   const firstName = session?.user?.name?.split(" ")[0] || "there";
 
   React.useEffect(() => {
-    Promise.all([getBillStatements(), getCategories()])
-      .then(([statementResponse, categoryResponse]) => {
+    getBillStatements()
+      .then((statementResponse) => {
         setStatements(statementResponse.data);
-        setCategories(categoryResponse.data);
         if (!searchParams.get("bill_statement_id")) {
           const currentName = format(new Date(), "MMMM yyyy");
           const current = statementResponse.data.find(
@@ -116,45 +80,38 @@ export default function DashboardPage() {
     setLoading(true);
 
     try {
-      const [
-        summary,
-        recentResponse,
-        unpaidResponse,
-        pendingResponse,
-        transactionResponse,
-      ] = await Promise.all([
-        getExpenseSummary(scope),
-        getExpenses({
-          ...scope,
-          page: 1,
-          page_size: 5,
-          sort_by: "date",
-          sort_order: "desc",
-        }),
-        getExpenses({
-          ...scope,
-          status: "unpaid",
-          page: 1,
-          page_size: 5,
-          sort_by: "date",
-          sort_order: "asc",
-        }),
-        getExpenses({
-          ...scope,
-          status: "pending",
-          page: 1,
-          page_size: 5,
-          sort_by: "date",
-          sort_order: "asc",
-        }),
-        getAllTransactions(scope),
-      ]);
+      const [summary, recentResponse, unpaidResponse, pendingResponse] =
+        await Promise.all([
+          getExpenseSummary(scope),
+          getExpenses({
+            ...scope,
+            page: 1,
+            page_size: 6,
+            sort_by: "date",
+            sort_order: "desc",
+          }),
+          getExpenses({
+            ...scope,
+            status: "unpaid",
+            page: 1,
+            page_size: 6,
+            sort_by: "date",
+            sort_order: "asc",
+          }),
+          getExpenses({
+            ...scope,
+            status: "pending",
+            page: 1,
+            page_size: 6,
+            sort_by: "date",
+            sort_order: "asc",
+          }),
+        ]);
 
       if (requestId !== requestIdRef.current) return;
       setTotals(summary.data.totals);
       setMethods(summary.data.payment_methods);
       setRecent(recentResponse.data.data);
-      setTransactions(transactionResponse);
       setAttention(
         [...unpaidResponse.data.data, ...pendingResponse.data.data]
           .sort(
@@ -162,7 +119,7 @@ export default function DashboardPage() {
               new Date(a.expense_date).getTime() -
               new Date(b.expense_date).getTime(),
           )
-          .slice(0, 5),
+          .slice(0, 6),
       );
     } catch (error) {
       console.error("Failed to load dashboard", error);
@@ -176,11 +133,6 @@ export default function DashboardPage() {
     return () => {
       requestIdRef.current += 1;
     };
-  }, [loadDashboard]);
-
-  const refreshDashboard = React.useCallback(() => {
-    loadDashboard();
-    window.dispatchEvent(new Event("expense-navigation-updated"));
   }, [loadDashboard]);
 
   const changeStatement = (value: string) => {
@@ -218,6 +170,11 @@ export default function DashboardPage() {
     },
   ];
 
+  const expensesUrl =
+    selectedStatement === "all"
+      ? "/expenses"
+      : `/expenses?bill_statement_id=${selectedStatement}`;
+
   return (
     <div className="app-page gap-5">
       <section className="flex flex-col gap-5 rounded-2xl border border-border bg-card p-5 shadow-sm sm:flex-row sm:items-end sm:justify-between sm:p-7">
@@ -232,19 +189,24 @@ export default function DashboardPage() {
             Transactions, installments, and subscriptions in one calm view.
           </p>
         </div>
-        <Select value={selectedStatement} onValueChange={changeStatement}>
-          <SelectTrigger className="w-full sm:w-56">
-            <SelectValue />
-          </SelectTrigger>
-          <SelectContent>
-            <SelectItem value="all">All time</SelectItem>
-            {statements.map((statement) => (
-              <SelectItem key={statement.id} value={statement.id}>
-                {statement.name}
-              </SelectItem>
-            ))}
-          </SelectContent>
-        </Select>
+        <div className="flex flex-wrap items-center gap-3">
+          <Select value={selectedStatement} onValueChange={changeStatement}>
+            <SelectTrigger className="w-full sm:w-56">
+              <SelectValue />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem value="all">All time</SelectItem>
+              {statements.map((statement) => (
+                <SelectItem key={statement.id} value={statement.id}>
+                  {statement.name}
+                </SelectItem>
+              ))}
+            </SelectContent>
+          </Select>
+          <Button asChild variant="outline">
+            <Link href={expensesUrl}>View all transactions →</Link>
+          </Button>
+        </div>
       </section>
 
       <section className="grid gap-3 sm:grid-cols-2 xl:grid-cols-4">
@@ -267,11 +229,19 @@ export default function DashboardPage() {
 
       <section className="grid gap-5 xl:grid-cols-[1.2fr_.8fr]">
         <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-          <div className="border-b border-border px-5 py-4">
-            <h3 className="font-semibold">Payment methods</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              Paid and outstanding across all activity.
-            </p>
+          <div className="flex items-center justify-between border-b border-border px-5 py-4">
+            <div>
+              <h3 className="font-semibold">Payment methods</h3>
+              <p className="mt-1 text-sm text-muted-foreground">
+                Paid and outstanding across all activity.
+              </p>
+            </div>
+            <Link
+              href={expensesUrl}
+              className="text-xs font-semibold text-primary hover:underline"
+            >
+              All expenses →
+            </Link>
           </div>
           {methods.length === 0 ? (
             <p className="p-10 text-center text-sm text-muted-foreground">
@@ -285,6 +255,9 @@ export default function DashboardPage() {
                   params.set("payment_method_id", method.payment_method_id);
                 }
                 params.set("payment_method", method.name);
+                if (selectedStatement !== "all") {
+                  params.set("bill_statement_id", selectedStatement);
+                }
                 return (
                   <Link
                     key={method.payment_method_id || method.name}
@@ -315,6 +288,11 @@ export default function DashboardPage() {
           title="Needs attention"
           items={attention}
           empty="Nothing needs attention."
+          href={
+            selectedStatement === "all"
+              ? "/expenses?status=unpaid"
+              : `/expenses?bill_statement_id=${selectedStatement}&status=unpaid`
+          }
         />
       </section>
 
@@ -323,34 +301,8 @@ export default function DashboardPage() {
         items={recent}
         empty="No recent activity."
         horizontal
+        href={expensesUrl}
       />
-
-      <section className="space-y-3">
-        <div className="flex flex-col gap-2 sm:flex-row sm:items-end sm:justify-between">
-          <div>
-            <h3 className="text-lg font-semibold">Transactions</h3>
-            <p className="mt-1 text-sm text-muted-foreground">
-              {loading
-                ? "Loading all transactions…"
-                : `${transactions.length} transaction${transactions.length === 1 ? "" : "s"} in this view`}
-            </p>
-          </div>
-          <Link
-            href="/expenses"
-            className="text-sm font-medium text-primary hover:underline"
-          >
-            Open transactions
-          </Link>
-        </div>
-        <ExpensesTable
-          expenses={transactions}
-          expenseType="transaction"
-          categories={categories}
-          isLoading={loading}
-          onExpenseUpdated={refreshDashboard}
-          onExpenseDeleted={refreshDashboard}
-        />
-      </section>
     </div>
   );
 }
@@ -360,16 +312,26 @@ function ActivityPanel({
   items,
   empty,
   horizontal = false,
+  href,
 }: {
   title: string;
   items: Expense[];
   empty: string;
   horizontal?: boolean;
+  href?: string;
 }) {
   return (
     <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-      <div className="border-b border-border px-5 py-4">
+      <div className="flex items-center justify-between border-b border-border px-5 py-4">
         <h3 className="font-semibold">{title}</h3>
+        {href && (
+          <Link
+            href={href}
+            className="text-xs font-semibold text-primary hover:underline"
+          >
+            View in expenses →
+          </Link>
+        )}
       </div>
       {items.length === 0 ? (
         <p className="p-10 text-center text-sm text-muted-foreground">
@@ -379,7 +341,7 @@ function ActivityPanel({
         <div
           className={
             horizontal
-              ? "grid divide-y divide-border md:grid-cols-2 md:divide-x md:divide-y-0 xl:grid-cols-5"
+              ? "grid divide-y divide-border md:grid-cols-2 md:divide-x md:divide-y-0 xl:grid-cols-6"
               : "divide-y divide-border"
           }
         >

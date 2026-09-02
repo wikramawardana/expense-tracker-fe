@@ -155,7 +155,8 @@ export interface ExpenseFilters {
   search?: string;
   page?: number;
   page_size?: number;
-  category?: ExpenseCategory | "";
+  category?: string;
+  category_id?: string;
   status?: ExpenseStatus | "";
   payment_method?: string;
   payment_method_id?: string;

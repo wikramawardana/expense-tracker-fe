@@ -539,9 +539,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
   if (isMobile) {
     return (
       <TooltipProvider delayDuration={0}>
-        <div className="flex h-dvh flex-col bg-background">
+        <div className="flex h-dvh w-full flex-col overflow-hidden bg-background">
           <Header mobile />
-          <main className="custom-scrollbar flex-1 overflow-auto">
+          <main className="custom-scrollbar flex-1 overflow-y-auto overflow-x-hidden">
             {children}
           </main>
         </div>
@@ -568,7 +568,7 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
     <TooltipProvider delayDuration={0}>
       <div
         className={cn(
-          "grid h-dvh grid-rows-[4rem_1fr] bg-background transition-[grid-template-columns] duration-200",
+          "grid h-dvh w-full overflow-hidden grid-rows-[4rem_1fr] bg-background transition-[grid-template-columns] duration-200",
           collapsed ? "grid-cols-[72px_1fr]" : "grid-cols-[260px_1fr]",
         )}
       >
@@ -579,7 +579,9 @@ export function DashboardShell({ children }: { children: React.ReactNode }) {
         <aside className="overflow-hidden border-r border-border bg-card">
           <Navigation />
         </aside>
-        <main className="custom-scrollbar overflow-auto">{children}</main>
+        <main className="custom-scrollbar overflow-y-auto overflow-x-hidden">
+          {children}
+        </main>
       </div>
     </TooltipProvider>
   );

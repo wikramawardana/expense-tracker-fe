@@ -27,6 +27,7 @@ import {
   SelectTrigger,
   SelectValue,
 } from "@/components/ui/select";
+import { formatCurrency } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import { getBillStatements } from "@/services/bill-statements.service";
 import { applyBulkExpenseAction } from "@/services/expenses.service";
@@ -83,6 +84,11 @@ export function ExpenseBulkActions({
   const [isDeleteOpen, setIsDeleteOpen] = React.useState(false);
 
   const selectedCount = selectedExpenses.length;
+  const selectedTotalAmount = React.useMemo(
+    () =>
+      selectedExpenses.reduce((sum, expense) => sum + (expense.amount || 0), 0),
+    [selectedExpenses],
+  );
   const selectedIds = React.useMemo(
     () => selectedExpenses.map((expense) => expense.id),
     [selectedExpenses],
@@ -216,9 +222,14 @@ export function ExpenseBulkActions({
             <p className="text-xs font-black uppercase text-muted-foreground">
               Bulk Action
             </p>
-            <p className="text-sm font-black text-foreground">
-              {selectedCount} selected
-            </p>
+            <div className="flex flex-wrap items-center gap-2">
+              <span className="text-sm font-black text-foreground">
+                {selectedCount} selected
+              </span>
+              <span className="inline-flex items-center rounded-md bg-primary/10 px-2 py-0.5 text-xs font-bold text-primary">
+                Total: {formatCurrency(selectedTotalAmount)}
+              </span>
+            </div>
           </div>
 
           <div className="grid flex-1 grid-cols-1 gap-2 sm:grid-cols-[minmax(180px,240px)_minmax(220px,1fr)_auto_auto] lg:max-w-4xl">

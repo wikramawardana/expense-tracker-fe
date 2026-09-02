@@ -23,63 +23,9 @@ interface ExpensesTableProps {
   onExpenseDeleted?: () => void;
 }
 
-interface ExpenseGroup {
-  paymentMethod: string;
-  expenses: Expense[];
-  total: number;
-  earliestDate: number;
-}
-
-function isInstallment(expense: Expense) {
-  return expense.recurrence_type?.trim().toLowerCase() === "installment";
-}
-
-function paymentMethodLabel(expense: Expense) {
-  return expense.payment_method?.trim() || "Unknown payment";
-}
-
-function dateValue(expense: Expense) {
-  const parsed = Date.parse(expense.expense_date);
-  return Number.isNaN(parsed) ? Number.MAX_SAFE_INTEGER : parsed;
-}
-
-function groupByPaymentMethod(expenses: Expense[]): ExpenseGroup[] {
-  const map = new Map<string, Expense[]>();
-
-  for (const expense of expenses) {
-    const key = paymentMethodLabel(expense);
-    map.set(key, [...(map.get(key) ?? []), expense]);
-  }
-
-  return Array.from(map.entries())
-    .map(([paymentMethod, groupExpenses]) => {
-      const sortedExpenses = [...groupExpenses].sort((a, b) => {
-        const dateDiff = dateValue(a) - dateValue(b);
-        if (dateDiff !== 0) return dateDiff;
-        return a.title.localeCompare(b.title);
-      });
-
-      return {
-        paymentMethod,
-        expenses: sortedExpenses,
-        total: sortedExpenses.reduce((sum, expense) => sum + expense.amount, 0),
-        earliestDate: Math.min(...sortedExpenses.map(dateValue)),
-      };
-    })
-    .sort((a, b) => {
-      const dateDiff = a.earliestDate - b.earliestDate;
-      if (dateDiff !== 0) return dateDiff;
-      return a.paymentMethod.localeCompare(b.paymentMethod);
-    });
-}
-
-function flattenGroups(groups: ExpenseGroup[]) {
-  return groups.flatMap((group) => group.expenses);
-}
-
 export function ExpensesTable({
   expenses,
-  expenseType,
+  expenseType: _expenseType,
   categories = [],
   isLoading,
   onExpenseUpdated,
@@ -103,26 +49,6 @@ export function ExpensesTable({
   const selectedExpenses = React.useMemo(
     () => expenses.filter((expense) => selectedIds.has(expense.id)),
     [expenses, selectedIds],
-  );
-
-  const installmentGroups = React.useMemo(
-    () => groupByPaymentMethod(expenses.filter(isInstallment)),
-    [expenses],
-  );
-  const normalGroups = React.useMemo(
-    () =>
-      groupByPaymentMethod(
-        expenses.filter((expense) => !isInstallment(expense)),
-      ),
-    [expenses],
-  );
-  const installmentExpenses = React.useMemo(
-    () => flattenGroups(installmentGroups),
-    [installmentGroups],
-  );
-  const normalExpenses = React.useMemo(
-    () => flattenGroups(normalGroups),
-    [normalGroups],
   );
 
   const hasVisibleRows = visibleIds.length > 0;
@@ -323,88 +249,73 @@ export function ExpensesTable({
     ],
   );
 
-  const installmentTable = useReactTable({
-    data: installmentExpenses,
+  const table = useReactTable({
+    data: expenses,
     columns,
     getCoreRowModel: getCoreRowModel(),
   });
 
-  const normalTable = useReactTable({
-    data: normalExpenses,
-    columns,
-    getCoreRowModel: getCoreRowModel(),
-  });
-
-  const renderGroupedTable = (
-    table: typeof installmentTable,
-    groups: ExpenseGroup[],
-    emptyMessage: string,
-  ) => {
-    const rowByExpenseId = new Map(
-      table.getRowModel().rows.map((row) => [row.original.id, row]),
-    );
-
-    if (groups.length === 0) {
-      return (
-        <div className="p-6 text-center text-sm font-semibold text-muted-foreground">
-          {emptyMessage}
-        </div>
-      );
-    }
-
+  if (isLoading) {
     return (
-      <table className="w-full text-base">
-        <thead className="sticky top-0 z-10 border-b-2 border-foreground bg-secondary font-mono text-[13px] font-black uppercase">
-          {table.getHeaderGroups().map((headerGroup) => (
-            <tr key={headerGroup.id}>
-              {headerGroup.headers.map((header) => (
-                <th
-                  key={header.id}
-                  className="h-12 px-4 text-left align-middle text-[13px] font-black uppercase text-secondary-foreground"
-                >
-                  {header.isPlaceholder
-                    ? null
-                    : flexRender(
-                        header.column.columnDef.header,
-                        header.getContext(),
-                      )}
-                </th>
+      <div className="rounded-xl border border-border bg-card p-12 text-center shadow-sm">
+        <div className="inline-block h-8 w-8 animate-spin border-4 border-solid border-primary border-r-transparent rounded-full" />
+        <p className="mt-3 text-sm font-semibold text-muted-foreground">
+          Loading expenses…
+        </p>
+      </div>
+    );
+  }
+
+  if (expenses.length === 0) {
+    return (
+      <div className="rounded-xl border border-border bg-card p-12 text-center shadow-sm">
+        <p className="text-base font-semibold text-foreground">
+          No expenses found
+        </p>
+        <p className="mt-1 text-sm text-muted-foreground">
+          Adjust filters or add your first expense to get started.
+        </p>
+      </div>
+    );
+  }
+
+  return (
+    <div className="space-y-3">
+      <ExpenseBulkActions
+        selectedExpenses={selectedExpenses}
+        onClearSelection={clearSelection}
+        onBulkActionComplete={onExpenseUpdated}
+      />
+
+      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
+        <div className="overflow-x-auto">
+          <table className="w-full text-base">
+            <thead className="border-b border-border bg-muted/60 text-[13px] font-semibold">
+              {table.getHeaderGroups().map((headerGroup) => (
+                <tr key={headerGroup.id}>
+                  {headerGroup.headers.map((header) => (
+                    <th
+                      key={header.id}
+                      className="h-11 px-4 text-left align-middle text-[13px] font-semibold text-muted-foreground"
+                    >
+                      {header.isPlaceholder
+                        ? null
+                        : flexRender(
+                            header.column.columnDef.header,
+                            header.getContext(),
+                          )}
+                    </th>
+                  ))}
+                </tr>
               ))}
-            </tr>
-          ))}
-        </thead>
-        <tbody className="divide-y divide-border">
-          {groups.map((group) => (
-            <React.Fragment key={group.paymentMethod}>
-              <tr className="bg-muted/60">
-                <td colSpan={columns.length} className="px-4 py-2">
-                  <div className="flex flex-col gap-2 sm:flex-row sm:items-center sm:justify-between">
-                    <div className="flex items-center gap-2">
-                      <PaymentMethodBadge paymentMethod={group.paymentMethod} />
-                      <span className="text-sm font-bold text-muted-foreground">
-                        {group.expenses.length} expense
-                        {group.expenses.length === 1 ? "" : "s"}
-                      </span>
-                    </div>
-                    <div className="flex items-center gap-3 text-sm font-bold text-muted-foreground">
-                      <span>
-                        Earliest {formatDate(group.expenses[0].expense_date)}
-                      </span>
-                      <span>{formatCurrency(group.total)}</span>
-                    </div>
-                  </div>
-                </td>
-              </tr>
-              {group.expenses.map((expense) => {
-                const row = rowByExpenseId.get(expense.id);
-                if (!row) return null;
-
+            </thead>
+            <tbody className="divide-y divide-border">
+              {table.getRowModel().rows.map((row) => {
                 const isSelected = selectedIds.has(row.original.id);
-
                 return (
                   <tr
                     key={row.original.id}
-                    className={`transition-colors hover:bg-secondary/70 ${
+                    className={`transition-colors hover:bg-muted/50 ${
                       isSelected ? "bg-primary/5" : ""
                     }`}
                   >
@@ -419,80 +330,9 @@ export function ExpensesTable({
                   </tr>
                 );
               })}
-            </React.Fragment>
-          ))}
-        </tbody>
-      </table>
-    );
-  };
-
-  if (isLoading) {
-    return (
-      <div className="border-2 border-foreground bg-card shadow-[4px_4px_0_var(--foreground)]">
-        <div className="p-12 text-center">
-          <div className="inline-block h-8 w-8 animate-spin border-4 border-solid border-foreground border-r-transparent" />
-          <p className="mt-3 text-sm font-black uppercase text-muted-foreground">
-            Loading expenses…
-          </p>
+            </tbody>
+          </table>
         </div>
-      </div>
-    );
-  }
-
-  if (expenses.length === 0) {
-    return (
-      <div className="border-2 border-foreground bg-card shadow-[4px_4px_0_var(--foreground)]">
-        <div className="p-12 text-center">
-          <p className="text-base font-black uppercase text-foreground">
-            No expenses found
-          </p>
-          <p className="mt-1 text-sm font-bold text-muted-foreground">
-            Adjust filters or add your first expense to get started.
-          </p>
-        </div>
-      </div>
-    );
-  }
-
-  return (
-    <div className="space-y-3">
-      <ExpenseBulkActions
-        selectedExpenses={selectedExpenses}
-        onClearSelection={clearSelection}
-        onBulkActionComplete={onExpenseUpdated}
-      />
-
-      <div className="overflow-hidden rounded-xl border border-border bg-card shadow-sm">
-        {expenseType === "installment" && installmentGroups.length > 0 && (
-          <div className="border-b border-border bg-card">
-            <div className="flex items-center justify-between gap-3 bg-amber-50 px-4 py-2 text-xs font-bold uppercase text-amber-900 dark:bg-amber-950/40 dark:text-amber-200">
-              <span>📅 Monthly Installments</span>
-              <span>
-                {installmentExpenses.length} active plan
-                {installmentExpenses.length === 1 ? "" : "s"}
-              </span>
-            </div>
-            <div className="overflow-x-auto">
-              {renderGroupedTable(
-                installmentTable,
-                installmentGroups,
-                "No installment plans",
-              )}
-            </div>
-          </div>
-        )}
-
-        {expenseType !== "installment" && (
-          <div className="overflow-x-auto">
-            {renderGroupedTable(
-              normalTable,
-              normalGroups,
-              expenseType === "subscription"
-                ? "No subscriptions found"
-                : "No transactions found",
-            )}
-          </div>
-        )}
       </div>
     </div>
   );

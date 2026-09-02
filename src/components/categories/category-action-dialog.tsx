@@ -33,20 +33,6 @@ interface CategoryActionDialogProps {
   onCategoryDeleted?: () => void;
 }
 
-// Common color options
-const COLOR_OPTIONS = [
-  "#3B82F6",
-  "#EF4444",
-  "#10B981",
-  "#F59E0B",
-  "#8B5CF6",
-  "#EC4899",
-  "#06B6D4",
-  "#84CC16",
-  "#F97316",
-  "#6366F1",
-];
-
 export function CategoryActionDialog({
   category,
   onCategoryUpdated,
@@ -59,7 +45,6 @@ export function CategoryActionDialog({
 
   // Edit form state
   const [name, setName] = React.useState(category.name);
-  const [color, setColor] = React.useState(category.color || "");
   const [description, setDescription] = React.useState(
     category.description || "",
   );
@@ -68,7 +53,6 @@ export function CategoryActionDialog({
   // Reset form when category changes
   React.useEffect(() => {
     setName(category.name);
-    setColor(category.color || "");
     setDescription(category.description || "");
     setIsActive(category.is_active);
   }, [category]);
@@ -83,7 +67,6 @@ export function CategoryActionDialog({
     try {
       await updateCategory(category.id, {
         name: name.trim(),
-        color: color || undefined,
         description: description.trim() || undefined,
         is_active: isActive,
       });
@@ -146,14 +129,14 @@ export function CategoryActionDialog({
 
       {/* View Dialog */}
       <Dialog open={isViewOpen} onOpenChange={setIsViewOpen}>
-        <DialogContent className="sm:max-w-[500px]">
+        <DialogContent className="sm:max-w-[480px]">
           <DialogHeader>
             <DialogTitle>Category Details</DialogTitle>
             <DialogDescription>
               View detailed information about this category
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 py-2">
             <div className="grid grid-cols-2 gap-4">
               <div>
                 <Label className="text-muted-foreground">Name</Label>
@@ -166,22 +149,6 @@ export function CategoryActionDialog({
                 >
                   {category.is_active ? "Active" : "Inactive"}
                 </p>
-              </div>
-            </div>
-            <div className="grid grid-cols-2 gap-4">
-              <div>
-                <Label className="text-muted-foreground">Color</Label>
-                {category.color ? (
-                  <div className="flex items-center gap-2 mt-1">
-                    <div
-                      className="w-6 h-6 rounded border-2 border-foreground"
-                      style={{ backgroundColor: category.color }}
-                    />
-                    <span className="text-sm">{category.color}</span>
-                  </div>
-                ) : (
-                  <p className="text-muted-foreground">Not set</p>
-                )}
               </div>
             </div>
             <div className="grid grid-cols-2 gap-4">
@@ -206,14 +173,14 @@ export function CategoryActionDialog({
 
       {/* Edit Dialog */}
       <Dialog open={isEditOpen} onOpenChange={setIsEditOpen}>
-        <DialogContent className="sm:max-w-[500px] max-h-[90vh] overflow-y-auto">
+        <DialogContent className="sm:max-w-[480px] max-h-[90vh] overflow-y-auto">
           <DialogHeader>
             <DialogTitle>Edit Category</DialogTitle>
             <DialogDescription>
-              Make changes to the category details
+              Make changes to the category tag
             </DialogDescription>
           </DialogHeader>
-          <div className="space-y-4">
+          <div className="space-y-4 py-2">
             <div className="space-y-2">
               <Label htmlFor="edit-name">
                 Name <span className="text-red-500">*</span>
@@ -223,32 +190,6 @@ export function CategoryActionDialog({
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 placeholder="Category name"
-              />
-            </div>
-
-            <div className="space-y-2">
-              <Label>Color</Label>
-              <div className="flex flex-wrap gap-2">
-                {COLOR_OPTIONS.map((c) => (
-                  <button
-                    key={c}
-                    type="button"
-                    onClick={() => setColor(color === c ? "" : c)}
-                    className={`w-10 h-10 rounded border-2 transition-all ${
-                      color === c
-                        ? "border-foreground shadow-sm scale-110"
-                        : "border-foreground/30 hover:border-foreground"
-                    }`}
-                    style={{ backgroundColor: c }}
-                  />
-                ))}
-              </div>
-              <Input
-                type="text"
-                value={color}
-                onChange={(e) => setColor(e.target.value)}
-                placeholder="Or enter hex color (e.g., #3B82F6)"
-                className="mt-2"
               />
             </div>
 
@@ -263,7 +204,7 @@ export function CategoryActionDialog({
               />
             </div>
 
-            <div className="flex items-center justify-between">
+            <div className="flex items-center justify-between pt-1">
               <Label htmlFor="edit-active">Active</Label>
               <Switch
                 id="edit-active"

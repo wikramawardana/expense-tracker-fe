@@ -7,6 +7,7 @@ import {
   useReactTable,
 } from "@tanstack/react-table";
 import * as React from "react";
+import { CategoryBadge } from "@/components/expenses/status-badge";
 import { formatDate } from "@/lib/format";
 import { cn } from "@/lib/utils";
 import type { Category } from "@/types/category.types";
@@ -129,38 +130,18 @@ export function CategoriesTable({
     () => [
       {
         accessorKey: "name",
-        header: () => <div className="text-left">Name</div>,
+        header: () => <div className="text-left">Category Tag</div>,
         cell: ({ row }) => (
-          <div className="font-medium text-foreground">
-            {row.getValue("name")}
+          <div className="flex items-center">
+            <CategoryBadge category={row.original} />
           </div>
         ),
-      },
-      {
-        accessorKey: "color",
-        header: () => <div className="text-left">Color</div>,
-        cell: ({ row }) => {
-          const color = row.getValue("color") as string | null;
-          return color ? (
-            <div className="flex items-center gap-2">
-              <div
-                className="h-5 w-5 rounded ring-1 ring-inset ring-border"
-                style={{ backgroundColor: color }}
-              />
-              <span className="text-xs text-muted-foreground tabular-nums">
-                {color}
-              </span>
-            </div>
-          ) : (
-            <span className="text-muted-foreground">—</span>
-          );
-        },
       },
       {
         accessorKey: "description",
         header: () => <div className="text-left">Description</div>,
         cell: ({ row }) => (
-          <div className="max-w-[220px] truncate text-muted-foreground">
+          <div className="max-w-[260px] truncate text-muted-foreground">
             {row.getValue("description") || "—"}
           </div>
         ),

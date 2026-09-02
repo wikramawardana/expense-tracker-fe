@@ -22,20 +22,6 @@ interface CreateCategoryDialogProps {
   onCategoryCreated?: () => void;
 }
 
-// Common color options
-const COLOR_OPTIONS = [
-  "#3B82F6",
-  "#EF4444",
-  "#10B981",
-  "#F59E0B",
-  "#8B5CF6",
-  "#EC4899",
-  "#06B6D4",
-  "#84CC16",
-  "#F97316",
-  "#6366F1",
-];
-
 export function CreateCategoryDialog({
   onCategoryCreated,
 }: CreateCategoryDialogProps) {
@@ -44,12 +30,10 @@ export function CreateCategoryDialog({
 
   // Form state
   const [name, setName] = React.useState("");
-  const [color, setColor] = React.useState("");
   const [description, setDescription] = React.useState("");
 
   const resetForm = () => {
     setName("");
-    setColor("");
     setDescription("");
   };
 
@@ -63,7 +47,6 @@ export function CreateCategoryDialog({
     try {
       await createCategory({
         name: name.trim(),
-        color: color || undefined,
         description: description.trim() || undefined,
       });
       toast.success("Category created successfully");
@@ -87,14 +70,14 @@ export function CreateCategoryDialog({
           Add Category
         </Button>
       </DialogTrigger>
-      <DialogContent className="sm:max-w-[500px]">
+      <DialogContent className="sm:max-w-[440px]">
         <DialogHeader>
           <DialogTitle>Add New Category</DialogTitle>
           <DialogDescription>
-            Create a new expense category. Fill in the details below.
+            Create a new expense category tag.
           </DialogDescription>
         </DialogHeader>
-        <div className="space-y-4">
+        <div className="space-y-4 py-2">
           <div className="space-y-2">
             <Label htmlFor="name">
               Name <span className="text-red-500">*</span>
@@ -104,32 +87,6 @@ export function CreateCategoryDialog({
               value={name}
               onChange={(e) => setName(e.target.value)}
               placeholder="e.g., Transportation"
-            />
-          </div>
-
-          <div className="space-y-2">
-            <Label>Color</Label>
-            <div className="flex flex-wrap gap-2">
-              {COLOR_OPTIONS.map((c) => (
-                <button
-                  key={c}
-                  type="button"
-                  onClick={() => setColor(color === c ? "" : c)}
-                  className={`w-10 h-10 rounded border-2 transition-all ${
-                    color === c
-                      ? "border-foreground shadow-sm scale-110"
-                      : "border-foreground/30 hover:border-foreground"
-                  }`}
-                  style={{ backgroundColor: c }}
-                />
-              ))}
-            </div>
-            <Input
-              type="text"
-              value={color}
-              onChange={(e) => setColor(e.target.value)}
-              placeholder="Or enter hex color (e.g., #3B82F6)"
-              className="mt-2"
             />
           </div>
 

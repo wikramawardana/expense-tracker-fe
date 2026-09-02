@@ -1,4 +1,4 @@
-import { AlertCircle, CheckCircle2, Clock } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock, Tag } from "lucide-react";
 import type { ComponentType } from "react";
 import { cn } from "@/lib/utils";
 import type { Category } from "@/types/category.types";
@@ -59,6 +59,26 @@ interface CategoryBadgeProps {
   className?: string;
 }
 
+export function CategoryBadge({ category, className }: CategoryBadgeProps) {
+  if (!category) {
+    return (
+      <span className={cn("text-xs text-muted-foreground", className)}>—</span>
+    );
+  }
+
+  return (
+    <span
+      className={cn(
+        "inline-flex items-center gap-1.5 rounded-md border border-border/80 bg-muted/70 px-2.5 py-0.5 text-xs font-medium text-foreground/80 transition-colors hover:bg-muted dark:bg-muted/40",
+        className,
+      )}
+    >
+      <Tag className="h-3 w-3 shrink-0 text-muted-foreground" />
+      <span className="truncate max-w-[140px]">{category.name}</span>
+    </span>
+  );
+}
+
 const fallbackPalette = [
   "#0f766e",
   "#2563eb",
@@ -97,52 +117,6 @@ function rgba(hex: string, alpha: number) {
 
 function colorForValue(value: string) {
   return fallbackPalette[hashString(value) % fallbackPalette.length];
-}
-
-function categoryAccent(category: Category) {
-  return category.color && hexToRgb(category.color)
-    ? category.color
-    : colorForValue(category.name);
-}
-
-export function CategoryBadge({ category, className }: CategoryBadgeProps) {
-  if (!category) {
-    return (
-      <span
-        className={cn(
-          "inline-flex items-center gap-1 rounded-full px-2.5 py-0.5 text-xs font-medium",
-          "bg-muted text-muted-foreground ring-1 ring-inset ring-border",
-          className,
-        )}
-      >
-        —
-      </span>
-    );
-  }
-
-  const accent = categoryAccent(category);
-  const bg = rgba(accent, 0.12);
-  const ring = rgba(accent, 0.28);
-
-  return (
-    <span
-      className={cn(
-        "inline-flex items-center gap-1.5 rounded-full px-2.5 py-0.5 text-xs font-semibold ring-1 ring-inset",
-        className,
-      )}
-      style={{
-        backgroundColor: bg,
-        color: accent,
-        boxShadow: `inset 0 0 0 1px ${ring}`,
-      }}
-    >
-      <span
-        className="h-1.5 w-1.5 rounded-full"
-        style={{ backgroundColor: accent }}
-      />
-      <span>{category.name}</span>
-    </span>
-  );
 }
 
 interface PaymentMethodBadgeProps {

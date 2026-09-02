@@ -21,11 +21,7 @@ import { getCategories } from "@/services/categories.service";
 import { getPaymentMethods } from "@/services/payment-methods.service";
 import type { BillStatement } from "@/types/bill-statement.types";
 import type { Category } from "@/types/category.types";
-import type {
-  ExpenseCategory,
-  ExpenseFilters,
-  ExpenseStatus,
-} from "@/types/expense.types";
+import type { ExpenseFilters, ExpenseStatus } from "@/types/expense.types";
 import type { PaymentMethod } from "@/types/payment-method.types";
 
 interface ExpensesFiltersProps {
@@ -91,7 +87,7 @@ export function ExpensesFilters({
     filters.sort_order || "desc",
   );
 
-  // Sync dropdown/sort state from external filter changes.
+  // Sync state from external filter changes.
   React.useEffect(() => {
     setCategoryId(filters.category_id || filters.category || "all");
     setStatus(filters.status || "all");
@@ -99,119 +95,130 @@ export function ExpensesFilters({
       filters.payment_method_id || filters.payment_method || "all",
     );
     setBillStatementId(filters.bill_statement_id || "all");
+    setSearch(filters.search || "");
+    const from = filters.expense_date_from
+      ? new Date(filters.expense_date_from)
+      : undefined;
+    const to = filters.expense_date_to
+      ? new Date(filters.expense_date_to)
+      : undefined;
+    setDateRange(from || to ? { from, to } : undefined);
     setSortBy(filters.sort_by || "date");
     setSortOrder(filters.sort_order || "desc");
   }, [filters]);
 
-  // Sync search when cleared externally
-  const prevSearchRef = React.useRef(filters.search || "");
-  React.useEffect(() => {
-    const appliedSearch = filters.search || "";
-    if (appliedSearch === "" && prevSearchRef.current !== "") {
-      setSearch("");
-    }
-    prevSearchRef.current = appliedSearch;
-  }, [filters.search]);
+  // Unified filter application function that combines all current filter dimensions
+  const applyFilters = (overrides: Partial<ExpenseFilters> = {}) => {
+    const nextCat =
+      overrides.category_id !== undefined
+        ? overrides.category_id
+        : overrides.category !== undefined
+          ? overrides.category
+          : categoryId;
+    const nextStatus =
+      overrides.status !== undefined ? overrides.status : status;
+    const nextPm =
+      overrides.payment_method_id !== undefined
+        ? overrides.payment_method_id
+        : overrides.payment_method !== undefined
+          ? overrides.payment_method
+          : paymentMethodId;
+    const nextStmt =
+      overrides.bill_statement_id !== undefined
+        ? overrides.bill_statement_id
+        : billStatementId;
+    const nextSearch =
+      overrides.search !== undefined ? overrides.search : search;
+    const nextSortBy =
+      overrides.sort_by !== undefined ? overrides.sort_by : sortBy;
+    const nextSortOrder =
+      overrides.sort_order !== undefined ? overrides.sort_order : sortOrder;
 
-  const buildFilters = (
-    overrides: Partial<ExpenseFilters> = {},
-  ): ExpenseFilters => {
-    const selectedMethod = paymentMethods.find(
-      (m) => m.id === paymentMethodId || m.name === paymentMethodId,
+    const selectedPm = paymentMethods.find(
+      (m) => m.id === nextPm || m.name.toLowerCase() === nextPm.toLowerCase(),
     );
     const selectedCat = categoryList.find(
-      (c) => c.id === categoryId || c.name === categoryId,
+      (c) => c.id === nextCat || c.name.toLowerCase() === nextCat.toLowerCase(),
     );
 
-    return {
-      ...filters,
-      search: search.trim(),
-      category_id: selectedCat?.id || (categoryId === "all" ? "" : categoryId),
-      category: (selectedCat?.name ||
-        (categoryId === "all" ? "" : categoryId)) as ExpenseCategory,
-      status: status === "all" ? "" : (status as ExpenseStatus),
-      payment_method_id:
-        selectedMethod?.id ||
-        (paymentMethodId === "all" ? "" : paymentMethodId),
-      payment_method:
-        selectedMethod?.name ||
-        (paymentMethodId === "all" ? "" : paymentMethodId),
-      bill_statement_id: billStatementId === "all" ? "" : billStatementId,
-      expense_date_from: dateRange?.from
-        ? format(dateRange.from, "yyyy-MM-dd'T'00:00:00'Z'")
-        : "",
-      expense_date_to: dateRange?.to
-        ? format(dateRange.to, "yyyy-MM-dd'T'23:59:59'Z'")
-        : "",
-      sort_by: sortBy,
-      sort_order: sortOrder,
-      page: 1,
-      ...overrides,
-    };
-  };
+    const fromDate =
+      overrides.expense_date_from !== undefined
+        ? overrides.expense_date_from
+        : dateRange?.from
+          ? format(dateRange.from, "yyyy-MM-dd'T'00:00:00'Z'")
+          : "";
+    const toDate =
+      overrides.expense_date_to !== undefined
+        ? overrides.expense_date_to
+        : dateRange?.to
+          ? format(dateRange.to, "yyyy-MM-dd'T'23:59:59'Z'")
+          : "";
 
-  const handleApplyFilters = () => {
-    onFiltersChange(buildFilters());
+    const combined: ExpenseFilters = {
+      ...filters,
+      page: 1,
+      page_size: filters.page_size || 50,
+      expense_type: filters.expense_type,
+      search: nextSearch.trim(),
+      category_id: selectedCat?.id || (nextCat === "all" ? "" : nextCat),
+      category: selectedCat?.name || (nextCat === "all" ? "" : nextCat),
+      status: nextStatus === "all" ? "" : (nextStatus as ExpenseStatus),
+      payment_method_id: selectedPm?.id || (nextPm === "all" ? "" : nextPm),
+      payment_method: selectedPm?.name || (nextPm === "all" ? "" : nextPm),
+      bill_statement_id: nextStmt === "all" ? "" : nextStmt,
+      expense_date_from: fromDate,
+      expense_date_to: toDate,
+      sort_by: nextSortBy,
+      sort_order: nextSortOrder,
+    };
+
+    onFiltersChange(combined);
   };
 
   const handleCategoryChange = (value: string) => {
     setCategoryId(value);
-    const selectedCat = categoryList.find(
-      (c) => c.id === value || c.name === value,
-    );
-    onFiltersChange({
-      ...filters,
-      category_id: value === "all" ? "" : selectedCat?.id || value,
-      category: (value === "all"
-        ? ""
-        : selectedCat?.name || value) as ExpenseCategory,
-      page: 1,
-    });
+    applyFilters({ category_id: value });
   };
 
   const handleStatusChange = (value: string) => {
     setStatus(value);
-    onFiltersChange({
-      ...filters,
-      status: value === "all" ? "" : (value as ExpenseStatus),
-      page: 1,
-    });
+    applyFilters({ status: value as ExpenseStatus });
   };
 
   const handlePaymentMethodChange = (value: string) => {
     setPaymentMethodId(value);
-    const selectedMethod = paymentMethods.find(
-      (m) => m.id === value || m.name === value,
-    );
-    onFiltersChange({
-      ...filters,
-      payment_method_id: value === "all" ? "" : selectedMethod?.id || value,
-      payment_method: value === "all" ? "" : selectedMethod?.name || value,
-      page: 1,
-    });
+    applyFilters({ payment_method_id: value });
   };
 
   const handleBillStatementChange = (value: string) => {
     setBillStatementId(value);
-    onFiltersChange({
-      ...filters,
-      bill_statement_id: value === "all" ? "" : value,
-      page: 1,
+    applyFilters({ bill_statement_id: value });
+  };
+
+  const handleDateRangeChange = (range: DateRange | undefined) => {
+    setDateRange(range);
+    applyFilters({
+      expense_date_from: range?.from
+        ? format(range.from, "yyyy-MM-dd'T'00:00:00'Z'")
+        : "",
+      expense_date_to: range?.to
+        ? format(range.to, "yyyy-MM-dd'T'23:59:59'Z'")
+        : "",
     });
   };
 
   const handleSortByChange = (value: string) => {
     setSortBy(value);
-    onFiltersChange({ ...filters, sort_by: value, page: 1 });
+    applyFilters({ sort_by: value });
   };
 
   const handleSortOrderChange = (value: string) => {
     setSortOrder(value as "asc" | "desc");
-    onFiltersChange({
-      ...filters,
-      sort_order: value as "asc" | "desc",
-      page: 1,
-    });
+    applyFilters({ sort_order: value as "asc" | "desc" });
+  };
+
+  const handleSearchSubmit = () => {
+    applyFilters({ search });
   };
 
   const handleClearFilters = () => {
@@ -234,23 +241,28 @@ export function ExpensesFilters({
 
   // Check if any filters are active
   const hasActiveFilters =
-    search ||
+    Boolean(search) ||
     categoryId !== "all" ||
     status !== "all" ||
     paymentMethodId !== "all" ||
     billStatementId !== "all" ||
-    dateRange?.from ||
-    dateRange?.to;
+    Boolean(dateRange?.from) ||
+    Boolean(dateRange?.to);
 
-  // Check if local state differs from applied filters
-  const hasUnappliedChanges =
-    search.trim() !== (filters.search || "").trim() ||
-    (dateRange?.from ? format(dateRange.from, "yyyy-MM-dd") : "") !==
-      (filters.expense_date_from
-        ? filters.expense_date_from.split("T")[0]
-        : "") ||
-    (dateRange?.to ? format(dateRange.to, "yyyy-MM-dd") : "") !==
-      (filters.expense_date_to ? filters.expense_date_to.split("T")[0] : "");
+  // Derive selected value keys for controlled selects so they never desync
+  const selectedCatValue =
+    categoryList.find(
+      (c) =>
+        c.id === categoryId ||
+        c.name.toLowerCase() === categoryId.toLowerCase(),
+    )?.id || (categoryId === "all" ? "all" : categoryId);
+
+  const selectedPmValue =
+    paymentMethods.find(
+      (m) =>
+        m.id === paymentMethodId ||
+        m.name.toLowerCase() === paymentMethodId.toLowerCase(),
+    )?.id || (paymentMethodId === "all" ? "all" : paymentMethodId);
 
   return (
     <div className="space-y-3 rounded-xl border border-border bg-card p-4 shadow-sm">
@@ -263,13 +275,13 @@ export function ExpensesFilters({
             placeholder="Search expenses..."
             value={search}
             onChange={(e) => setSearch(e.target.value)}
-            onKeyDown={(e) => e.key === "Enter" && handleApplyFilters()}
+            onKeyDown={(e) => e.key === "Enter" && handleSearchSubmit()}
             className="w-full pl-9"
           />
         </div>
 
         {/* Category Filter */}
-        <Select value={categoryId} onValueChange={handleCategoryChange}>
+        <Select value={selectedCatValue} onValueChange={handleCategoryChange}>
           <SelectTrigger className="w-full">
             <SelectValue placeholder="All categories" />
           </SelectTrigger>
@@ -300,7 +312,7 @@ export function ExpensesFilters({
 
         {/* Payment Method Filter */}
         <Select
-          value={paymentMethodId}
+          value={selectedPmValue}
           onValueChange={handlePaymentMethodChange}
         >
           <SelectTrigger className="w-full">
@@ -331,7 +343,7 @@ export function ExpensesFilters({
           {/* Date Range Filter */}
           <DateRangePickerWithPresets
             dateRange={dateRange}
-            onDateRangeChange={setDateRange}
+            onDateRangeChange={handleDateRangeChange}
             triggerClassName="w-full sm:w-[240px]"
             align="start"
           />
@@ -374,17 +386,7 @@ export function ExpensesFilters({
               Clear
             </Button>
           )}
-          <Button
-            onClick={handleApplyFilters}
-            size="sm"
-            className="h-9 px-4"
-            disabled={!hasUnappliedChanges}
-            title={
-              hasUnappliedChanges
-                ? "Apply search & date filter"
-                : "No pending search/date changes"
-            }
-          >
+          <Button onClick={handleSearchSubmit} size="sm" className="h-9 px-4">
             <Search className="mr-1 h-4 w-4" />
             Search
           </Button>

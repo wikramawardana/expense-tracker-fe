@@ -67,7 +67,6 @@ export function ExpenseWorkspace({
   const { data: session, isPending: isSessionLoading } = useSession();
   const [expenses, setExpenses] = React.useState<Expense[]>([]);
   const [categories, setCategories] = React.useState<Category[]>([]);
-  const [filters, setFilters] = React.useState<ExpenseFilters | null>(null);
   const [totals, setTotals] = React.useState<ExpenseTotals>(emptyTotals);
   const [isLoading, setIsLoading] = React.useState(true);
   const [isSummaryLoading, setIsSummaryLoading] = React.useState(true);
@@ -91,51 +90,46 @@ export function ExpenseWorkspace({
     }
   }, [basePath, isSessionLoading, router, session]);
 
+  const filters: ExpenseFilters = React.useMemo(() => {
+    return {
+      page: 1,
+      page_size: PAGE_SIZE,
+      sort_by: searchParams.get("sort_by") || "date",
+      sort_order: (searchParams.get("sort_order") as "asc" | "desc") || "desc",
+      expense_type: expenseType,
+      payment_method_id: searchParams.get("payment_method_id") || "",
+      payment_method: searchParams.get("payment_method") || "",
+      category_id: searchParams.get("category_id") || "",
+      category: searchParams.get("category") || "",
+      status: (searchParams.get("status") as ExpenseStatus) || "",
+      search: searchParams.get("search") || "",
+      bill_statement_id: searchParams.get("bill_statement_id") || "",
+      expense_date_from: searchParams.get("expense_date_from") || "",
+      expense_date_to: searchParams.get("expense_date_to") || "",
+    };
+  }, [expenseType, searchParams]);
+
   React.useEffect(() => {
-    if (!isAuthenticated) return;
+    const statementId = searchParams.get("bill_statement_id");
+    if (!statementId) {
+      setStatementName(null);
+      return;
+    }
     let cancelled = false;
-
-    (async () => {
-      const statementId = searchParams.get("bill_statement_id") || "";
-      const baseFilters: ExpenseFilters = {
-        page: 1,
-        page_size: PAGE_SIZE,
-        sort_by: searchParams.get("sort_by") || "date",
-        sort_order:
-          (searchParams.get("sort_order") as "asc" | "desc") || "desc",
-        expense_type: expenseType,
-        payment_method_id: searchParams.get("payment_method_id") || "",
-        payment_method: searchParams.get("payment_method") || "",
-        category_id: searchParams.get("category_id") || "",
-        category: searchParams.get("category") || "",
-        status: (searchParams.get("status") as ExpenseStatus) || "",
-        search: searchParams.get("search") || "",
-        bill_statement_id: statementId,
-        expense_date_from: searchParams.get("expense_date_from") || "",
-        expense_date_to: searchParams.get("expense_date_to") || "",
-      };
-
-      if (statementId) {
-        try {
-          const response = await getBillStatements();
+    getBillStatements()
+      .then((response) => {
+        if (!cancelled) {
           const statement = response.data.find(
             (item) => item.id === statementId,
           );
-          if (!cancelled) setStatementName(statement?.name ?? null);
-        } catch (error) {
-          console.error("Failed to resolve statement", error);
+          setStatementName(statement?.name ?? null);
         }
-      } else {
-        setStatementName(null);
-      }
-
-      if (!cancelled) setFilters(baseFilters);
-    })();
-
+      })
+      .catch((err) => console.error("Failed to resolve statement", err));
     return () => {
       cancelled = true;
     };
-  }, [expenseType, isAuthenticated, searchParams]);
+  }, [searchParams]);
 
   const fetchSummary = React.useCallback(
     async (activeFilters: ExpenseFilters) => {
@@ -183,7 +177,7 @@ export function ExpenseWorkspace({
   );
 
   React.useEffect(() => {
-    if (!isAuthenticated || !filters) return;
+    if (!isAuthenticated) return;
     getCategories()
       .then((response) => setCategories(response.data))
       .catch((error) => console.error("Failed to load categories", error));
@@ -192,7 +186,7 @@ export function ExpenseWorkspace({
   }, [fetchFirstPage, fetchSummary, filters, isAuthenticated]);
 
   const loadMore = React.useCallback(async () => {
-    if (!filters || isLoadingMore || !hasMore) return;
+    if (isLoadingMore || !hasMore) return;
     const nextPage = currentPage + 1;
     setIsLoadingMore(true);
     try {
@@ -225,54 +219,57 @@ export function ExpenseWorkspace({
     return () => observer.disconnect();
   }, [hasMore, isLoading, isLoadingMore, loadMore]);
 
-  const handleFiltersChange = (nextFilters: ExpenseFilters) => {
-    const scopedFilters = { ...nextFilters, expense_type: expenseType };
-    setFilters(scopedFilters);
+  const handleFiltersChange = React.useCallback(
+    (nextFilters: ExpenseFilters) => {
+      const params = new URLSearchParams();
+      if (nextFilters.bill_statement_id) {
+        params.set("bill_statement_id", nextFilters.bill_statement_id);
+      }
+      if (nextFilters.payment_method_id) {
+        params.set("payment_method_id", nextFilters.payment_method_id);
+      }
+      if (nextFilters.payment_method) {
+        params.set("payment_method", nextFilters.payment_method);
+      }
+      if (nextFilters.category_id) {
+        params.set("category_id", nextFilters.category_id);
+      }
+      if (nextFilters.category) {
+        params.set("category", nextFilters.category);
+      }
+      if (nextFilters.status) {
+        params.set("status", nextFilters.status);
+      }
+      if (nextFilters.search) {
+        params.set("search", nextFilters.search);
+      }
+      if (nextFilters.expense_date_from) {
+        params.set("expense_date_from", nextFilters.expense_date_from);
+      }
+      if (nextFilters.expense_date_to) {
+        params.set("expense_date_to", nextFilters.expense_date_to);
+      }
+      if (nextFilters.sort_by && nextFilters.sort_by !== "date") {
+        params.set("sort_by", nextFilters.sort_by);
+      }
+      if (nextFilters.sort_order && nextFilters.sort_order !== "desc") {
+        params.set("sort_order", nextFilters.sort_order);
+      }
 
-    const params = new URLSearchParams();
-    if (scopedFilters.bill_statement_id) {
-      params.set("bill_statement_id", scopedFilters.bill_statement_id);
-    }
-    if (scopedFilters.payment_method_id) {
-      params.set("payment_method_id", scopedFilters.payment_method_id);
-    }
-    if (scopedFilters.payment_method) {
-      params.set("payment_method", scopedFilters.payment_method);
-    }
-    if (scopedFilters.category_id) {
-      params.set("category_id", scopedFilters.category_id);
-    }
-    if (scopedFilters.status) {
-      params.set("status", scopedFilters.status);
-    }
-    if (scopedFilters.search) {
-      params.set("search", scopedFilters.search);
-    }
-    if (scopedFilters.expense_date_from) {
-      params.set("expense_date_from", scopedFilters.expense_date_from);
-    }
-    if (scopedFilters.expense_date_to) {
-      params.set("expense_date_to", scopedFilters.expense_date_to);
-    }
-    if (scopedFilters.sort_by && scopedFilters.sort_by !== "date") {
-      params.set("sort_by", scopedFilters.sort_by);
-    }
-    if (scopedFilters.sort_order && scopedFilters.sort_order !== "desc") {
-      params.set("sort_order", scopedFilters.sort_order);
-    }
-
-    router.replace(`${basePath}${params.size ? `?${params.toString()}` : ""}`, {
-      scroll: false,
-    });
-  };
+      router.replace(
+        `${basePath}${params.size ? `?${params.toString()}` : ""}`,
+        { scroll: false },
+      );
+    },
+    [basePath, router],
+  );
 
   const refresh = React.useCallback(async () => {
-    if (!filters) return;
     await Promise.all([fetchSummary(filters), fetchFirstPage(filters)]);
     window.dispatchEvent(new Event("expense-navigation-updated"));
   }, [fetchFirstPage, fetchSummary, filters]);
 
-  if (isSessionLoading || !session?.user || !filters) {
+  if (isSessionLoading || !session?.user) {
     return (
       <div className="grid min-h-[60vh] place-items-center">
         <div className="size-8 animate-spin rounded-full border-2 border-primary border-r-transparent" />

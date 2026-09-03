@@ -14,6 +14,59 @@ import { ExpenseActionDialog } from "./expense-action-dialog";
 import { ExpenseBulkActions } from "./expense-bulk-actions";
 import { CategoryBadge, PaymentMethodBadge, StatusBadge } from "./status-badge";
 
+const SPECIAL_DESC_MAP: Record<string, string> = {
+  "waroeng ss": "Waroeng SS",
+  "mcd puncak": "McD Puncak",
+  "dcreps": "D'Crepes",
+  "zegavit": "Zegavit",
+  "squishy": "Squishy",
+  "saos & tepung": "Saos & Tepung",
+  "tempat makan": "Tempat Makan",
+  "tempat makan & sendok": "Tempat Makan & Sendok",
+  "pisang goreng bu nanik": "Pisang Goreng Bu Nanik",
+  "millie plastik": "Millie Plastik",
+  "kaos kaki": "Kaos Kaki",
+  "frozen": "Frozen",
+  "nasgor": "Nasgor",
+};
+
+export function formatDisplayDescription(desc: string | null | undefined): string | null {
+  if (!desc) return null;
+  const trimmed = desc.trim();
+  if (!trimmed) return null;
+
+  // Clean up BNI legal disclaimers if present
+  if (trimmed.includes("BNI Credit Card (") && trimmed.includes("Jika transaksi")) {
+    const cardMatch = trimmed.match(/MASTERCARDXX([0-9]{4})/i);
+    const last4 = cardMatch ? cardMatch[1] : "9103";
+    const merchMatch = trimmed.match(/at (QRIS-[^\)]+|$)/i);
+    const merch = merchMatch ? merchMatch[1].trim() : "BNI Transaction";
+    return `BNI Credit Card (..${last4}) at ${merch}`;
+  }
+
+  // Check special casing map
+  const low = trimmed.toLowerCase();
+  if (SPECIAL_DESC_MAP[low]) {
+    return SPECIAL_DESC_MAP[low];
+  }
+
+  // If short lowercase note, capitalize words
+  if (trimmed === trimmed.toLowerCase() && trimmed.length < 60) {
+    return trimmed
+      .split(/\s+/)
+      .map((w) =>
+        w.length <= 2 && /^[a-zA-Z]+$/.test(w) && !["di", "ke"].includes(w)
+          ? w.toUpperCase()
+          : ["&", "dan", "di", "ke", "dari", "untuk"].includes(w)
+          ? w
+          : w.charAt(0).toUpperCase() + w.slice(1)
+      )
+      .join(" ");
+  }
+
+  return trimmed;
+}
+
 interface ExpensesTableProps {
   expenses: Expense[];
   expenseType?: ExpenseType;
@@ -159,7 +212,7 @@ export function ExpensesTable({
               </div>
               {expense.description && (
                 <div className="mt-1 max-w-[240px] truncate text-[13px] font-medium text-muted-foreground">
-                  {expense.description}
+                  {formatDisplayDescription(expense.description)}
                 </div>
               )}
             </div>

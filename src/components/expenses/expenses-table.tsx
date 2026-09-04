@@ -17,29 +17,34 @@ import { CategoryBadge, PaymentMethodBadge, StatusBadge } from "./status-badge";
 const SPECIAL_DESC_MAP: Record<string, string> = {
   "waroeng ss": "Waroeng SS",
   "mcd puncak": "McD Puncak",
-  "dcreps": "D'Crepes",
-  "zegavit": "Zegavit",
-  "squishy": "Squishy",
+  dcreps: "D'Crepes",
+  zegavit: "Zegavit",
+  squishy: "Squishy",
   "saos & tepung": "Saos & Tepung",
   "tempat makan": "Tempat Makan",
   "tempat makan & sendok": "Tempat Makan & Sendok",
   "pisang goreng bu nanik": "Pisang Goreng Bu Nanik",
   "millie plastik": "Millie Plastik",
   "kaos kaki": "Kaos Kaki",
-  "frozen": "Frozen",
-  "nasgor": "Nasgor",
+  frozen: "Frozen",
+  nasgor: "Nasgor",
 };
 
-export function formatDisplayDescription(desc: string | null | undefined): string | null {
+export function formatDisplayDescription(
+  desc: string | null | undefined,
+): string | null {
   if (!desc) return null;
   const trimmed = desc.trim();
   if (!trimmed) return null;
 
   // Clean up BNI legal disclaimers if present
-  if (trimmed.includes("BNI Credit Card (") && trimmed.includes("Jika transaksi")) {
+  if (
+    trimmed.includes("BNI Credit Card (") &&
+    trimmed.includes("Jika transaksi")
+  ) {
     const cardMatch = trimmed.match(/MASTERCARDXX([0-9]{4})/i);
     const last4 = cardMatch ? cardMatch[1] : "9103";
-    const merchMatch = trimmed.match(/at (QRIS-[^\)]+|$)/i);
+    const merchMatch = trimmed.match(/at (QRIS-[^)]+|$)/i);
     const merch = merchMatch ? merchMatch[1].trim() : "BNI Transaction";
     return `BNI Credit Card (..${last4}) at ${merch}`;
   }
@@ -58,8 +63,8 @@ export function formatDisplayDescription(desc: string | null | undefined): strin
         w.length <= 2 && /^[a-zA-Z]+$/.test(w) && !["di", "ke"].includes(w)
           ? w.toUpperCase()
           : ["&", "dan", "di", "ke", "dari", "untuk"].includes(w)
-          ? w
-          : w.charAt(0).toUpperCase() + w.slice(1)
+            ? w
+            : w.charAt(0).toUpperCase() + w.slice(1),
       )
       .join(" ");
   }

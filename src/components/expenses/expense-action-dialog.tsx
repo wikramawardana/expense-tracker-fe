@@ -394,7 +394,7 @@ export function ExpenseActionDialog({
       // Build update payload
       const updatePayload: Parameters<typeof updateExpense>[1] = {
         title,
-        description: description || undefined,
+        description: description.trim(),
         amount: Number(amount),
         category_id: categoryId,
         bill_statement_id: billStatementId,
@@ -402,7 +402,7 @@ export function ExpenseActionDialog({
         status,
         payment_method: selectedPaymentMethod.name,
         payment_method_id: selectedPaymentMethod.id,
-        paid_by: paidBy || undefined,
+        paid_by: paidBy?.trim() || "",
       };
 
       // Add schedule fields based on type

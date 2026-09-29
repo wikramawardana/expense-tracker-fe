@@ -39,3 +39,8 @@
   ```bash
   pnpm build
   ```
+
+## 5. Deployment Status
+- The expense tracker web app was retired from the VPS on 2026-09-29. The source repository remains available.
+- Automated bank email sync to Google Sheets remains active in the sibling `temporal-sync` directory and does not depend on this frontend.
+- The deployment workflow is preserved as `.github/workflows/deploy.yml.disabled` and does not run automatically.
